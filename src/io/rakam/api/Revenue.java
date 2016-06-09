@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.text.TextUtils;
 
@@ -8,7 +8,7 @@ import org.json.JSONObject;
 /**
  *  <h1>Revenue</h1>
  * Revenue objects are a wrapper for revenue events and revenue properties. This should be used
- * in conjunction with {@code AmplitudeClient.logRevenueV2()} to record in-app transactions.
+ * in conjunction with {@code RakamClient.logRevenueV2()} to record in-app transactions.
  * Each set method returns the same Revenue object, allowing
  * you to chain multiple set calls together, for example:
  * {@code Revenue revenue = new Revenue().setProductId("com.product.id").setPrice(3.99);}
@@ -20,19 +20,19 @@ import org.json.JSONObject;
  * <b>Note:</b> the total revenue amount is calculated as price * quantity.
  * <br><br>
  * After creating a Revenue object and setting the desired transaction properties, send it to
- * Amplitude servers by calling {@code Amplitude.getInstance().logRevenueV2(revenue);} and pass in
+ * Rakam servers by calling {@code Rakam.getInstance().logRevenueV2(revenue);} and pass in
  * the object.
  *
- * @see <a href="https://github.com/amplitude/Amplitude-Android#tracking-revenue">
+ * @see <a href="https://github.com/buremba/rakam-android#tracking-revenue">
  *     Android SDK README</a> for more information on logging revenue.
  */
 public class Revenue {
 
     /**
-     * The class identifier tag used in logging. TAG = {@code "com.amplitude.api.Revenue"}
+     * The class identifier tag used in logging. TAG = {@code "Revenue"}
      */
-    public static final String TAG = "com.amplitude.api.Revenue";
-    private static AmplitudeLog logger =  AmplitudeLog.getLogger();
+    public static final String TAG = "Revenue";
+    private static RakamLog logger =  RakamLog.getLogger();
 
     /**
      * The Product ID field (required).
@@ -144,23 +144,11 @@ public class Revenue {
     }
 
     /**
-     * This is deprecated. RevenueProperties is a confusing name, should be EventProperties
-     *
-     * @param revenueProperties the revenue properties
-     * @return the same Revenue object
-     * @deprecated - use {@code Revenue.setEventProperties()} instead
-     */
-    public Revenue setRevenueProperties(JSONObject revenueProperties) {
-        logger.w(TAG, "setRevenueProperties is deprecated, please use setEventProperties instead");
-        return setEventProperties(revenueProperties);
-    }
-
-    /**
      * Set event properties for the revenue event, like you would for an event during logEvent.
      *
      * @param eventProperties the event properties
      * @return the same Revenue object
-     * @see <a href="https://github.com/amplitude/Amplitude-Android#setting-event-properties">
+     * @see <a href="https://github.com/buremba/rakam-android#setting-event-properties">
      *     Event Properties</a> for more information about logging event properties.
      */
     public Revenue setEventProperties(JSONObject eventProperties) {
@@ -169,7 +157,7 @@ public class Revenue {
     }
 
     /**
-     * Converts Revenue object into a JSONObject to send to Amplitude servers
+     * Converts Revenue object into a JSONObject to send to Rakam servers
      *
      * @return the JSON representation of this Revenue object
      */

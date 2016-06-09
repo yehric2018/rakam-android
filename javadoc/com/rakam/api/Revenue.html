@@ -37,7 +37,7 @@ var activeTableTab = "activeTableTab";
 <!--   -->
 </a>
 <ul class="navList" title="Navigation">
-<li><a href="../../../com/amplitude/api/package-summary.html">Package</a></li>
+<li><a href="../../../com/rakam/api/package-summary.html">Package</a></li>
 <li class="navBarCell1Rev">Class</li>
 <li><a href="package-tree.html">Tree</a></li>
 <li><a href="../../../deprecated-list.html">Deprecated</a></li>
@@ -47,11 +47,11 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../com/amplitude/api/PinnedAmplitudeClient.SSLContextBuilder.html" title="class in com.amplitude.api"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../com/rakam/api/PinnedRakamClient.SSLContextBuilder.html" title="class in io.rakam.api"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
-<li><a href="../../../index.html?com/amplitude/api/Revenue.html" target="_top">Frames</a></li>
+<li><a href="../../../index.html?com/rakam/api/Revenue.html" target="_top">Frames</a></li>
 <li><a href="Revenue.html" target="_top">No&nbsp;Frames</a></li>
 </ul>
 <ul class="navList" id="allclasses_navbar_top">
@@ -90,7 +90,7 @@ var activeTableTab = "activeTableTab";
 <!-- ========= END OF TOP NAVBAR ========= -->
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
-<div class="subTitle">com.amplitude.api</div>
+<div class="subTitle">io.rakam.api</div>
 <h2 title="Class Revenue" class="title">Class Revenue</h2>
 </div>
 <div class="contentContainer">
@@ -98,7 +98,7 @@ var activeTableTab = "activeTableTab";
 <li>java.lang.Object</li>
 <li>
 <ul class="inheritance">
-<li>com.amplitude.api.Revenue</li>
+<li>io.rakam.api.Revenue</li>
 </ul>
 </li>
 </ul>
@@ -111,7 +111,7 @@ var activeTableTab = "activeTableTab";
 extends java.lang.Object</pre>
 <div class="block"><h1>Revenue</h1>
  Revenue objects are a wrapper for revenue events and revenue properties. This should be used
- in conjunction with <code>AmplitudeClient.logRevenueV2()</code> to record in-app transactions.
+ in conjunction with <code>RakamClient.logRevenueV2()</code> to record in-app transactions.
  Each set method returns the same Revenue object, allowing
  you to chain multiple set calls together, for example:
  <code>Revenue revenue = new Revenue().setProductId("com.product.id").setPrice(3.99);</code>
@@ -123,11 +123,11 @@ extends java.lang.Object</pre>
  <b>Note:</b> the total revenue amount is calculated as price * quantity.
  <br><br>
  After creating a Revenue object and setting the desired transaction properties, send it to
- Amplitude servers by calling <code>Amplitude.getInstance().logRevenueV2(revenue);</code> and pass in
+ Rakam servers by calling <code>Rakam.getInstance().logRevenueV2(revenue);</code> and pass in
  the object.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="https://github.com/amplitude/Amplitude-Android#tracking-revenue">
+<dd><a href="https://github.com/buremba/rakam-android#tracking-revenue">
      Android SDK README</a> for more information on logging revenue.</dd>
 </dl>
 </li>
@@ -150,49 +150,49 @@ extends java.lang.Object</pre>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected java.lang.Double</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#price">price</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#price">price</a></span></code>
 <div class="block">The Price field (required).</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>protected java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#productId">productId</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#productId">productId</a></span></code>
 <div class="block">The Product ID field (required).</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected org.json.JSONObject</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#properties">properties</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#properties">properties</a></span></code>
 <div class="block">The Revenue Event Properties field (optional).</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>protected int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#quantity">quantity</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#quantity">quantity</a></span></code>
 <div class="block">The Quantity field (defaults to 1).</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#receipt">receipt</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#receipt">receipt</a></span></code>
 <div class="block">The Receipt field (required if you want to verify the revenue event).</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>protected java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#receiptSig">receiptSig</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#receiptSig">receiptSig</a></span></code>
 <div class="block">The Receipt Signature field (required if you want to verify the revenue event).</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#revenueType">revenueType</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#revenueType">revenueType</a></span></code>
 <div class="block">The Revenue Type field (optional).</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#TAG">TAG</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#TAG">TAG</a></span></code>
 <div class="block">The class identifier tag used in logging.</div>
 </td>
 </tr>
@@ -211,7 +211,7 @@ extends java.lang.Object</pre>
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#Revenue--">Revenue</a></span>()</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#Revenue--">Revenue</a></span>()</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -230,59 +230,59 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>protected boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#isValidRevenue--">isValidRevenue</a></span>()</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#isValidRevenue--">isValidRevenue</a></span>()</code>
 <div class="block">Verifies that revenue object is valid and contains the required fields (productId, price)</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#setEventProperties-org.json.JSONObject-">setEventProperties</a></span>(org.json.JSONObject&nbsp;eventProperties)</code>
+<td class="colFirst"><code><a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#setEventProperties-org.json.JSONObject-">setEventProperties</a></span>(org.json.JSONObject&nbsp;eventProperties)</code>
 <div class="block">Set event properties for the revenue event, like you would for an event during logEvent.</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#setPrice-double-">setPrice</a></span>(double&nbsp;price)</code>
+<td class="colFirst"><code><a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#setPrice-double-">setPrice</a></span>(double&nbsp;price)</code>
 <div class="block">Set a value for the price.</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#setProductId-java.lang.String-">setProductId</a></span>(java.lang.String&nbsp;productId)</code>
+<td class="colFirst"><code><a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#setProductId-java.lang.String-">setProductId</a></span>(java.lang.String&nbsp;productId)</code>
 <div class="block">Set a value for the product identifier.</div>
 </td>
 </tr>
 <tr id="i4" class="altColor">
-<td class="colFirst"><code><a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#setQuantity-int-">setQuantity</a></span>(int&nbsp;quantity)</code>
+<td class="colFirst"><code><a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#setQuantity-int-">setQuantity</a></span>(int&nbsp;quantity)</code>
 <div class="block">Set a value for the quantity.</div>
 </td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code><a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#setReceipt-java.lang.String-java.lang.String-">setReceipt</a></span>(java.lang.String&nbsp;receipt,
+<td class="colFirst"><code><a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#setReceipt-java.lang.String-java.lang.String-">setReceipt</a></span>(java.lang.String&nbsp;receipt,
           java.lang.String&nbsp;receiptSignature)</code>
 <div class="block">Set the receipt and receipt signature.</div>
 </td>
 </tr>
 <tr id="i6" class="altColor">
-<td class="colFirst"><code><a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#setRevenueProperties-org.json.JSONObject-">setRevenueProperties</a></span>(org.json.JSONObject&nbsp;revenueProperties)</code>
+<td class="colFirst"><code><a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#setRevenueProperties-org.json.JSONObject-">setRevenueProperties</a></span>(org.json.JSONObject&nbsp;revenueProperties)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;
 <div class="block"><span class="deprecationComment">- use <code>Revenue.setEventProperties()</code> instead</span></div>
 </div>
 </td>
 </tr>
 <tr id="i7" class="rowColor">
-<td class="colFirst"><code><a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#setRevenueType-java.lang.String-">setRevenueType</a></span>(java.lang.String&nbsp;revenueType)</code>
+<td class="colFirst"><code><a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#setRevenueType-java.lang.String-">setRevenueType</a></span>(java.lang.String&nbsp;revenueType)</code>
 <div class="block">Set a value for the revenue type.</div>
 </td>
 </tr>
 <tr id="i8" class="altColor">
 <td class="colFirst"><code>protected org.json.JSONObject</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplitude/api/Revenue.html#toJSONObject--">toJSONObject</a></span>()</code>
-<div class="block">Converts Revenue object into a JSONObject to send to Amplitude servers</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/rakam/api/Revenue.html#toJSONObject--">toJSONObject</a></span>()</code>
+<div class="block">Converts Revenue object into a JSONObject to send to Rakam servers</div>
 </td>
 </tr>
 </table>
@@ -314,10 +314,10 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>TAG</h4>
 <pre>public static final&nbsp;java.lang.String TAG</pre>
-<div class="block">The class identifier tag used in logging. TAG = <code>"com.amplitude.api.Revenue"</code></div>
+<div class="block">The class identifier tag used in logging. TAG = <code>"io.rakam.api.Revenue"</code></div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../constant-values.html#com.amplitude.api.Revenue.TAG">Constant Field Values</a></dd>
+<dd><a href="../../../constant-values.html#Revenue.TAG">Constant Field Values</a></dd>
 </dl>
 </li>
 </ul>
@@ -436,7 +436,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setProductId</h4>
-<pre>public&nbsp;<a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a>&nbsp;setProductId(java.lang.String&nbsp;productId)</pre>
+<pre>public&nbsp;<a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a>&nbsp;setProductId(java.lang.String&nbsp;productId)</pre>
 <div class="block">Set a value for the product identifier. Empty and invalid strings are ignored.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -452,7 +452,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setQuantity</h4>
-<pre>public&nbsp;<a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a>&nbsp;setQuantity(int&nbsp;quantity)</pre>
+<pre>public&nbsp;<a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a>&nbsp;setQuantity(int&nbsp;quantity)</pre>
 <div class="block">Set a value for the quantity. Note: revenue amount is calculated as price * quantity.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -468,7 +468,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setPrice</h4>
-<pre>public&nbsp;<a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a>&nbsp;setPrice(double&nbsp;price)</pre>
+<pre>public&nbsp;<a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a>&nbsp;setPrice(double&nbsp;price)</pre>
 <div class="block">Set a value for the price. Note: revenue amount is calculated as price * quantity.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -484,7 +484,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setRevenueType</h4>
-<pre>public&nbsp;<a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a>&nbsp;setRevenueType(java.lang.String&nbsp;revenueType)</pre>
+<pre>public&nbsp;<a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a>&nbsp;setRevenueType(java.lang.String&nbsp;revenueType)</pre>
 <div class="block">Set a value for the revenue type.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -500,7 +500,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setReceipt</h4>
-<pre>public&nbsp;<a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a>&nbsp;setReceipt(java.lang.String&nbsp;receipt,
+<pre>public&nbsp;<a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a>&nbsp;setReceipt(java.lang.String&nbsp;receipt,
                           java.lang.String&nbsp;receiptSignature)</pre>
 <div class="block">Set the receipt and receipt signature. Both fields are required to verify the revenue event.</div>
 <dl>
@@ -518,7 +518,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setRevenueProperties</h4>
-<pre>public&nbsp;<a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a>&nbsp;setRevenueProperties(org.json.JSONObject&nbsp;revenueProperties)</pre>
+<pre>public&nbsp;<a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a>&nbsp;setRevenueProperties(org.json.JSONObject&nbsp;revenueProperties)</pre>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;<span class="deprecationComment">- use <code>Revenue.setEventProperties()</code> instead</span></div>
 <div class="block">This is deprecated. RevenueProperties is a confusing name, should be EventProperties</div>
 <dl>
@@ -535,7 +535,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setEventProperties</h4>
-<pre>public&nbsp;<a href="../../../com/amplitude/api/Revenue.html" title="class in com.amplitude.api">Revenue</a>&nbsp;setEventProperties(org.json.JSONObject&nbsp;eventProperties)</pre>
+<pre>public&nbsp;<a href="../../../com/rakam/api/Revenue.html" title="class in io.rakam.api">Revenue</a>&nbsp;setEventProperties(org.json.JSONObject&nbsp;eventProperties)</pre>
 <div class="block">Set event properties for the revenue event, like you would for an event during logEvent.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -543,7 +543,7 @@ extends java.lang.Object</pre>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the same Revenue object</dd>
 <dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="https://github.com/amplitude/Amplitude-Android#setting-event-properties">
+<dd><a href="https://github.com/buremba/rakam-android#setting-event-properties">
      Event Properties</a> for more information about logging event properties.</dd>
 </dl>
 </li>
@@ -555,7 +555,7 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>toJSONObject</h4>
 <pre>protected&nbsp;org.json.JSONObject&nbsp;toJSONObject()</pre>
-<div class="block">Converts Revenue object into a JSONObject to send to Amplitude servers</div>
+<div class="block">Converts Revenue object into a JSONObject to send to Rakam servers</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the JSON representation of this Revenue object</dd>
@@ -578,7 +578,7 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <ul class="navList" title="Navigation">
-<li><a href="../../../com/amplitude/api/package-summary.html">Package</a></li>
+<li><a href="../../../com/rakam/api/package-summary.html">Package</a></li>
 <li class="navBarCell1Rev">Class</li>
 <li><a href="package-tree.html">Tree</a></li>
 <li><a href="../../../deprecated-list.html">Deprecated</a></li>
@@ -588,11 +588,11 @@ extends java.lang.Object</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../com/amplitude/api/PinnedAmplitudeClient.SSLContextBuilder.html" title="class in com.amplitude.api"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../com/rakam/api/PinnedRakamClient.SSLContextBuilder.html" title="class in io.rakam.api"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
-<li><a href="../../../index.html?com/amplitude/api/Revenue.html" target="_top">Frames</a></li>
+<li><a href="../../../index.html?com/rakam/api/Revenue.html" target="_top">Frames</a></li>
 <li><a href="Revenue.html" target="_top">No&nbsp;Frames</a></li>
 </ul>
 <ul class="navList" id="allclasses_navbar_bottom">

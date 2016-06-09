@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.os.Handler;
 import android.os.HandlerThread;

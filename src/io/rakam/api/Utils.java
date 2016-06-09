@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -9,8 +9,8 @@ import org.json.JSONObject;
  */
 public class Utils {
 
-    public static final String TAG = "com.amplitude.api.Utils";
-    private static AmplitudeLog logger = AmplitudeLog.getLogger();
+    public static final String TAG = "Utils";
+    private static RakamLog logger = RakamLog.getLogger();
 
 
     /**

@@ -4,7 +4,7 @@ public class Constants {
 
     public static final String LIBRARY = "rakam-android";
     public static final String PLATFORM = "Android";
-    public static final String VERSION = "2.7.2";
+    public static final String VERSION = "2.7.3";
 
     public static final String DEFAULT_EVENT_LOG_URL = "https://app.rakam.io/";
 

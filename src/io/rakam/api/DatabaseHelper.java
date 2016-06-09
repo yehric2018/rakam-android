@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -20,7 +20,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     static DatabaseHelper instance;
 
-    private static final String TAG = "com.amplitude.api.DatabaseHelper";
+    private static final String TAG = "DatabaseHelper";
 
     protected static final String STORE_TABLE_NAME = "store";
     protected static final String LONG_STORE_TABLE_NAME = "long_store";
@@ -47,7 +47,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     private File file;
 
-    private static final AmplitudeLog logger = AmplitudeLog.getLogger();
+    private static final RakamLog logger = RakamLog.getLogger();
 
     static synchronized DatabaseHelper getDatabaseHelper(Context context) {
         if (instance == null) {
@@ -111,7 +111,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    synchronized long insertOrReplaceKeyValue(String key, String value) {
+    synchronized long insertOrReplaceKeyValue(String key, Object value) {
         return value == null ? deleteKeyFromTable(STORE_TABLE_NAME, key) :
             insertOrReplaceKeyValueToTable(STORE_TABLE_NAME, key, value);
     }

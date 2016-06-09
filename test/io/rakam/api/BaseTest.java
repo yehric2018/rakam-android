@@ -9,12 +9,8 @@ import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -67,7 +63,7 @@ public class BaseTest {
      * calling this method or passing false for withServer.
      */
     public void setUp(boolean withServer) throws Exception {
-        ShadowApplication.getInstance().setPackageName("com.rakam.test");
+        ShadowApplication.getInstance().setPackageName("io.rakam.test");
         context = ShadowApplication.getInstance().getApplicationContext();
 
         // Clear the database helper for each test. Better to have isolation.
@@ -111,7 +107,7 @@ public class BaseTest {
     }
 
     public RecordedRequest runRequest(RakamClient rakam) {
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 
@@ -246,26 +242,10 @@ public class BaseTest {
     }
 
     public JSONArray getEventsFromRequest(RecordedRequest request) throws JSONException {
-        Map<String, String> parsedBody = parseRequest(request.getUtf8Body());
-        if (parsedBody == null && !parsedBody.containsKey("e")) {
-            return null;
-        }
-        return new JSONArray(parsedBody.get("e"));
+         return new JSONObject(request.getBody().readUtf8()).getJSONArray("events");
     }
 
-    // parse request string into a key:value map
-    public static Map<String, String> parseRequest(String request) {
-        try {
-            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-            String[] pairs = request.split("&");
-            for (String pair : pairs) {
-                int idx = pair.indexOf("=");
-                query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
-            }
-            return query_pairs;
-        } catch (UnsupportedEncodingException e) {
-            fail(e.toString());
-        }
-        return null;
+    public JSONArray getUserPropertiesFromRequest(RecordedRequest request) throws JSONException {
+         return new JSONArray(request.getBody().readUtf8());
     }
 }

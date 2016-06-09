@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -21,7 +21,7 @@ import java.util.UUID;
 
 public class DeviceInfo {
 
-    public static final String TAG = "com.amplitude.api.DeviceInfo";
+    public static final String TAG = "DeviceInfo";
 
     public static final String OS_NAME = "android";
 
@@ -191,11 +191,11 @@ public class DeviceInfo {
                 Method getId = advertisingInfo.getClass().getMethod("getId");
                 advertisingId = (String) getId.invoke(advertisingInfo);
             } catch (ClassNotFoundException e) {
-                AmplitudeLog.getLogger().w(TAG, "Google Play Services SDK not found!");
+                RakamLog.getLogger().w(TAG, "Google Play Services SDK not found!");
             } catch (InvocationTargetException e) {
-                AmplitudeLog.getLogger().w(TAG, "Google Play Services not available");
+                RakamLog.getLogger().w(TAG, "Google Play Services not available");
             } catch (Exception e) {
-                AmplitudeLog.getLogger().e(TAG, "Encountered an error connecting to Google Play Services", e);
+                RakamLog.getLogger().e(TAG, "Encountered an error connecting to Google Play Services", e);
             }
             return advertisingId;
         }
@@ -211,17 +211,17 @@ public class DeviceInfo {
                 // status 0 corresponds to com.google.android.gms.common.ConnectionResult.SUCCESS;
                 return status != null && status.intValue() == 0;
             } catch (NoClassDefFoundError e) {
-                AmplitudeLog.getLogger().w(TAG, "Google Play Services Util not found!");
+                RakamLog.getLogger().w(TAG, "Google Play Services Util not found!");
             } catch (ClassNotFoundException e) {
-                AmplitudeLog.getLogger().w(TAG, "Google Play Services Util not found!");
+                RakamLog.getLogger().w(TAG, "Google Play Services Util not found!");
             } catch (NoSuchMethodException e) {
-                AmplitudeLog.getLogger().w(TAG, "Google Play Services not available");
+                RakamLog.getLogger().w(TAG, "Google Play Services not available");
             } catch (InvocationTargetException e) {
-                AmplitudeLog.getLogger().w(TAG, "Google Play Services not available");
+                RakamLog.getLogger().w(TAG, "Google Play Services not available");
             } catch (IllegalAccessException e) {
-                AmplitudeLog.getLogger().w(TAG, "Google Play Services not available");
+                RakamLog.getLogger().w(TAG, "Google Play Services not available");
             } catch (Exception e) {
-                AmplitudeLog.getLogger().w(TAG,
+                RakamLog.getLogger().w(TAG,
                         "Error when checking for Google Play Services: " + e);
             }
             return false;

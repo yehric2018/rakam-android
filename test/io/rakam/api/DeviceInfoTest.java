@@ -47,7 +47,7 @@ public class DeviceInfoTest {
 
     private Context context;
     private DeviceInfo deviceInfo;
-    private static final String TEST_VERSION_NAME = "com.rakam.test";
+    private static final String TEST_VERSION_NAME = "io.rakam.test";
     private static final String TEST_BRAND = "brand";
     private static final String TEST_MANUFACTURER = "manufacturer";
     private static final String TEST_MODEL = "model";

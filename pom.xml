@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.rakam</groupId>
   <artifactId>android-sdk</artifactId>
-  <version>2.7.2</version>
+  <version>2.7.3</version>
   <packaging>jar</packaging>
 
   <name>Rakam Android SDK</name>

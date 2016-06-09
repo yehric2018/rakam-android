@@ -164,10 +164,7 @@ public class InitializeTest extends BaseTest {
         ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
-        RecordedRequest request = runRequest(rakam);
-        JSONArray events = getEventsFromRequest(request);
-
-        assertEquals(events.getJSONObject(0).getLong("event_id"), 1L);
+        runRequest(rakam);
 
         assertEquals(rakam.getLastEventId(), 1L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY), 1L);

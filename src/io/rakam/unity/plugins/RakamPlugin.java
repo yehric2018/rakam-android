@@ -5,6 +5,7 @@ import android.content.Context;
 
 import io.rakam.api.Rakam;
 import io.rakam.api.Identify;
+import io.rakam.api.Revenue;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,12 +34,6 @@ public class RakamPlugin {
         Rakam.getInstance().enableForegroundTracking(app);
     }
 
-    @Deprecated
-    public static void startSession() { return; }
-
-    @Deprecated
-    public static void endSession() { return; }
-
     public static void logEvent(String event) {
         Rakam.getInstance().logEvent(event);
     }
@@ -63,16 +58,8 @@ public class RakamPlugin {
         Rakam.getInstance().setUserProperties(ToJSONObject(jsonProperties));
     }
 
-    public static void logRevenue(double amount) {
-        Rakam.getInstance().logRevenue(amount);
-    }
-
-    public static void logRevenue(String productId, int quantity, double price) {
-        Rakam.getInstance().logRevenue(productId, quantity, price);
-    }
-
-    public static void logRevenue(String productId, int quantity, double price, String receipt, String receiptSignature) {
-        Rakam.getInstance().logRevenue(productId, quantity, price, receipt, receiptSignature);
+    public static void logRevenue(Revenue revenue) {
+        Rakam.getInstance().logRevenue(revenue);
     }
 
     public static String getDeviceId() {
@@ -246,66 +233,66 @@ public class RakamPlugin {
         Rakam.getInstance().identify(new Identify().add(property, ToJSONObject(values)));
     }
 
-    // append user property
-    public static void appendUserProperty(String property, boolean value) {
-        Rakam.getInstance().identify(new Identify().append(property, value));
-    }
-
-    public static void appendUserProperty(String property, double value) {
-        Rakam.getInstance().identify(new Identify().append(property, value));
-    }
-
-    public static void appendUserProperty(String property, float value) {
-        Rakam.getInstance().identify(new Identify().append(property, value));
-    }
-
-    public static void appendUserProperty(String property, int value) {
-        Rakam.getInstance().identify(new Identify().append(property, value));
-    }
-
-    public static void appendUserProperty(String property, long value) {
-        Rakam.getInstance().identify(new Identify().append(property, value));
-    }
-
-    public static void appendUserProperty(String property, String value) {
-        Rakam.getInstance().identify(new Identify().append(property, value));
-    }
-
-    public static void appendUserPropertyDict(String property, String values) {
-        Rakam.getInstance().identify(new Identify().append(property, ToJSONObject(values)));
-    }
-
-    public static void appendUserPropertyList(String property, String values) {
-        JSONObject properties = ToJSONObject(values);
-        if (properties == null) {
-            return;
-        }
-        Rakam.getInstance().identify(new Identify().append(
-                property, properties.optJSONArray("list")
-        ));
-    }
-
-    public static void appendUserProperty(String property, boolean[] values) {
-        Rakam.getInstance().identify(new Identify().append(property, values));
-    }
-
-    public static void appendUserProperty(String property, double[] values) {
-        Rakam.getInstance().identify(new Identify().append(property, values));
-    }
-
-    public static void appendUserProperty(String property, float[] values) {
-        Rakam.getInstance().identify(new Identify().append(property, values));
-    }
-
-    public static void appendUserProperty(String property, int[] values) {
-        Rakam.getInstance().identify(new Identify().append(property, values));
-    }
-
-    public static void appendUserProperty(String property, long[] values) {
-        Rakam.getInstance().identify(new Identify().append(property, values));
-    }
-
-    public static void appendUserProperty(String property, String[] values) {
-        Rakam.getInstance().identify(new Identify().append(property, values));
-    }
+//    // append user property
+//    public static void appendUserProperty(String property, boolean value) {
+//        Rakam.getInstance().identify(new Identify().append(property, value));
+//    }
+//
+//    public static void appendUserProperty(String property, double value) {
+//        Rakam.getInstance().identify(new Identify().append(property, value));
+//    }
+//
+//    public static void appendUserProperty(String property, float value) {
+//        Rakam.getInstance().identify(new Identify().append(property, value));
+//    }
+//
+//    public static void appendUserProperty(String property, int value) {
+//        Rakam.getInstance().identify(new Identify().append(property, value));
+//    }
+//
+//    public static void appendUserProperty(String property, long value) {
+//        Rakam.getInstance().identify(new Identify().append(property, value));
+//    }
+//
+//    public static void appendUserProperty(String property, String value) {
+//        Rakam.getInstance().identify(new Identify().append(property, value));
+//    }
+//
+//    public static void appendUserPropertyDict(String property, String values) {
+//        Rakam.getInstance().identify(new Identify().append(property, ToJSONObject(values)));
+//    }
+//
+//    public static void appendUserPropertyList(String property, String values) {
+//        JSONObject properties = ToJSONObject(values);
+//        if (properties == null) {
+//            return;
+//        }
+//        Rakam.getInstance().identify(new Identify().append(
+//                property, properties.optJSONArray("list")
+//        ));
+//    }
+//
+//    public static void appendUserProperty(String property, boolean[] values) {
+//        Rakam.getInstance().identify(new Identify().append(property, values));
+//    }
+//
+//    public static void appendUserProperty(String property, double[] values) {
+//        Rakam.getInstance().identify(new Identify().append(property, values));
+//    }
+//
+//    public static void appendUserProperty(String property, float[] values) {
+//        Rakam.getInstance().identify(new Identify().append(property, values));
+//    }
+//
+//    public static void appendUserProperty(String property, int[] values) {
+//        Rakam.getInstance().identify(new Identify().append(property, values));
+//    }
+//
+//    public static void appendUserProperty(String property, long[] values) {
+//        Rakam.getInstance().identify(new Identify().append(property, values));
+//    }
+//
+//    public static void appendUserProperty(String property, String[] values) {
+//        Rakam.getInstance().identify(new Identify().append(property, values));
+//    }
 }

@@ -22,7 +22,7 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Before
     public void setUp() throws Exception {
-        ShadowApplication.getInstance().setPackageName("com.rakam.test");
+        ShadowApplication.getInstance().setPackageName("io.rakam.test");
         context = ShadowApplication.getInstance().getApplicationContext();
     }
 
@@ -41,15 +41,15 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgrade() {
-        String sourceName = "com.rakam.a" + "." + context.getPackageName();
+        String sourceName = "io.rakam.a" + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
-                .putLong("com.rakam.a.previousSessionId", 100L)
-                .putString("com.rakam.a.deviceId", "deviceid")
-                .putString("com.rakam.a.userId", "userid")
-                .putBoolean("com.rakam.a.optOut", true)
+                .putLong("io.rakam.a.previousSessionId", 100L)
+                .putString("io.rakam.a.deviceId", "deviceid")
+                .putString("io.rakam.a.userId", "userid")
+                .putBoolean("io.rakam.a.optOut", true)
                 .commit();
 
-        assertTrue(RakamClient.upgradePrefs(context, "com.rakam.a", null));
+        assertTrue(RakamClient.upgradePrefs(context, "io.rakam.a", null));
 
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
@@ -127,7 +127,7 @@ public class UpgradePrefsTest extends BaseTest {
     @Test
     public void testUpgradeDeviceIdFromLegacyToDB() {
         String deviceId = "device_id";
-        String legacyPkgName = "com.rakam.a";
+        String legacyPkgName = "io.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putString(legacyPkgName + ".deviceId", deviceId)
@@ -149,7 +149,7 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeDeviceIdFromLegacyToDBEmpty() {
-        String legacyPkgName = "com.rakam.a";
+        String legacyPkgName = "io.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putLong("partial.lastEventTime", 100L)
@@ -206,7 +206,7 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeOptOutFromLegacyToDB() {
-        String legacyPkgName = "com.rakam.a";
+        String legacyPkgName = "io.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putBoolean(legacyPkgName + ".optOut", true)
@@ -243,7 +243,7 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeUserIdFromLegacyToDB() {
-        String legacyPkgName = "com.rakam.a";
+        String legacyPkgName = "io.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putString(legacyPkgName + ".userId", "testUserId2").commit();
