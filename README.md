@@ -1,4 +1,4 @@
-[![Circle CI](https://circleci.com/gh/buremba/rakam-android.svg?style=badge&circle-token=e01cc9eb8ea55f82890973569bf55412848b9e49)](https://circleci.com/gh/buremba/rakam-android)
+[![CircleCI](https://circleci.com/gh/buremba/rakam-android.svg?style=svg)](https://circleci.com/gh/buremba/rakam-android)
 
 Rakam Android SDK
 ====================
@@ -363,3 +363,5 @@ The SDK includes support for SSL pinning, but it is undocumented and recommended
 
 ### SDK Logging ###
 You can disable all logging done in the SDK by calling `Rakam.getInstance().enableLogging(false)`. By default the logging level is Log.INFO, meaning info messages, errors, and asserts are logged, but verbose and debug messages are not. You can change the logging level, for example to enable debug messages you can do `Rakam.getInstance().setLogLevel(Log.DEBUG)`.
+
+**This library is a fork of [Amplitude-Android](https://github.com/amplitude/Amplitude-Android)** and adopted for Rakam
