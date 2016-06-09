@@ -363,3 +363,5 @@ The SDK includes support for SSL pinning, but it is undocumented and recommended
 
 ### SDK Logging ###
 You can disable all logging done in the SDK by calling `Rakam.getInstance().enableLogging(false)`. By default the logging level is Log.INFO, meaning info messages, errors, and asserts are logged, but verbose and debug messages are not. You can change the logging level, for example to enable debug messages you can do `Rakam.getInstance().setLogLevel(Log.DEBUG)`.
+
+**This library is a fork of [Amplitude-Android](https://github.com/amplitude/Amplitude-Android)** and adopted for Rakam
