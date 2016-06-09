@@ -1,4 +1,4 @@
-[![Circle CI](https://circleci.com/gh/buremba/rakam-android.svg?style=badge&circle-token=e01cc9eb8ea55f82890973569bf55412848b9e49)](https://circleci.com/gh/buremba/rakam-android)
+[![CircleCI](https://circleci.com/gh/buremba/rakam-android.svg?style=svg)](https://circleci.com/gh/buremba/rakam-android)
 
 Rakam Android SDK
 ====================
