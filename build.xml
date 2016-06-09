@@ -199,7 +199,7 @@
         <echo message="Cloning demo app..."/>
 
         <exec dir="." executable="rm"><arg line="-rf test-release"/></exec>
-        <exec dir="." executable="git"><arg line="clone https://github.io/rakam/AndroidDemo test-release"/></exec>
+        <exec dir="." executable="git"><arg line="clone https://github.com/buremba/rakam-android-demo test-release"/></exec>
         <exec dir="test-release" executable="./rakam-test.sh"><arg line="${version}"/></exec>
         <exec dir="." executable="rm"><arg line="-rf test-release"/></exec>
     </target>
