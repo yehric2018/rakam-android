@@ -1,12 +1,12 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
 import static org.junit.Assert.assertNotNull;
@@ -28,23 +28,23 @@ public class PinningTest extends BaseTest {
 
     @Test
     public void testSslPinning() {
-        amplitude = PinnedAmplitudeClient.getInstance();
-        amplitude.initialize(context, "1cc2c1978ebab0f6451112a8f5df4f4e");
+        rakam = PinnedRakamClient.getInstance();
+        rakam.initialize(context, "1cc2c1978ebab0f6451112a8f5df4f4e");
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
-        amplitude.logEvent("pinned_test_event", null);
+        rakam.logEvent("pinned_test_event", null);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
-        ShadowLooper httplooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 
-        assertNull(amplitude.lastError);
+        assertNull(rakam.lastError);
     }
 
-    private static class InvalidPinnedAmplitudeClient extends PinnedAmplitudeClient {
+    private static class InvalidPinnedRakamClient extends PinnedRakamClient {
         public static final SSLContextBuilder INVALID_SSL_CONTEXT = new SSLContextBuilder()
           .addCertificate(""
               + "MIIFVjCCBD6gAwIBAgIRAObsedhCFsMHaYL156gA4XAwDQYJKoZIhvcNAQELBQAwgZ"
@@ -76,7 +76,7 @@ public class PinningTest extends BaseTest {
               + "H1mWAYpFPJ7rOmpCReC6brxCho/7jg+fBqEUfCGyrMtYSRejCc9aZGBQmuz5v5iT6P"
               + "XCBeVmjEX3kh4bkRPHJ5vyASNXUkF3nwVAe4cwOoLHN8o=");
 
-        public InvalidPinnedAmplitudeClient() {
+        public InvalidPinnedRakamClient() {
             super();
             super.getPinnedCertSslSocketFactory(INVALID_SSL_CONTEXT);
         }
@@ -84,19 +84,19 @@ public class PinningTest extends BaseTest {
 
     @Test
     public void testSslPinningInvalid() {
-        amplitude = new InvalidPinnedAmplitudeClient();
-        amplitude.initialize(context, "1cc2c1978ebab0f6451112a8f5df4f4e");
+        rakam = new InvalidPinnedRakamClient();
+        rakam.initialize(context, "1cc2c1978ebab0f6451112a8f5df4f4e");
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
-        amplitude.logEvent("pinned_test_event_invalid", null);
+        rakam.logEvent("pinned_test_event_invalid", null);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
-        ShadowLooper httplooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 
-        assertNotNull(amplitude.lastError);
+        assertNotNull(rakam.lastError);
     }
 }

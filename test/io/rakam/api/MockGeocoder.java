@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.location.Geocoder;
 

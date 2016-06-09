@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -12,8 +12,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Arrays;
@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
-public class AmplitudeClientTest extends BaseTest {
+public class RakamClientTest extends BaseTest {
 
     private String generateStringWithLength(int length, char c) {
         if (length < 0) return "";
@@ -45,7 +45,7 @@ public class AmplitudeClientTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        amplitude.initialize(context, apiKey);
+        rakam.initialize(context, apiKey);
     }
 
     @After
@@ -57,34 +57,34 @@ public class AmplitudeClientTest extends BaseTest {
     public void testSetUserId() {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         String userId = "user_id";
-        amplitude.setUserId(userId);
-        assertEquals(userId, dbHelper.getValue(AmplitudeClient.USER_ID_KEY));
-        assertEquals(userId, amplitude.getUserId());
+        rakam.setUserId(userId);
+        assertEquals(userId, dbHelper.getValue(RakamClient.USER_ID_KEY));
+        assertEquals(userId, rakam.getUserId());
 
         // try setting to null
-        amplitude.setUserId(null);
-        assertNull(dbHelper.getValue(AmplitudeClient.USER_ID_KEY));
-        assertNull(amplitude.getUserId());
+        rakam.setUserId(null);
+        assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
+        assertNull(rakam.getUserId());
     }
 
     @Test
     public void testSetUserIdTwice() {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         String userId1 = "user_id1";
         String userId2 = "user_id2";
 
-        amplitude.setUserId(userId1);
-        assertEquals(amplitude.getUserId(), userId1);
-        amplitude.logEvent("event1");
+        rakam.setUserId(userId1);
+        assertEquals(rakam.getUserId(), userId1);
+        rakam.logEvent("event1");
         looper.runToEndOfTasks();
 
         JSONObject event1 = getLastUnsentEvent();
         assertEquals(event1.optString("event_type"), "event1");
         assertEquals(event1.optString("user_id"), userId1);
 
-        amplitude.setUserId(userId2);
-        assertEquals(amplitude.getUserId(), userId2);
-        amplitude.logEvent("event2");
+        rakam.setUserId(userId2);
+        assertEquals(rakam.getUserId(), userId2);
+        rakam.logEvent("event2");
         looper.runToEndOfTasks();
 
         JSONObject event2 = getLastUnsentEvent();
@@ -95,53 +95,53 @@ public class AmplitudeClientTest extends BaseTest {
     @Test
     public void testSetDeviceId() {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
-        assertNull(amplitude.getDeviceId());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        assertNull(rakam.getDeviceId());
         looper.runToEndOfTasks();
 
-        String deviceId = amplitude.getDeviceId(); // Randomly generated device ID
+        String deviceId = rakam.getDeviceId(); // Randomly generated device ID
         assertNotNull(deviceId);
         assertEquals(deviceId.length(), 36 + 1); // 36 for UUID, + 1 for appended R
         assertEquals(deviceId.charAt(36), 'R');
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
 
         // test setting invalid device ids
-        amplitude.setDeviceId(null);
-        assertEquals(amplitude.getDeviceId(), deviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        rakam.setDeviceId(null);
+        assertEquals(rakam.getDeviceId(), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
-        amplitude.setDeviceId("");
-        assertEquals(amplitude.getDeviceId(), deviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        rakam.setDeviceId("");
+        assertEquals(rakam.getDeviceId(), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
-        amplitude.setDeviceId("9774d56d682e549c");
-        assertEquals(amplitude.getDeviceId(), deviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        rakam.setDeviceId("9774d56d682e549c");
+        assertEquals(rakam.getDeviceId(), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
-        amplitude.setDeviceId("unknown");
-        assertEquals(amplitude.getDeviceId(), deviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        rakam.setDeviceId("unknown");
+        assertEquals(rakam.getDeviceId(), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
-        amplitude.setDeviceId("000000000000000");
-        assertEquals(amplitude.getDeviceId(), deviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        rakam.setDeviceId("000000000000000");
+        assertEquals(rakam.getDeviceId(), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
-        amplitude.setDeviceId("Android");
-        assertEquals(amplitude.getDeviceId(), deviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        rakam.setDeviceId("Android");
+        assertEquals(rakam.getDeviceId(), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
-        amplitude.setDeviceId("DEFACE");
-        assertEquals(amplitude.getDeviceId(), deviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), deviceId);
+        rakam.setDeviceId("DEFACE");
+        assertEquals(rakam.getDeviceId(), deviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), deviceId);
 
         // set valid device id
         String newDeviceId = UUID.randomUUID().toString();
-        amplitude.setDeviceId(newDeviceId);
-        assertEquals(amplitude.getDeviceId(), newDeviceId);
-        assertEquals(dbHelper.getValue(amplitude.DEVICE_ID_KEY), newDeviceId);
+        rakam.setDeviceId(newDeviceId);
+        assertEquals(rakam.getDeviceId(), newDeviceId);
+        assertEquals(dbHelper.getValue(rakam.DEVICE_ID_KEY), newDeviceId);
 
-        amplitude.logEvent("test");
+        rakam.logEvent("test");
         looper.runToEndOfTasks();
         JSONObject event = getLastUnsentEvent();
         assertEquals(event.optString("event_type"), "test");
@@ -150,20 +150,20 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testSetUserProperties() throws JSONException {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
 
         // setting null or empty user properties does nothing
-        amplitude.setUserProperties(null);
+        rakam.setUserProperties(null);
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 0);
-        amplitude.setUserProperties(new JSONObject());
+        rakam.setUserProperties(new JSONObject());
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 0);
 
         JSONObject userProperties = new JSONObject().put("key1", "value1").put("key2", "value2");
-        amplitude.setUserProperties(userProperties);
+        rakam.setUserProperties(userProperties);
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 1);
@@ -198,8 +198,8 @@ public class AmplitudeClientTest extends BaseTest {
         // identify should ignore this since duplicate key
         identify.set(property4, value3);
 
-        amplitude.identify(identify);
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+        rakam.identify(identify);
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(getUnsentIdentifyCount(), 1);
         assertEquals(getUnsentEventCount(), 0);
         JSONObject event = getLastUnsentIdentify();
@@ -217,21 +217,21 @@ public class AmplitudeClientTest extends BaseTest {
     @Test
     public void testReloadDeviceIdFromDatabase() {
         String deviceId = "test_device_id";
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
 
-        assertNull(amplitude.getDeviceId());
+        assertNull(rakam.getDeviceId());
         DatabaseHelper.getDatabaseHelper(context).insertOrReplaceKeyValue(
-                AmplitudeClient.DEVICE_ID_KEY,
+                RakamClient.DEVICE_ID_KEY,
                 deviceId
         );
         looper.getScheduler().advanceToLastPostedRunnable();
-        assertEquals(deviceId, amplitude.getDeviceId());
+        assertEquals(deviceId, rakam.getDeviceId());
     }
 
     @Test
     public void testDoesNotUpgradeDeviceIdFromSharedPrefsToDatabase() {
-        assertNull(amplitude.getDeviceId());
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        assertNull(rakam.getDeviceId());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
 
         // initializeDeviceId no longer fetches from SharedPrefs, will get advertising ID instead
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
@@ -239,70 +239,70 @@ public class AmplitudeClientTest extends BaseTest {
         prefs.edit().putString(Constants.PREFKEY_DEVICE_ID, "test_device_id").commit();
 
         looper.getScheduler().advanceToLastPostedRunnable();
-        String deviceId = amplitude.getDeviceId();
+        String deviceId = rakam.getDeviceId();
         assertTrue(deviceId.endsWith("R"));
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertEquals(
                 deviceId,
-                dbHelper.getValue(AmplitudeClient.DEVICE_ID_KEY)
+                dbHelper.getValue(RakamClient.DEVICE_ID_KEY)
         );
     }
 
     @Test
     public void testGetDeviceIdWithoutAdvertisingId() {
-        assertNull(amplitude.getDeviceId());
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        assertNull(rakam.getDeviceId());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.getScheduler().advanceToLastPostedRunnable();
-        assertNotNull(amplitude.getDeviceId());
-        assertEquals(37, amplitude.getDeviceId().length());
-        String deviceId = amplitude.getDeviceId();
+        assertNotNull(rakam.getDeviceId());
+        assertEquals(37, rakam.getDeviceId().length());
+        String deviceId = rakam.getDeviceId();
         assertTrue(deviceId.endsWith("R"));
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertEquals(
                 deviceId,
-                dbHelper.getValue(AmplitudeClient.DEVICE_ID_KEY)
+                dbHelper.getValue(RakamClient.DEVICE_ID_KEY)
         );
     }
 
     @Test
     public void testOptOut() {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
-        ShadowLooper httplooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
 
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        assertFalse(amplitude.isOptedOut());
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.OPT_OUT_KEY), 0L);
+        assertFalse(rakam.isOptedOut());
+        assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 0L);
 
-        amplitude.setOptOut(true);
-        assertTrue(amplitude.isOptedOut());
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.OPT_OUT_KEY), 1L);
-        RecordedRequest request = sendEvent(amplitude, "test_opt_out", null);
+        rakam.setOptOut(true);
+        assertTrue(rakam.isOptedOut());
+        assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 1L);
+        RecordedRequest request = sendEvent(rakam, "test_opt_out", null);
         assertNull(request);
 
         // Event shouldn't be sent event once opt out is turned off.
-        amplitude.setOptOut(false);
-        assertFalse(amplitude.isOptedOut());
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.OPT_OUT_KEY), 0L);
+        rakam.setOptOut(false);
+        assertFalse(rakam.isOptedOut());
+        assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 0L);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         httplooper.runToEndOfTasks();
         assertNull(request);
 
-        request = sendEvent(amplitude, "test_opt_out", null);
+        request = sendEvent(rakam, "test_opt_out", null);
         assertNotNull(request);
     }
 
     @Test
     public void testOffline() {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
-        ShadowLooper httplooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
 
-        amplitude.setOffline(true);
-        RecordedRequest request = sendEvent(amplitude, "test_offline", null);
+        rakam.setOffline(true);
+        RecordedRequest request = sendEvent(rakam, "test_offline", null);
         assertNull(request);
 
         // Events should be sent after offline is turned off.
-        amplitude.setOffline(false);
+        rakam.setOffline(false);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         httplooper.runToEndOfTasks();
@@ -316,7 +316,7 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testLogEvent() {
-        RecordedRequest request = sendEvent(amplitude, "test_event", null);
+        RecordedRequest request = sendEvent(rakam, "test_event", null);
         assertNotNull(request);
     }
 
@@ -325,7 +325,7 @@ public class AmplitudeClientTest extends BaseTest {
         long [] timestamps = {1000, 1001};
         clock.setTimestamps(timestamps);
 
-        RecordedRequest request = sendIdentify(amplitude, new Identify().set("key", "value"));
+        RecordedRequest request = sendIdentify(rakam, new Identify().set("key", "value"));
         assertNotNull(request);
         JSONArray events = getEventsFromRequest(request);
         assertEquals(events.length(), 1);
@@ -344,21 +344,21 @@ public class AmplitudeClientTest extends BaseTest {
 
         // verify db state
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        assertNull(dbHelper.getValue(AmplitudeClient.USER_ID_KEY));
-        assertEquals((long)dbHelper.getLongValue(AmplitudeClient.LAST_IDENTIFY_ID_KEY), 1L);
-        assertEquals((long)dbHelper.getLongValue(AmplitudeClient.LAST_EVENT_ID_KEY), -1L);
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.SEQUENCE_NUMBER_KEY), 1L);
-        assertEquals((long)dbHelper.getLongValue(AmplitudeClient.LAST_EVENT_TIME_KEY), timestamps[0]);
+        assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
+        assertEquals((long)dbHelper.getLongValue(RakamClient.LAST_IDENTIFY_ID_KEY), 1L);
+        assertEquals((long)dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY), -1L);
+        assertEquals((long) dbHelper.getLongValue(RakamClient.SEQUENCE_NUMBER_KEY), 1L);
+        assertEquals((long)dbHelper.getLongValue(RakamClient.LAST_EVENT_TIME_KEY), timestamps[0]);
     }
 
     @Test
     public void testNullIdentify() {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 0);
 
-        amplitude.identify(null);
+        rakam.identify(null);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
@@ -371,13 +371,13 @@ public class AmplitudeClientTest extends BaseTest {
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
 
-        amplitude.logEvent("test_event1");
-        amplitude.logEvent("test_event2");
-        amplitude.logEvent("test_event3");
+        rakam.logEvent("test_event1");
+        rakam.logEvent("test_event2");
+        rakam.logEvent("test_event3");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
@@ -391,7 +391,7 @@ public class AmplitudeClientTest extends BaseTest {
         }
 
         // send response and check that remove events works properly
-        runRequest(amplitude);
+        runRequest(rakam);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
@@ -404,13 +404,13 @@ public class AmplitudeClientTest extends BaseTest {
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
-        amplitude.identify(new Identify().set("photo_count", 1));
-        amplitude.identify(new Identify().add("karma", 2));
-        amplitude.identify(new Identify().unset("gender"));
+        rakam.identify(new Identify().set("photo_count", 1));
+        rakam.identify(new Identify().add("karma", 2));
+        rakam.identify(new Identify().unset("gender"));
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
@@ -445,7 +445,7 @@ public class AmplitudeClientTest extends BaseTest {
         ));
 
         // send response and check that remove events works properly
-        runRequest(amplitude);
+        runRequest(rakam);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
@@ -458,18 +458,18 @@ public class AmplitudeClientTest extends BaseTest {
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
-        amplitude.logEvent("test_event");
-        amplitude.identify(new Identify().add("photo_count", 1));
+        rakam.logEvent("test_event");
+        rakam.identify(new Identify().add("photo_count", 1));
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
         // verify some internal counters
         assertEquals(getUnsentEventCount(), 1);
-        assertEquals(amplitude.getLastEventId(), 1);
+        assertEquals(rakam.getLastEventId(), 1);
         assertEquals(getUnsentIdentifyCount(), 1);
-        assertEquals(amplitude.getLastIdentifyId(), 1);
+        assertEquals(rakam.getLastIdentifyId(), 1);
 
         JSONArray unsentEvents = getUnsentEvents(1);
         assertEquals(unsentEvents.optJSONObject(0).optString("event_type"), "test_event");
@@ -486,7 +486,7 @@ public class AmplitudeClientTest extends BaseTest {
         ));
 
         // send response and check that remove events works properly
-        RecordedRequest request = runRequest(amplitude);
+        RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
         assertEquals(events.length(), 2);
         assertEquals(events.optJSONObject(0).optString("event_type"), "test_event");
@@ -506,27 +506,27 @@ public class AmplitudeClientTest extends BaseTest {
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
-        amplitude.logEvent("test_event1");
-        amplitude.identify(new Identify().add("photo_count", 1));
-        amplitude.logEvent("test_event2");
-        amplitude.logEvent("test_event3");
-        amplitude.logEvent("test_event4");
-        amplitude.identify(new Identify().set("gender", "male"));
-        amplitude.identify(new Identify().unset("karma"));
+        rakam.logEvent("test_event1");
+        rakam.identify(new Identify().add("photo_count", 1));
+        rakam.logEvent("test_event2");
+        rakam.logEvent("test_event3");
+        rakam.logEvent("test_event4");
+        rakam.identify(new Identify().set("gender", "male"));
+        rakam.identify(new Identify().unset("karma"));
 
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
         // verify some internal counters
         assertEquals(getUnsentEventCount(), 4);
-        assertEquals(amplitude.getLastEventId(), 4);
+        assertEquals(rakam.getLastEventId(), 4);
         assertEquals(getUnsentIdentifyCount(), 3);
-        assertEquals(amplitude.getLastIdentifyId(), 3);
+        assertEquals(rakam.getLastIdentifyId(), 3);
 
-        RecordedRequest request = runRequest(amplitude);
+        RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
         assertEquals(events.length(), 7);
 
@@ -589,28 +589,28 @@ public class AmplitudeClientTest extends BaseTest {
 
         // verify db state
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        assertNull(dbHelper.getValue(AmplitudeClient.USER_ID_KEY));
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.LAST_IDENTIFY_ID_KEY), 3L);
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.LAST_EVENT_ID_KEY), 4L);
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.SEQUENCE_NUMBER_KEY), 7L);
-        assertEquals((long)dbHelper.getLongValue(AmplitudeClient.LAST_EVENT_TIME_KEY), timestamps[6]);
+        assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
+        assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_IDENTIFY_ID_KEY), 3L);
+        assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY), 4L);
+        assertEquals((long) dbHelper.getLongValue(RakamClient.SEQUENCE_NUMBER_KEY), 7L);
+        assertEquals((long)dbHelper.getLongValue(RakamClient.LAST_EVENT_TIME_KEY), timestamps[6]);
     }
 
     @Test
     public void testMergeEventBackwardsCompatible() throws JSONException {
-        amplitude.setEventUploadThreshold(4);
+        rakam.setEventUploadThreshold(4);
         // eventst logged before v2.1.0 won't have a sequence number, should get priority
         long [] timestamps = {1, 1, 2, 3};
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
-        amplitude.uploadingCurrently.set(true);
-        amplitude.identify(new Identify().add("photo_count", 1));
-        amplitude.logEvent("test_event1");
-        amplitude.identify(new Identify().add("photo_count", 2));
+        rakam.uploadingCurrently.set(true);
+        rakam.identify(new Identify().add("photo_count", 1));
+        rakam.logEvent("test_event1");
+        rakam.identify(new Identify().add("photo_count", 2));
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
@@ -623,18 +623,18 @@ public class AmplitudeClientTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         dbHelper.removeEvent(1);
         dbHelper.addEvent(event.toString());
-        amplitude.uploadingCurrently.set(false);
+        rakam.uploadingCurrently.set(false);
 
         // log another event to trigger upload
-        amplitude.logEvent("test_event2");
+        rakam.logEvent("test_event2");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
         // verify some internal counters
         assertEquals(getUnsentEventCount(), 2);
-        assertEquals(amplitude.getLastEventId(), 3);
+        assertEquals(rakam.getLastEventId(), 3);
         assertEquals(getUnsentIdentifyCount(), 2);
-        assertEquals(amplitude.getLastIdentifyId(), 2);
+        assertEquals(rakam.getLastIdentifyId(), 2);
 
         JSONObject expectedIdentify1 = new JSONObject();
         expectedIdentify1.put(Constants.AMP_OP_ADD, new JSONObject().put("photo_count", 1));
@@ -642,7 +642,7 @@ public class AmplitudeClientTest extends BaseTest {
         expectedIdentify2.put(Constants.AMP_OP_ADD, new JSONObject().put("photo_count", 2));
 
         // send response and check that merging events correctly ordered events
-        RecordedRequest request = runRequest(amplitude);
+        RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
         assertEquals(events.length(), 4);
         assertEquals(events.optJSONObject(0).optString("event_type"), "test_event1");
@@ -672,21 +672,21 @@ public class AmplitudeClientTest extends BaseTest {
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
         for (int i = 0; i < Constants.EVENT_UPLOAD_THRESHOLD; i++) {
-            amplitude.logEvent("test_event" + i);
+            rakam.logEvent("test_event" + i);
         }
-        amplitude.identify(new Identify().add("photo_count", 1));
-        amplitude.identify(new Identify().add("photo_count", 2));
+        rakam.identify(new Identify().add("photo_count", 1));
+        rakam.identify(new Identify().add("photo_count", 2));
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
         assertEquals(getUnsentEventCount(), Constants.EVENT_UPLOAD_THRESHOLD);
         assertEquals(getUnsentIdentifyCount(), 2);
 
-        RecordedRequest request = runRequest(amplitude);
+        RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
         for (int i = 0; i < events.length(); i++) {
             assertEquals(events.optJSONObject(i).optString("event_type"), "test_event" + i);
@@ -700,11 +700,11 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testLogEventHasUUID() {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
-        amplitude.logEvent("test_event");
+        rakam.logEvent("test_event");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
@@ -716,13 +716,13 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testLogRevenue() {
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         JSONObject event, apiProps;
 
-        amplitude.logRevenue(10.99);
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+        rakam.logRevenue(10.99);
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         event = getLastUnsentEvent();
         apiProps = event.optJSONObject("api_properties");
@@ -734,9 +734,9 @@ public class AmplitudeClientTest extends BaseTest {
         assertNull(apiProps.optString("receipt", null));
         assertNull(apiProps.optString("receiptSig", null));
 
-        amplitude.logRevenue("ID1", 2, 9.99);
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+        rakam.logRevenue("ID1", 2, 9.99);
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         event = getLastUnsentEvent();
         apiProps = event.optJSONObject("api_properties");;
@@ -748,9 +748,9 @@ public class AmplitudeClientTest extends BaseTest {
         assertNull(apiProps.optString("receipt", null));
         assertNull(apiProps.optString("receiptSig", null));
 
-        amplitude.logRevenue("ID2", 3, 8.99, "RECEIPT", "SIG");
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+        rakam.logRevenue("ID2", 3, 8.99, "RECEIPT", "SIG");
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         event = getLastUnsentEvent();
         apiProps = event.optJSONObject("api_properties");
@@ -762,18 +762,18 @@ public class AmplitudeClientTest extends BaseTest {
         assertEquals("RECEIPT", apiProps.optString("receipt"));
         assertEquals("SIG", apiProps.optString("receiptSig"));
 
-        assertNotNull(runRequest(amplitude));
+        assertNotNull(runRequest(rakam));
     }
 
     @Test
     public void testLogRevenueV2() throws JSONException {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
         // ignore invalid revenue objects
-        amplitude.logRevenueV2(null);
+        rakam.logRevenueV2(null);
         looper.runToEndOfTasks();
-        amplitude.logRevenueV2(new Revenue());
+        rakam.logRevenueV2(new Revenue());
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
 
@@ -790,7 +790,7 @@ public class AmplitudeClientTest extends BaseTest {
         revenue.setQuantity(quantity).setReceipt(receipt, receiptSig);
         revenue.setRevenueType(revenueType).setRevenueProperties(props);
 
-        amplitude.logRevenueV2(revenue);
+        rakam.logRevenueV2(revenue);
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 1);
 
@@ -824,10 +824,10 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testLogEventSync() {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 
-        amplitude.logEventSync("test_event_sync", null);
+        rakam.logEventSync("test_event_sync", null);
 
         // Event should be in the database synchronously.
         JSONObject event = getLastEvent();
@@ -836,7 +836,7 @@ public class AmplitudeClientTest extends BaseTest {
         looper.runToEndOfTasks();
 
         server.enqueue(new MockResponse().setBody("success"));
-        ShadowLooper httplooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 
         try {
@@ -848,11 +848,11 @@ public class AmplitudeClientTest extends BaseTest {
 
     /**
      * Test for not excepting on empty event properties.
-     * See https://github.com/amplitude/Amplitude-Android/issues/35
+     * See https://github.com/buremba/rakam-android/issues/35
      */
     @Test
     public void testEmptyEventProps() {
-        RecordedRequest request = sendEvent(amplitude, "test_event", new JSONObject());
+        RecordedRequest request = sendEvent(rakam, "test_event", new JSONObject());
         assertNotNull(request);
     }
 
@@ -861,13 +861,13 @@ public class AmplitudeClientTest extends BaseTest {
      */
     @Test
     public void testSaveEventLogic() {
-        amplitude.trackSessionEvents(true);
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        rakam.trackSessionEvents(true);
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
 
         for (int i = 0; i < Constants.EVENT_UPLOAD_THRESHOLD; i++) {
-            amplitude.logEvent("test");
+            rakam.logEvent("test");
         }
         looper.runToEndOfTasks();
         // unsent events will be threshold (+1 for start session)
@@ -875,14 +875,14 @@ public class AmplitudeClientTest extends BaseTest {
 
         server.enqueue(new MockResponse().setBody("invalid_api_key"));
         server.enqueue(new MockResponse().setBody("bad_checksum"));
-        ShadowLooper httpLooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httpLooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httpLooper.runToEndOfTasks();
 
         // no events sent, queue should be same size
         assertEquals(getUnsentEventCount(), Constants.EVENT_UPLOAD_THRESHOLD + 1);
 
         for (int i = 0; i < Constants.EVENT_UPLOAD_THRESHOLD; i++) {
-            amplitude.logEvent("test");
+            rakam.logEvent("test");
         }
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), Constants.EVENT_UPLOAD_THRESHOLD * 2 + 1);
@@ -894,25 +894,25 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testRequestTooLargeBackoffLogic() {
-        amplitude.trackSessionEvents(true);
+        rakam.trackSessionEvents(true);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
         // verify event queue empty
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
 
         // 413 error force backoff with 2 events --> new upload limit will be 1
-        amplitude.logEvent("test");
+        rakam.logEvent("test");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 2); // 2 events: start session + test
         server.enqueue(new MockResponse().setResponseCode(413));
-        ShadowLooper httpLooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httpLooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httpLooper.runToEndOfTasks();
 
         // 413 error with upload limit 1 will remove the top (start session) event
-        amplitude.logEvent("test");
+        rakam.logEvent("test");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 3);
@@ -934,8 +934,8 @@ public class AmplitudeClientTest extends BaseTest {
         assertEquals(getUnsentEventCount(), 1);
 
         // verify backoff disabled - queue 2 more events, see that all get uploaded
-        amplitude.logEvent("test");
-        amplitude.logEvent("test");
+        rakam.logEvent("test");
+        rakam.logEvent("test");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 3);
@@ -953,25 +953,25 @@ public class AmplitudeClientTest extends BaseTest {
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 0);
 
-        amplitude.setEventUploadMaxBatchSize(2);
-        amplitude.setEventUploadThreshold(2);
-        amplitude.uploadingCurrently.set(true); // block uploading until we queue up enough events
+        rakam.setEventUploadMaxBatchSize(2);
+        rakam.setEventUploadThreshold(2);
+        rakam.uploadingCurrently.set(true); // block uploading until we queue up enough events
         for (int i = 0; i < 6; i++) {
-            amplitude.logEvent(String.format("test%d", i));
+            rakam.logEvent(String.format("test%d", i));
             looper.runToEndOfTasks();
             looper.runToEndOfTasks();
             assertEquals(dbHelper.getTotalEventCount(), i+1);
         }
-        amplitude.uploadingCurrently.set(false);
+        rakam.uploadingCurrently.set(false);
 
         // allow event uploads
         // 7 events in queue, should upload 2, and then 2, and then 2, and then 2
-        amplitude.logEvent("test7");
+        rakam.logEvent("test7");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(dbHelper.getEventCount(), 7);
@@ -980,7 +980,7 @@ public class AmplitudeClientTest extends BaseTest {
 
         // server response
         server.enqueue(new MockResponse().setBody("success"));
-        ShadowLooper httpLooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httpLooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httpLooper.runToEndOfTasks();
 
         // when receive success response, continue uploading
@@ -1014,14 +1014,14 @@ public class AmplitudeClientTest extends BaseTest {
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 0);
 
         // 413 error force backoff with 2 events --> new upload limit will be 1
-        amplitude.identify(new Identify().add("photo_count", 1));
-        amplitude.logEvent("test1");
+        rakam.identify(new Identify().add("photo_count", 1));
+        rakam.logEvent("test1");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
@@ -1029,11 +1029,11 @@ public class AmplitudeClientTest extends BaseTest {
         assertEquals(getUnsentEventCount(), 1);
 
         server.enqueue(new MockResponse().setResponseCode(413));
-        ShadowLooper httpLooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httpLooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httpLooper.runToEndOfTasks();
 
         // 413 error with upload limit 1 will remove the top identify
-        amplitude.logEvent("test2");
+        rakam.logEvent("test2");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 2);
@@ -1051,8 +1051,8 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testLimitTrackingEnabled() {
-        amplitude.logEvent("test");
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+        rakam.logEvent("test");
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         JSONObject apiProperties = getLastUnsentEvent().optJSONObject("api_properties");
         assertTrue(apiProperties.has("limit_ad_tracking"));
         assertFalse(apiProperties.optBoolean("limit_ad_tracking"));
@@ -1063,7 +1063,7 @@ public class AmplitudeClientTest extends BaseTest {
     public void testTruncateString() {
         String longString = generateStringWithLength(Constants.MAX_STRING_LENGTH * 2, 'c');
         assertEquals(longString.length(), Constants.MAX_STRING_LENGTH * 2);
-        String truncatedString = amplitude.truncate(longString);
+        String truncatedString = rakam.truncate(longString);
         assertEquals(truncatedString.length(), Constants.MAX_STRING_LENGTH);
         assertEquals(truncatedString, generateStringWithLength(Constants.MAX_STRING_LENGTH, 'c'));
     }
@@ -1079,7 +1079,7 @@ public class AmplitudeClientTest extends BaseTest {
         object.put("array", new JSONArray().put(longString).put(10));
         object.put("jsonobject", new JSONObject().put("long string", longString));
 
-        object = amplitude.truncate(object);
+        object = rakam.truncate(object);
         assertEquals(object.optInt("int value"), 10);
         assertEquals(object.optBoolean("bool value"), false);
         assertEquals(object.optString("long string"), truncString);
@@ -1092,8 +1092,8 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testTruncateNullJSONObject() throws JSONException {
-        assertNull(amplitude.truncate((JSONObject) null));
-        assertNull(amplitude.truncate((JSONArray) null));
+        assertNull(rakam.truncate((JSONObject) null));
+        assertNull(rakam.truncate((JSONArray) null));
     }
 
     @Test
@@ -1105,14 +1105,14 @@ public class AmplitudeClientTest extends BaseTest {
         clock.setTimestamps(timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
-        amplitude.logEvent("test", new JSONObject().put("long_string", longString));
-        amplitude.identify(new Identify().set("long_string", longString));
+        rakam.logEvent("test", new JSONObject().put("long_string", longString));
+        rakam.identify(new Identify().set("long_string", longString));
 
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
-        RecordedRequest request = runRequest(amplitude);
+        RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
 
         assertEquals(events.optJSONObject(0).optString("event_type"), "test");
@@ -1132,26 +1132,26 @@ public class AmplitudeClientTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         int limit = 10;
         for (int i = 0; i < limit; i++) {
-            assertEquals(amplitude.getNextSequenceNumber(), i+1);
-            assertEquals(dbHelper.getLongValue(AmplitudeClient.SEQUENCE_NUMBER_KEY), Long.valueOf(i+1));
+            assertEquals(rakam.getNextSequenceNumber(), i+1);
+            assertEquals(dbHelper.getLongValue(RakamClient.SEQUENCE_NUMBER_KEY), Long.valueOf(i+1));
         }
     }
 
     @Test
     public void testSetOffline() throws JSONException {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
-        amplitude.setOffline(true);
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        rakam.setOffline(true);
 
-        amplitude.logEvent("test1");
-        amplitude.logEvent("test2");
-        amplitude.identify(new Identify().unset("key1"));
+        rakam.logEvent("test1");
+        rakam.logEvent("test2");
+        rakam.identify(new Identify().unset("key1"));
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 2);
         assertEquals(getUnsentIdentifyCount(), 1);
 
-        amplitude.setOffline(false);
+        rakam.setOffline(false);
         looper.runToEndOfTasks();
-        RecordedRequest request = runRequest(amplitude);
+        RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
         looper.runToEndOfTasks();
 
@@ -1168,21 +1168,21 @@ public class AmplitudeClientTest extends BaseTest {
 
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         int eventMaxCount = 3;
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
-        amplitude.setEventMaxCount(eventMaxCount).setOffline(true);
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        rakam.setEventMaxCount(eventMaxCount).setOffline(true);
 
-        amplitude.logEvent("test1");
-        amplitude.logEvent("test2");
-        amplitude.logEvent("test3");
-        amplitude.identify(new Identify().unset("key1"));
-        amplitude.identify(new Identify().unset("key2"));
-        amplitude.identify(new Identify().unset("key3"));
+        rakam.logEvent("test1");
+        rakam.logEvent("test2");
+        rakam.logEvent("test3");
+        rakam.identify(new Identify().unset("key1"));
+        rakam.identify(new Identify().unset("key2"));
+        rakam.identify(new Identify().unset("key3"));
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), eventMaxCount);
         assertEquals(getUnsentIdentifyCount(), eventMaxCount);
 
-        amplitude.logEvent("test4");
-        amplitude.identify(new Identify().unset("key4"));
+        rakam.logEvent("test4");
+        rakam.identify(new Identify().unset("key4"));
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), eventMaxCount);
         assertEquals(getUnsentIdentifyCount(), eventMaxCount);
@@ -1205,16 +1205,16 @@ public class AmplitudeClientTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         int eventMaxCount = 50;
         assertTrue(eventMaxCount > Constants.EVENT_REMOVE_BATCH_SIZE);
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
-        amplitude.setEventMaxCount(eventMaxCount).setOffline(true);
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        rakam.setEventMaxCount(eventMaxCount).setOffline(true);
 
         for (int i = 0; i < eventMaxCount; i++) {
-            amplitude.logEvent("test");
+            rakam.logEvent("test");
         }
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), eventMaxCount);
 
-        amplitude.logEvent("test");
+        rakam.logEvent("test");
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), eventMaxCount - (eventMaxCount/10) + 1);
     }
@@ -1223,14 +1223,14 @@ public class AmplitudeClientTest extends BaseTest {
     public void testTruncateEventsQueuesWithOneEvent() {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         int eventMaxCount = 1;
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
-        amplitude.setEventMaxCount(eventMaxCount).setOffline(true);
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        rakam.setEventMaxCount(eventMaxCount).setOffline(true);
 
-        amplitude.logEvent("test1");
+        rakam.logEvent("test1");
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), eventMaxCount);
 
-        amplitude.logEvent("test2");
+        rakam.logEvent("test2");
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), eventMaxCount);
 
@@ -1240,9 +1240,9 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testClearUserProperties() throws JSONException {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
 
-        amplitude.clearUserProperties();
+        rakam.clearUserProperties();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 1);
@@ -1261,9 +1261,9 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testSetGroup() throws JSONException {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
 
-        amplitude.setGroup("orgId", new JSONArray().put(10).put(15));
+        rakam.setGroup("orgId", new JSONArray().put(10).put(15));
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
@@ -1288,10 +1288,10 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testLogEventWithGroups() throws JSONException {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
 
         JSONObject groups = new JSONObject().put("orgId", 10).put("sport", "tennis");
-        amplitude.logEvent("test", null, groups);
+        rakam.logEvent("test", null, groups);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
@@ -1310,27 +1310,27 @@ public class AmplitudeClientTest extends BaseTest {
 
     @Test
     public void testMergeEventsArrayIndexOutOfBounds() throws JSONException {
-        ShadowLooper looper = Shadows.shadowOf(amplitude.logThread.getLooper());
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
 
-        amplitude.setOffline(true);
+        rakam.setOffline(true);
 
-        amplitude.logEvent("testEvent1");
+        rakam.logEvent("testEvent1");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
         // force failure case
-        amplitude.setLastEventId(0);
+        rakam.setLastEventId(0);
 
-        amplitude.setOffline(false);
+        rakam.setOffline(false);
         looper.runToEndOfTasks();
 
         // make sure next upload succeeds
-        amplitude.setLastEventId(1);
-        amplitude.logEvent("testEvent2");
+        rakam.setLastEventId(1);
+        rakam.logEvent("testEvent2");
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
 
-        RecordedRequest request = runRequest(amplitude);
+        RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
         assertEquals(events.length(), 2);
 

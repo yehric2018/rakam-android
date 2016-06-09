@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -6,7 +6,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
-import android.telephony.TelephonyManager;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.ConnectionResult;
@@ -23,10 +22,10 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowConfiguration;
 import org.robolectric.shadows.ShadowGeocoder;
 import org.robolectric.shadows.ShadowLocationManager;
 import org.robolectric.shadows.ShadowTelephonyManager;
@@ -48,7 +47,7 @@ public class DeviceInfoTest {
 
     private Context context;
     private DeviceInfo deviceInfo;
-    private static final String TEST_VERSION_NAME = "com.amplitude.test";
+    private static final String TEST_VERSION_NAME = "com.rakam.test";
     private static final String TEST_BRAND = "brand";
     private static final String TEST_MANUFACTURER = "manufacturer";
     private static final String TEST_MODEL = "model";
@@ -82,11 +81,11 @@ public class DeviceInfoTest {
         ReflectionHelpers.setStaticField(Build.class, "MODEL", TEST_MODEL);
 
         Configuration c = context.getResources().getConfiguration();
-        Shadows.shadowOf(c).setLocale(TEST_LOCALE);
+        ((ShadowConfiguration) ShadowExtractor.extract(c)).setLocale(TEST_LOCALE);
         Locale.setDefault(TEST_LOCALE);
 
-        ShadowTelephonyManager manager = Shadows.shadowOf((TelephonyManager) context
-                .getSystemService(Context.TELEPHONY_SERVICE));
+        ShadowTelephonyManager manager = ((ShadowTelephonyManager) ShadowExtractor.extract(context
+                .getSystemService(Context.TELEPHONY_SERVICE)));
         manager.setNetworkOperatorName(TEST_CARRIER);
         deviceInfo = new DeviceInfo(context);
     }
@@ -126,7 +125,7 @@ public class DeviceInfoTest {
 
     @Test
     public void testGetCountryFromNetwork() {
-        ShadowTelephonyManager manager = Shadows.shadowOf((TelephonyManager) context
+        ShadowTelephonyManager manager = (ShadowTelephonyManager) ShadowExtractor.extract(context
                 .getSystemService(Context.TELEPHONY_SERVICE));
         manager.setNetworkCountryIso(TEST_NETWORK_COUNTRY);
 
@@ -137,10 +136,10 @@ public class DeviceInfoTest {
     @Test
     @Config(shadows={MockGeocoder.class})
     public void testGetCountryFromLocation() {
-        ShadowTelephonyManager telephonyManager = Shadows.shadowOf((TelephonyManager) context
+        ShadowTelephonyManager telephonyManager = (ShadowTelephonyManager) ShadowExtractor.extract(context
                 .getSystemService(Context.TELEPHONY_SERVICE));
         telephonyManager.setNetworkCountryIso(TEST_NETWORK_COUNTRY);
-        ShadowLocationManager locationManager = Shadows.shadowOf((LocationManager) context
+        ShadowLocationManager locationManager = (ShadowLocationManager) ShadowExtractor.extract(context
                 .getSystemService(Context.LOCATION_SERVICE));
         locationManager.simulateLocation(makeLocation(LocationManager.NETWORK_PROVIDER,
                 TEST_LOCATION_LAT, TEST_LOCATION_LNG));
@@ -218,7 +217,7 @@ public class DeviceInfoTest {
     @Test
     public void testGetMostRecentLocation() {
         DeviceInfo deviceInfo = new DeviceInfo(context);
-        ShadowLocationManager locationManager = Shadows.shadowOf((LocationManager) context
+        ShadowLocationManager locationManager = (ShadowLocationManager) ShadowExtractor.extract(context
                 .getSystemService(Context.LOCATION_SERVICE));
         Location loc = makeLocation(LocationManager.NETWORK_PROVIDER, TEST_LOCATION_LAT,
                 TEST_LOCATION_LNG);

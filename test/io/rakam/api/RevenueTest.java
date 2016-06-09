@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import org.json.JSONException;
 import org.json.JSONObject;

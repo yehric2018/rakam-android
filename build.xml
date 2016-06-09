@@ -1,4 +1,4 @@
-<project name="Amplitude Android SDK" basedir="." default="dist" xmlns:artifact="urn:maven-artifact-ant">
+<project name="Rakam Android SDK" basedir="." default="dist" xmlns:artifact="urn:maven-artifact-ant">
 
     <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
              uri="urn:maven-artifact-ant"
@@ -15,16 +15,16 @@
     <property name="test.reports" location="${dist}/reports"/>
 
     <property environment="env" />
-    <property name="android-sdk-path" value="${env.ANDROID_SDK}" />
+    <property name="android-sdk-path" value="${env.ANDROID_HOME}" />
     <property name="android-target" value="${env.ANDROID_TARGET}" />
 
-    <property name="groupId" value="com.amplitude" />
-    <property name="artifactId" value="amplitude-android" />
+    <property name="groupId" value="io.rakam" />
+    <property name="artifactId" value="rakam-android" />
     <property name="version" value="2.7.2" />
 
     <property name="jar" value="${dist}/lib/${artifactId}-${version}.jar" />
     <property name="uberjar" value="${dist}/lib/${artifactId}-${version}-with-dependencies.jar" />
-    <property name="unity-jar" value="amplitude-unity-${version}.jar" />
+    <property name="unity-jar" value="rakam-unity-${version}.jar" />
     <property name="javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
     <property name="sources-jar" value="${dist}/lib/${artifactId}-${version}-sources.jar" />
 
@@ -86,43 +86,43 @@
     <target name="docs" >
         <javadoc classpathref="project.classpath" destdir="javadoc">
             <fileset dir="${src}" defaultexcludes="yes">
-                <exclude name="com/amplitude/security/**"/>
-                <exclude name="com/amplitude/unity/**"/>
-                <exclude name="com/amplitude/api/AmplitudeLog.java"/>
-                <exclude name="com/amplitude/api/Constants.java"/>
-                <exclude name="com/amplitude/api/DeviceInfo.java"/>
+                <exclude name="io/rakam/security/**"/>
+                <exclude name="io/rakam/unity/**"/>
+                <exclude name="io/rakam/api/rakamLog.java"/>
+                <exclude name="io/rakam/api/Constants.java"/>
+                <exclude name="io/rakam/api/DeviceInfo.java"/>
                 <exclude name="**SSLContextBuilder**"/>
-                <exclude name="com/amplitude/api/Utils.java"/>
-                <exclude name="com/amplitude/api/WorkerThread.java"/>
+                <exclude name="io/rakam/api/Utils.java"/>
+                <exclude name="io/rakam/api/WorkerThread.java"/>
             </fileset>
         </javadoc>
     </target>
 
     <target name="jar" depends="build">
-        <jar destfile="${jar}" basedir="${build}" includes="com/amplitude/api/*.class, com/amplitude/security/*.class" />
+        <jar destfile="${jar}" basedir="${build}" includes="io/rakam/api/*.class, io/rakam/security/*.class" />
         <jar destfile="${uberjar}">
-            <fileset dir="${build}" includes="com/amplitude/api/*.class, com/amplitude/security/*.class" />
+            <fileset dir="${build}" includes="io/rakam/api/*.class, io/rakam/security/*.class" />
             <zipgroupfileset id="dependency.fileset" dir="/" includes="${dependency.list}"/>
         </jar>
     </target>
 
     <target name="unity" depends="build" description="creates jar for unity plugin">
         <jar destfile="${unity-jar}">
-            <fileset dir="${build}" includes="com/amplitude/api/*.class, com/amplitude/unity/plugins/*.class, com/amplitude/security/*.class" />
-            <fileset dir="${src}" includes="com/amplitude/api/*.java, com/amplitude/unity/plugins/*.java, com/amplitude/security/*.java" />
+            <fileset dir="${build}" includes="io/rakam/api/*.class, io/rakam/unity/plugins/*.class, io/rakam/security/*.class" />
+            <fileset dir="${src}" includes="io/rakam/api/*.java, io/rakam/unity/plugins/*.java, io/rakam/security/*.java" />
             <zipgroupfileset id="dependency.fileset" dir="/" includes="${dependency.list}"/>
         </jar>
     </target>
 
     <target name="dist" depends="jar" description="creates release jar with javadoc and sources">
         <javadoc classpathref="project.classpath" sourcepath="${src}" destdir="${dist}/javadoc">
-            <fileset dir="${src}" includes="com/amplitude/api/*.java, com/amplitude/security/*.java" />
+            <fileset dir="${src}" includes="io/rakam/api/*.java, io/rakam/security/*.java" />
         </javadoc>
         <jar jarfile="${javadoc-jar}">
             <fileset dir="${dist}/javadoc" />
         </jar>
         <jar jarfile="${sources-jar}">
-            <fileset dir="${src}" includes="com/amplitude/api/*.java, com/amplitude/security/*.java" />
+            <fileset dir="${src}" includes="io/rakam/api/*.java, io/rakam/security/*.java" />
         </jar>
         <copy file="${jar}" todir="."/>
         <copy file="${uberjar}" todir="."/>
@@ -131,7 +131,7 @@
     <target name="update-version">
         <replaceregexp match="\d+\.\d+.\d+(-SNAPSHOT)?" replace="${version}" flags="g">
             <fileset dir="." includes="README.md"/>
-            <fileset dir="${src}" includes="com/amplitude/api/Constants.java" />
+            <fileset dir="${src}" includes="io/rakam/api/Constants.java" />
         </replaceregexp>
 
         <replaceregexp match="&lt;version&gt;[\d.]*(-SNAPSHOT)?&lt;/version&gt;" replace="&lt;version&gt;${version}&lt;/version&gt;">
@@ -148,14 +148,14 @@
 
         <exec dir="." executable="git"><arg line="checkout -b v${version}-snapshot"/></exec>
 
-        <exec dir="." executable="git"><arg line="rm amplitude-*jar"/></exec>
+        <exec dir="." executable="git"><arg line="rm rakam-*jar"/></exec>
 
         <replaceregexp match="## Unreleased" replace="## Unreleased&#10;&#10;## ${version} (${long-date})" flags="g">
             <fileset dir="." includes="CHANGELOG.md"/>
         </replaceregexp>
 
-        <exec dir="." executable="git"><arg line="add amplitude-*jar README.md pom.xml build.xml" /></exec>
-        <exec dir="." executable="git"><arg line="add src/com/amplitude/api/Constants.java" /></exec>
+        <exec dir="." executable="git"><arg line="add rakam-*jar README.md pom.xml build.xml" /></exec>
+        <exec dir="." executable="git"><arg line="add src/io/rakam/api/Constants.java" /></exec>
         <exec dir="." executable="git"><arg line="add CHANGELOG.md" /></exec>
 
         <exec dir="." executable="git"><arg line="commit -m 'Version ${version}'" /></exec>
@@ -199,8 +199,8 @@
         <echo message="Cloning demo app..."/>
 
         <exec dir="." executable="rm"><arg line="-rf test-release"/></exec>
-        <exec dir="." executable="git"><arg line="clone https://github.com/amplitude/AndroidDemo test-release"/></exec>
-        <exec dir="test-release" executable="./amplitude-test.sh"><arg line="${version}"/></exec>
+        <exec dir="." executable="git"><arg line="clone https://github.io/rakam/AndroidDemo test-release"/></exec>
+        <exec dir="test-release" executable="./rakam-test.sh"><arg line="${version}"/></exec>
         <exec dir="." executable="rm"><arg line="-rf test-release"/></exec>
     </target>
 

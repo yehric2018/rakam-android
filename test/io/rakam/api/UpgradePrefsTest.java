@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -22,7 +22,7 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Before
     public void setUp() throws Exception {
-        ShadowApplication.getInstance().setPackageName("com.amplitude.test");
+        ShadowApplication.getInstance().setPackageName("com.rakam.test");
         context = ShadowApplication.getInstance().getApplicationContext();
     }
 
@@ -35,21 +35,21 @@ public class UpgradePrefsTest extends BaseTest {
     public void testUpgradeOnInit() {
         Constants.class.getPackage().getName();
 
-        amplitude = new AmplitudeClient();
-        amplitude.initialize(context, "KEY");
+        rakam = new RakamClient();
+        rakam.initialize(context, "KEY");
     }
 
     @Test
     public void testUpgrade() {
-        String sourceName = "com.amplitude.a" + "." + context.getPackageName();
+        String sourceName = "com.rakam.a" + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
-                .putLong("com.amplitude.a.previousSessionId", 100L)
-                .putString("com.amplitude.a.deviceId", "deviceid")
-                .putString("com.amplitude.a.userId", "userid")
-                .putBoolean("com.amplitude.a.optOut", true)
+                .putLong("com.rakam.a.previousSessionId", 100L)
+                .putString("com.rakam.a.deviceId", "deviceid")
+                .putString("com.rakam.a.userId", "userid")
+                .putBoolean("com.rakam.a.optOut", true)
                 .commit();
 
-        assertTrue(AmplitudeClient.upgradePrefs(context, "com.amplitude.a", null));
+        assertTrue(RakamClient.upgradePrefs(context, "com.rakam.a", null));
 
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
@@ -64,18 +64,18 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeSelf() {
-        assertFalse(AmplitudeClient.upgradePrefs(context));
+        assertFalse(RakamClient.upgradePrefs(context));
     }
 
     @Test
     public void testUpgradeEmpty() {
-        assertFalse(AmplitudeClient.upgradePrefs(context, "empty", null));
+        assertFalse(RakamClient.upgradePrefs(context, "empty", null));
 
         String sourceName = "empty" + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .commit();
 
-        assertFalse(AmplitudeClient.upgradePrefs(context, "empty", null));
+        assertFalse(RakamClient.upgradePrefs(context, "empty", null));
     }
 
     @Test
@@ -86,7 +86,7 @@ public class UpgradePrefsTest extends BaseTest {
                 .putString("partial.deviceId", "deviceid")
                 .commit();
 
-        assertTrue(AmplitudeClient.upgradePrefs(context, "partial", null));
+        assertTrue(RakamClient.upgradePrefs(context, "partial", null));
 
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
@@ -106,9 +106,9 @@ public class UpgradePrefsTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putString(Constants.PREFKEY_DEVICE_ID, deviceId).commit();
 
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
-            DatabaseHelper.getDatabaseHelper(context).getValue(AmplitudeClient.DEVICE_ID_KEY),
+            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY),
             deviceId
         );
 
@@ -118,28 +118,28 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeDeviceIdToDBEmpty() {
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertNull(
-            DatabaseHelper.getDatabaseHelper(context).getValue(AmplitudeClient.DEVICE_ID_KEY)
+            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY)
         );
     }
 
     @Test
     public void testUpgradeDeviceIdFromLegacyToDB() {
         String deviceId = "device_id";
-        String legacyPkgName = "com.amplitude.a";
+        String legacyPkgName = "com.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putString(legacyPkgName + ".deviceId", deviceId)
                 .commit();
 
-        assertTrue(AmplitudeClient.upgradePrefs(context, legacyPkgName, null));
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradePrefs(context, legacyPkgName, null));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
 
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertEquals(
-            DatabaseHelper.getDatabaseHelper(context).getValue(AmplitudeClient.DEVICE_ID_KEY),
+            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY),
             deviceId
         );
 
@@ -149,20 +149,20 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeDeviceIdFromLegacyToDBEmpty() {
-        String legacyPkgName = "com.amplitude.a";
+        String legacyPkgName = "com.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putLong("partial.lastEventTime", 100L)
                 .commit();
 
-        assertTrue(AmplitudeClient.upgradePrefs(context, legacyPkgName, null));
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradePrefs(context, legacyPkgName, null));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
 
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertNull(target.getString(Constants.PREFKEY_DEVICE_ID, null));
         assertNull(
-            DatabaseHelper.getDatabaseHelper(context).getValue(AmplitudeClient.DEVICE_ID_KEY)
+            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY)
         );
     }
 
@@ -172,10 +172,10 @@ public class UpgradePrefsTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
 
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
             (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
-                AmplitudeClient.OPT_OUT_KEY
+                RakamClient.OPT_OUT_KEY
             ), 1L
         );
 
@@ -191,12 +191,12 @@ public class UpgradePrefsTest extends BaseTest {
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
 
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        dbHelper.insertOrReplaceKeyLongValue(AmplitudeClient.OPT_OUT_KEY, 0L);
+        dbHelper.insertOrReplaceKeyLongValue(RakamClient.OPT_OUT_KEY, 0L);
 
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
             (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
-                AmplitudeClient.OPT_OUT_KEY
+                RakamClient.OPT_OUT_KEY
             ), 0L
         );
 
@@ -206,21 +206,21 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeOptOutFromLegacyToDB() {
-        String legacyPkgName = "com.amplitude.a";
+        String legacyPkgName = "com.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putBoolean(legacyPkgName + ".optOut", true)
                 .commit();
 
-        assertTrue(AmplitudeClient.upgradePrefs(context, legacyPkgName, null));
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradePrefs(context, legacyPkgName, null));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
 
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertFalse(target.getBoolean(Constants.PREFKEY_DEVICE_ID, false));
         assertEquals(
             (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
-                AmplitudeClient.OPT_OUT_KEY
+                RakamClient.OPT_OUT_KEY
             ), 1L
         );
     }
@@ -231,9 +231,9 @@ public class UpgradePrefsTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putString(Constants.PREFKEY_USER_ID, "testUserId").commit();
 
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
-            DatabaseHelper.getDatabaseHelper(context).getValue(AmplitudeClient.USER_ID_KEY),
+            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.USER_ID_KEY),
             "testUserId"
         );
 
@@ -243,19 +243,19 @@ public class UpgradePrefsTest extends BaseTest {
 
     @Test
     public void testUpgradeUserIdFromLegacyToDB() {
-        String legacyPkgName = "com.amplitude.a";
+        String legacyPkgName = "com.rakam.a";
         String sourceName = legacyPkgName + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
                 .putString(legacyPkgName + ".userId", "testUserId2").commit();
 
-        assertTrue(AmplitudeClient.upgradePrefs(context, legacyPkgName, null));
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradePrefs(context, legacyPkgName, null));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
 
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertNull(target.getString(Constants.PREFKEY_USER_ID, null));
         assertEquals(DatabaseHelper.getDatabaseHelper(context).getValue(
-            AmplitudeClient.USER_ID_KEY
+            RakamClient.USER_ID_KEY
         ), "testUserId2");
     }
 
@@ -263,14 +263,14 @@ public class UpgradePrefsTest extends BaseTest {
     public void testSkipUpgradeSharedPrefsToDb() {
         // skips if DB already has deviceId, previous session id, and last event time
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        dbHelper.insertOrReplaceKeyValue(AmplitudeClient.DEVICE_ID_KEY, "testDeviceId");
-        dbHelper.insertOrReplaceKeyLongValue(AmplitudeClient.PREVIOUS_SESSION_ID_KEY, 1000L);
-        dbHelper.insertOrReplaceKeyLongValue(AmplitudeClient.LAST_EVENT_TIME_KEY, 2000L);
+        dbHelper.insertOrReplaceKeyValue(RakamClient.DEVICE_ID_KEY, "testDeviceId");
+        dbHelper.insertOrReplaceKeyLongValue(RakamClient.PREVIOUS_SESSION_ID_KEY, 1000L);
+        dbHelper.insertOrReplaceKeyLongValue(RakamClient.LAST_EVENT_TIME_KEY, 2000L);
 
-        assertNull(dbHelper.getValue(AmplitudeClient.USER_ID_KEY));
-        assertNull(dbHelper.getLongValue(AmplitudeClient.LAST_EVENT_ID_KEY));
-        assertNull(dbHelper.getLongValue(AmplitudeClient.LAST_IDENTIFY_ID_KEY));
-        assertNull(dbHelper.getLongValue(AmplitudeClient.OPT_OUT_KEY));
+        assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
+        assertNull(dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY));
+        assertNull(dbHelper.getLongValue(RakamClient.LAST_IDENTIFY_ID_KEY));
+        assertNull(dbHelper.getLongValue(RakamClient.OPT_OUT_KEY));
 
         String sourceName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
@@ -279,16 +279,16 @@ public class UpgradePrefsTest extends BaseTest {
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
         prefs.edit().putLong(Constants.PREFKEY_LAST_IDENTIFY_ID, 3000L).commit();
 
-        assertTrue(AmplitudeClient.upgradeSharedPrefsToDB(context));
+        assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
 
         // after upgrade, pref values still there since they weren't deleted
-        assertEquals(dbHelper.getValue(AmplitudeClient.DEVICE_ID_KEY), "testDeviceId");
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.PREVIOUS_SESSION_ID_KEY), 1000L);
-        assertEquals((long) dbHelper.getLongValue(AmplitudeClient.LAST_EVENT_TIME_KEY), 2000L);
-        assertNull(dbHelper.getValue(AmplitudeClient.USER_ID_KEY));
-        assertNull(dbHelper.getLongValue(AmplitudeClient.LAST_EVENT_ID_KEY));
-        assertNull(dbHelper.getLongValue(AmplitudeClient.LAST_IDENTIFY_ID_KEY));
-        assertNull(dbHelper.getLongValue(AmplitudeClient.OPT_OUT_KEY));
+        assertEquals(dbHelper.getValue(RakamClient.DEVICE_ID_KEY), "testDeviceId");
+        assertEquals((long) dbHelper.getLongValue(RakamClient.PREVIOUS_SESSION_ID_KEY), 1000L);
+        assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_TIME_KEY), 2000L);
+        assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
+        assertNull(dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY));
+        assertNull(dbHelper.getLongValue(RakamClient.LAST_IDENTIFY_ID_KEY));
+        assertNull(dbHelper.getLongValue(RakamClient.OPT_OUT_KEY));
 
         assertEquals(prefs.getString(Constants.PREFKEY_DEVICE_ID, null), "otherDeviceId");
         assertEquals(prefs.getString(Constants.PREFKEY_USER_ID, null), "testUserId");

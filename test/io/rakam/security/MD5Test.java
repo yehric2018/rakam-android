@@ -1,6 +1,6 @@
-package com.amplitude.security;
+package io.rakam.security;
 
-import com.amplitude.api.Constants;
+import io.rakam.api.Constants;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
@@ -63,7 +63,7 @@ public class MD5Test {
     }
 
     @Test
-    public void testMD5WithAmplitudeData() {
+    public void testMD5WithRakamData() {
 
         String apiVersionString = "" + Constants.API_VERSION;
         String apiKey = "1cc2c1978ebab0f6451112a8f5df4f4e";
@@ -75,7 +75,7 @@ public class MD5Test {
                 "ce_id\":\"610e21eb-2f27-48ca-bf4e-f977ce6391d1R\",\"device_brand\":\"unknown" +
                 "\",\"country\":\"US\",\"os_version\":\"unknown\",\"timestamp\":1439421597509" +
                 ",\"device_model\":\"unknown\",\"os_name\":\"android\",\"library\":{\"name\":" +
-                "\"amplitude-android\",\"version\":\"1.7.0\"},\"carrier\":null,\"user_id\":\"" +
+                "\"rakam-android\",\"version\":\"1.7.0\"},\"carrier\":null,\"user_id\":\"" +
                 "610e21eb-2f27-48ca-bf4e-f977ce6391d1R\",\"language\":\"en\"},{\"version_name" +
                 "\":null,\"device_manufacturer\":\"unknown\",\"user_properties\":{},\"platfor" +
                 "m\":\"Android\",\"api_properties\":{\"limit_ad_tracking\":false},\"session_i" +
@@ -83,7 +83,7 @@ public class MD5Test {
                 "\":{},\"device_id\":\"610e21eb-2f27-48ca-bf4e-f977ce6391d1R\",\"device_brand" +
                 "\":\"unknown\",\"country\":\"US\",\"os_version\":\"unknown\",\"timestamp\":1" +
                 "439421597509,\"device_model\":\"unknown\",\"os_name\":\"android\",\"library" +
-                "\":{\"name\":\"amplitude-android\",\"version\":\"1.7.0\"},\"carrier\":null," +
+                "\":{\"name\":\"rakam-android\",\"version\":\"1.7.0\"},\"carrier\":null," +
                 "\"user_id\":\"610e21eb-2f27-48ca-bf4e-f977ce6391d1R\",\"language\":\"en\"}]";
 
         String preImage = apiVersionString + apiKey + events + timestampString;

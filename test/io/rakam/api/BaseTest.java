@@ -1,11 +1,11 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import android.content.Context;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.robolectric.Shadows;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 
@@ -42,16 +42,16 @@ public class BaseTest {
     }
 
     // override getCurrentTimeMillis to enforce time progression in tests
-    protected class AmplitudeClientWithTime extends AmplitudeClient {
+    protected class RakamClientWithTime extends RakamClient {
         MockClock mockClock;
 
-        public AmplitudeClientWithTime(MockClock mockClock) { this.mockClock = mockClock; }
+        public RakamClientWithTime(MockClock mockClock) { this.mockClock = mockClock; }
 
         @Override
         protected long getCurrentTimeMillis() { return mockClock.currentTimeMillis(); }
     }
 
-    protected AmplitudeClient amplitude;
+    protected RakamClient rakam;
     protected Context context;
     protected MockWebServer server;
     protected MockClock clock;
@@ -63,11 +63,11 @@ public class BaseTest {
 
     /**
      * Handle common test setup for default cases. Specific cases can
-     * override the defaults by providing an amplitude object before
+     * override the defaults by providing an rakam object before
      * calling this method or passing false for withServer.
      */
     public void setUp(boolean withServer) throws Exception {
-        ShadowApplication.getInstance().setPackageName("com.amplitude.test");
+        ShadowApplication.getInstance().setPackageName("com.rakam.test");
         context = ShadowApplication.getInstance().getApplicationContext();
 
         // Clear the database helper for each test. Better to have isolation.
@@ -84,23 +84,23 @@ public class BaseTest {
             clock = new MockClock();
         }
 
-        if (amplitude == null) {
-            amplitude = new AmplitudeClientWithTime(clock);
+        if (rakam == null) {
+            rakam = new RakamClientWithTime(clock);
             // this sometimes deadlocks with lock contention by logThread and httpThread for
             // a ShadowWrangler instance and the ShadowLooper class
             // Might be a sign of a bug, or just Robolectric's bug.
         }
 
         if (server != null) {
-            amplitude.url = server.url("/").toString();
+            rakam.url = server.url("/").toString();
         }
     }
 
     public void tearDown() throws Exception {
-        if (amplitude != null) {
-            amplitude.logThread.getLooper().quit();
-            amplitude.httpThread.getLooper().quit();
-            amplitude = null;
+        if (rakam != null) {
+            rakam.logThread.getLooper().quit();
+            rakam.httpThread.getLooper().quit();
+            rakam = null;
         }
 
         if (server != null) {
@@ -110,9 +110,9 @@ public class BaseTest {
         DatabaseHelper.instance = null;
     }
 
-    public RecordedRequest runRequest(AmplitudeClient amplitude) {
+    public RecordedRequest runRequest(RakamClient rakam) {
         server.enqueue(new MockResponse().setBody("success"));
-        ShadowLooper httplooper = Shadows.shadowOf(amplitude.httpThread.getLooper());
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 
         try {
@@ -122,22 +122,22 @@ public class BaseTest {
         }
     }
 
-    public RecordedRequest sendEvent(AmplitudeClient amplitude, String name, JSONObject props) {
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
-        amplitude.logEvent(name, props);
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+    public RecordedRequest sendEvent(RakamClient rakam, String name, JSONObject props) {
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        rakam.logEvent(name, props);
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
-        return runRequest(amplitude);
+        return runRequest(rakam);
     }
 
-    public RecordedRequest sendIdentify(AmplitudeClient amplitude, Identify identify) {
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
-        amplitude.identify(identify);
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
-        Shadows.shadowOf(amplitude.logThread.getLooper()).runToEndOfTasks();
+    public RecordedRequest sendIdentify(RakamClient rakam, Identify identify) {
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        rakam.identify(identify);
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
-        return runRequest(amplitude);
+        return runRequest(rakam);
     }
 
     public long getUnsentEventCount() {

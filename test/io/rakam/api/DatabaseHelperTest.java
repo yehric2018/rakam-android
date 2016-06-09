@@ -1,4 +1,4 @@
-package com.amplitude.api;
+package io.rakam.api;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,7 +24,7 @@ public class DatabaseHelperTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp(false);
-        amplitude.initialize(context, apiKey);
+        rakam.initialize(context, apiKey);
         dbInstance = DatabaseHelper.getDatabaseHelper(context);
     }
 
@@ -77,112 +77,6 @@ public class DatabaseHelperTest extends BaseTest {
         assertEquals(6, insertOrReplaceKeyLongValue("test_key", 1L));
         assertEquals(1, addEvent("test_create"));
         assertEquals(1, addIdentify("test_create"));
-    }
-
-    // need separate tests for different version to version upgrades since insertion failure
-    // triggers database deletion and recreation - need to refetch writable database as well
-    @Test
-    public void testUpgradeVersion1ToVersion2() {
-        // store table doesn't exist in v1, insert will fail
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
-        String key = "test_key";
-        String value = "test_value";
-        assertEquals(-1, insertOrReplaceKeyValue(key, value));
-
-        // long store table doesn't exist in v1, insert will fail
-        Long longValue = 1L;
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
-        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
-
-        // identify table doesn't exist in v1, insert will fail
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
-        assertEquals(-1, addIdentify("test_upgrade"));
-
-        // only event inserts will work
-        assertEquals(1, addEvent("test_upgrade"));
-
-        // after v2 upgrade, can insert into store table
-        // still can't insert into identify table or long store table
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
-        dbInstance.onUpgrade(dbInstance.getWritableDatabase(), 1, 2);
-        assertEquals(2, addEvent("test_upgrade"));
-        assertEquals(1, insertOrReplaceKeyValue(key, value));
-        assertEquals(-1, addIdentify("test_upgrade"));
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
-        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
-    }
-
-    @Test
-    public void testUpgradeVersion2ToVersion3() {
-        // identify table doesn't exist in v2, insert will fail
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
-        assertEquals(-1, addIdentify("test_upgrade"));
-
-        // long store table doesn't exist in v2, insert will fail
-        String key = "test_key";
-        Long longValue = 1L;
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
-        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
-
-        // events and store inserts will work
-        String value = "test_value";
-        assertEquals(1, insertOrReplaceKeyValue(key, value));
-        assertEquals(1, addEvent("test_upgrade"));
-
-        // after v3 upgrade, can insert into identify table and long store
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
-        dbInstance.onUpgrade(dbInstance.getWritableDatabase(), 2, 3);
-        assertEquals(2, addEvent("test_upgrade"));
-        assertEquals(2, insertOrReplaceKeyValue(key, value));
-        assertEquals(1, addIdentify("test_upgrade"));
-        assertEquals(1, insertOrReplaceKeyLongValue(key, longValue));
-    }
-
-    @Test
-    public void testUpgradeVersion1ToVersion3() {
-        // store table doesn't exist in v1, insert will fail
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
-        String key = "test_key";
-        String value = "test_value";
-        assertEquals(-1, insertOrReplaceKeyValue(key, value));
-
-        // identify table doesn't exist in v1, insert will fail
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
-        assertEquals(-1, addIdentify("test_upgrade"));
-
-        // long store table doesn't exist in v1, insert will fail
-        Long longValue = 1L;
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
-        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
-
-        // only event inserts will work
-        assertEquals(1, addEvent("test_upgrade"));
-
-        // after v3 upgrade, can insert into store and identify tables
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
-        dbInstance.getWritableDatabase().execSQL(
-                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
-        dbInstance.onUpgrade(dbInstance.getWritableDatabase(), 1, 3);
-        assertEquals(2, addEvent("test_upgrade"));
-        assertEquals(1, insertOrReplaceKeyValue(key, value));
-        assertEquals(1, addIdentify("test_upgrade"));
-        assertEquals(1, insertOrReplaceKeyLongValue(key, longValue));
     }
 
     @Test
