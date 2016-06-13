@@ -60,6 +60,10 @@ public class RakamClient {
      */
     public static final String USER_ID_KEY = "user_id";
     /**
+     * The pref/database key for the super properties.
+     */
+    public static final String SUPER_PROPERTIES_KEY = "super_properties";
+    /**
      * The pref/database key for the opt out flag.
      */
     public static final String OPT_OUT_KEY = "opt_out";
@@ -203,7 +207,17 @@ public class RakamClient {
      */
     public RakamClient setSuperProperties(JSONObject superProperties) {
         this.superProperties = superProperties;
+        dbHelper.insertOrReplaceKeyValue(SUPER_PROPERTIES_KEY, superProperties.toString());
         return this;
+    }
+
+    /**
+     * Get super property keys for the user.
+     *
+     * @return the super properties
+     */
+    public JSONObject getSuperProperties() {
+        return Utils.cloneJSONObject(superProperties);
     }
 
     /**
@@ -252,6 +266,14 @@ public class RakamClient {
             }
 
             initialized = true;
+            String value = dbHelper.getValue(SUPER_PROPERTIES_KEY);
+            if(value != null) {
+                try {
+                    superProperties = new JSONObject(value);
+                } catch (JSONException e) {
+                    dbHelper.insertOrReplaceKeyValue(SUPER_PROPERTIES_KEY, null);
+                }
+            }
         }
 
         return this;
@@ -987,7 +1009,7 @@ public class RakamClient {
             return;
         }
 
-        logEvent(Constants.AMP_REVENUE_EVENT, revenue.toJSONObject());
+        logEvent(Constants.REVENUE_EVENT, revenue.toJSONObject());
     }
 
     /**
@@ -1041,6 +1063,18 @@ public class RakamClient {
     public void clearUserProperties() {
         Identify identify = new Identify().clearAll();
         identify(identify);
+    }
+
+    /**
+     * Clear super properties. This will clear all super properties at once. <b>Note: the
+     * result is irreversible!</b>
+     *
+     * @see <a href="https://github.com/buremba/rakam-android#super-properties">
+     * Super Properties</a>
+     */
+    public void clearSuperProperties() {
+        dbHelper.insertOrReplaceKeyValue(SUPER_PROPERTIES_KEY, null);
+        superProperties = null;
     }
 
     /**

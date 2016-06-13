@@ -4,7 +4,7 @@ public class Constants {
 
     public static final String LIBRARY = "rakam-android";
     public static final String PLATFORM = "Android";
-    public static final String VERSION = "2.7.3";
+    public static final String VERSION = "2.7.4";
 
     public static final String DEFAULT_EVENT_LOG_URL = "https://app.rakam.io/";
 
@@ -34,18 +34,18 @@ public class Constants {
     public static final String PREFKEY_USER_ID = PACKAGE_NAME + ".userId";
     public static final String PREFKEY_OPT_OUT = PACKAGE_NAME + ".optOut";
 
-    public static final String AMP_OP_INCREMENT = "increment_properties";
-    public static final String AMP_OP_APPEND = "append_item_to_property";
-    public static final String AMP_OP_CLEAR_ALL = "clear_all_properties";
-    public static final String AMP_OP_SET = "set_properties";
-    public static final String AMP_OP_SET_ONCE = "set_properties_once";
-    public static final String AMP_OP_UNSET = "unset_properties";
+    public static final String OP_INCREMENT = "increment_properties";
+    public static final String OP_APPEND = "append_item_to_property";
+    public static final String OP_CLEAR_ALL = "clear_all_properties";
+    public static final String OP_SET = "set_properties";
+    public static final String OP_SET_ONCE = "set_properties_once";
+    public static final String OP_UNSET = "unset_properties";
 
-    public static final String AMP_REVENUE_EVENT = "_revenue";
-    public static final String AMP_REVENUE_PRODUCT_ID = "_product_id";
-    public static final String AMP_REVENUE_QUANTITY = "_quantity";
-    public static final String AMP_REVENUE_PRICE = "_price";
-    public static final String AMP_REVENUE_REVENUE_TYPE = "_revenue_type";
-    public static final String AMP_REVENUE_RECEIPT = "_receipt";
-    public static final String AMP_REVENUE_RECEIPT_SIG = "_receipt_sig";
+    public static final String REVENUE_EVENT = "_revenue";
+    public static final String REVENUE_PRODUCT_ID = "_product_id";
+    public static final String REVENUE_QUANTITY = "_quantity";
+    public static final String REVENUE_PRICE = "_price";
+    public static final String REVENUE_REVENUE_TYPE = "_revenue_type";
+    public static final String REVENUE_RECEIPT = "_receipt";
+    public static final String REVENUE_RECEIPT_SIG = "_receipt_sig";
 }

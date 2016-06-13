@@ -7,10 +7,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
-import static io.rakam.api.Constants.AMP_OP_UNSET;
+import static io.rakam.api.Constants.OP_UNSET;
 
 /**
  * <h1>Identify</h1>
@@ -54,7 +53,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, boolean value) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
+        addToUserProperties(Constants.OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -67,7 +66,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, double value) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
+        addToUserProperties(Constants.OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -80,7 +79,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, float value) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
+        addToUserProperties(Constants.OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -93,7 +92,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, int value) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
+        addToUserProperties(Constants.OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -106,7 +105,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, long value) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
+        addToUserProperties(Constants.OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -119,7 +118,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, String value) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
+        addToUserProperties(Constants.OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -132,7 +131,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, JSONArray values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, values);
+        addToUserProperties(Constants.OP_SET_ONCE, property, values);
         return this;
     }
 
@@ -145,7 +144,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, JSONObject values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, values);
+        addToUserProperties(Constants.OP_SET_ONCE, property, values);
         return this;
     }
 
@@ -158,7 +157,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, boolean[] values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, booleanArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET_ONCE, property, booleanArrayToJSONArray(values));
         return this;
     }
 
@@ -171,7 +170,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, double[] values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, doubleArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET_ONCE, property, doubleArrayToJSONArray(values));
         return this;
     }
 
@@ -184,7 +183,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, float[] values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, floatArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET_ONCE, property, floatArrayToJSONArray(values));
         return this;
     }
 
@@ -197,7 +196,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, int[] values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, intArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET_ONCE, property, intArrayToJSONArray(values));
         return this;
     }
 
@@ -210,7 +209,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, long[] values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, longArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET_ONCE, property, longArrayToJSONArray(values));
         return this;
     }
 
@@ -223,7 +222,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify setOnce(String property, String[] values) {
-        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, stringArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET_ONCE, property, stringArrayToJSONArray(values));
         return this;
     }
 
@@ -236,7 +235,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, boolean value) {
-        addToUserProperties(Constants.AMP_OP_SET, property, value);
+        addToUserProperties(Constants.OP_SET, property, value);
         return this;
     }
 
@@ -248,7 +247,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, double value) {
-        addToUserProperties(Constants.AMP_OP_SET, property, value);
+        addToUserProperties(Constants.OP_SET, property, value);
         return this;
     }
 
@@ -260,7 +259,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, float value) {
-        addToUserProperties(Constants.AMP_OP_SET, property, value);
+        addToUserProperties(Constants.OP_SET, property, value);
         return this;
     }
 
@@ -272,7 +271,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, int value) {
-        addToUserProperties(Constants.AMP_OP_SET, property, value);
+        addToUserProperties(Constants.OP_SET, property, value);
         return this;
     }
 
@@ -284,7 +283,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, long value) {
-        addToUserProperties(Constants.AMP_OP_SET, property, value);
+        addToUserProperties(Constants.OP_SET, property, value);
         return this;
     }
 
@@ -296,7 +295,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, String value) {
-        addToUserProperties(Constants.AMP_OP_SET, property, value);
+        addToUserProperties(Constants.OP_SET, property, value);
         return this;
     }
 
@@ -308,7 +307,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, JSONObject values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, values);
+        addToUserProperties(Constants.OP_SET, property, values);
         return this;
     }
 
@@ -320,7 +319,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, JSONArray values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, values);
+        addToUserProperties(Constants.OP_SET, property, values);
         return this;
     }
 
@@ -332,7 +331,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, boolean[] values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, booleanArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET, property, booleanArrayToJSONArray(values));
         return this;
     }
 
@@ -344,7 +343,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, double[] values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, doubleArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET, property, doubleArrayToJSONArray(values));
         return this;
     }
 
@@ -356,7 +355,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, float[] values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, floatArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET, property, floatArrayToJSONArray(values));
         return this;
     }
 
@@ -368,7 +367,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, int[] values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, intArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET, property, intArrayToJSONArray(values));
         return this;
     }
 
@@ -380,7 +379,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, long[] values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, longArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET, property, longArrayToJSONArray(values));
         return this;
     }
 
@@ -392,7 +391,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify set(String property, String[] values) {
-        addToUserProperties(Constants.AMP_OP_SET, property, stringArrayToJSONArray(values));
+        addToUserProperties(Constants.OP_SET, property, stringArrayToJSONArray(values));
         return this;
     }
 
@@ -407,7 +406,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify add(String property, double value) {
-        addToUserProperties(Constants.AMP_OP_INCREMENT, property, value);
+        addToUserProperties(Constants.OP_INCREMENT, property, value);
         return this;
     }
 
@@ -421,7 +420,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify add(String property, float value) {
-        addToUserProperties(Constants.AMP_OP_INCREMENT, property, value);
+        addToUserProperties(Constants.OP_INCREMENT, property, value);
         return this;
     }
 
@@ -435,7 +434,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify add(String property, int value) {
-        addToUserProperties(Constants.AMP_OP_INCREMENT, property, value);
+        addToUserProperties(Constants.OP_INCREMENT, property, value);
         return this;
     }
 
@@ -449,7 +448,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify add(String property, long value) {
-        addToUserProperties(Constants.AMP_OP_INCREMENT, property, value);
+        addToUserProperties(Constants.OP_INCREMENT, property, value);
         return this;
     }
 
@@ -464,7 +463,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify add(String property, String value) {
-        addToUserProperties(Constants.AMP_OP_INCREMENT, property, value);
+        addToUserProperties(Constants.OP_INCREMENT, property, value);
         return this;
     }
 
@@ -479,7 +478,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify add(String property, JSONObject values) {
-        addToUserProperties(Constants.AMP_OP_INCREMENT, property, values);
+        addToUserProperties(Constants.OP_INCREMENT, property, values);
         return this;
     }
 
@@ -929,7 +928,7 @@ public class Identify {
      * @return the same Identify object
      */
     public Identify unset(String property) {
-        addToUserProperties(AMP_OP_UNSET, property, null);
+        addToUserProperties(OP_UNSET, property, null);
         return this;
     }
 
@@ -942,7 +941,7 @@ public class Identify {
      */
     public Identify clearAll() {
         if (userPropertiesOperations.length() > 0) {
-            if (!userProperties.contains(Constants.AMP_OP_CLEAR_ALL)) {
+            if (!userProperties.contains(Constants.OP_CLEAR_ALL)) {
                 RakamLog.getLogger().w(TAG, String.format(
                         "Need to send $clearAll on its own Identify object without any other " +
                                 "operations, ignoring $clearAll"
@@ -952,7 +951,7 @@ public class Identify {
         }
 
         try {
-            userPropertiesOperations.put(Constants.AMP_OP_CLEAR_ALL, 1);
+            userPropertiesOperations.put(Constants.OP_CLEAR_ALL, 1);
         } catch (JSONException e) {
             RakamLog.getLogger().e(TAG, e.toString());
         }
@@ -969,7 +968,7 @@ public class Identify {
             return;
         }
 
-        if (operation != AMP_OP_UNSET && value == null) {
+        if (operation != OP_UNSET && value == null) {
             RakamLog.getLogger().w(TAG, String.format(
                     "Attempting to perform operation %s with null value for property %s, ignoring",
                     operation, property
@@ -978,7 +977,7 @@ public class Identify {
         }
 
         // check that clearAll wasn't already used in this Identify
-        if (userPropertiesOperations.has(Constants.AMP_OP_CLEAR_ALL)) {
+        if (userPropertiesOperations.has(Constants.OP_CLEAR_ALL)) {
             RakamLog.getLogger().w(TAG, String.format(
                     "This Identify already contains a $clearAll operation, ignoring operation %s",
                     operation
@@ -997,10 +996,10 @@ public class Identify {
 
         try {
             if (!userPropertiesOperations.has(operation)) {
-                userPropertiesOperations.put(operation, operation != AMP_OP_UNSET ? new JSONObject() : new JSONArray());
+                userPropertiesOperations.put(operation, operation != OP_UNSET ? new JSONObject() : new JSONArray());
             }
 
-            if(operation != AMP_OP_UNSET) {
+            if(operation != OP_UNSET) {
                 userPropertiesOperations.getJSONObject(operation).put(property, value);
             } else {
                 userPropertiesOperations.getJSONArray(operation).put(property);
@@ -1071,7 +1070,7 @@ public class Identify {
      * @return the user property
      */
     Identify setUserProperty(String property, Object value) {
-        addToUserProperties(Constants.AMP_OP_SET, property, value);
+        addToUserProperties(Constants.OP_SET, property, value);
         return this;
     }
 }
