@@ -20,7 +20,7 @@
 
     <property name="groupId" value="io.rakam" />
     <property name="artifactId" value="rakam-android" />
-    <property name="version" value="2.7.3" />
+    <property name="version" value="2.7.4" />
 
     <property name="jar" value="${dist}/lib/${artifactId}-${version}.jar" />
     <property name="uberjar" value="${dist}/lib/${artifactId}-${version}-with-dependencies.jar" />
@@ -249,6 +249,9 @@
             <arg value="-DpomFile=pom.xml" />
             <arg value="-Dfile=${jar}" />
             <arg value="-Pgpg" />
+            <!--<arg value="-Dgpg.passphrase=dummy" />-->
+            <arg value="-Dkeyname=${gpg.keyname}" />
+            <arg value="-DpassphraseServerId=${gpg.keyname}" />
         </artifact:mvn>
 
         <artifact:mvn>
@@ -259,6 +262,9 @@
             <arg value="-Dfile=${sources-jar}" />
             <arg value="-Dclassifier=sources" />
             <arg value="-Pgpg" />
+            <!--<arg value="-Dgpg.passphrase=dummy" />-->
+            <arg value="-Dkeyname=${gpg.keyname}" />
+            <arg value="-DpassphraseServerId=${gpg.keyname}" />
         </artifact:mvn>
 
         <artifact:mvn>
@@ -269,6 +275,9 @@
             <arg value="-Dfile=${javadoc-jar}" />
             <arg value="-Dclassifier=javadoc" />
             <arg value="-Pgpg" />
+            <!--<arg value="-Dgpg.passphrase=dummy" />-->
+            <arg value="-Dkeyname=${gpg.keyname}" />
+            <arg value="-DpassphraseServerId=${gpg.keyname}" />
         </artifact:mvn>
     </target>
 
