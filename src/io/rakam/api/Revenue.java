@@ -164,12 +164,12 @@ public class Revenue {
     protected JSONObject toJSONObject() {
         JSONObject obj = properties == null ? new JSONObject() : properties;
         try {
-            obj.put(Constants.AMP_REVENUE_PRODUCT_ID, productId);
-            obj.put(Constants.AMP_REVENUE_QUANTITY, quantity);
-            obj.put(Constants.AMP_REVENUE_PRICE, price);
-            obj.put(Constants.AMP_REVENUE_REVENUE_TYPE, revenueType);
-            obj.put(Constants.AMP_REVENUE_RECEIPT, receipt);
-            obj.put(Constants.AMP_REVENUE_RECEIPT_SIG, receiptSig);
+            obj.put(Constants.REVENUE_PRODUCT_ID, productId);
+            obj.put(Constants.REVENUE_QUANTITY, quantity);
+            obj.put(Constants.REVENUE_PRICE, price);
+            obj.put(Constants.REVENUE_REVENUE_TYPE, revenueType);
+            obj.put(Constants.REVENUE_RECEIPT, receipt);
+            obj.put(Constants.REVENUE_RECEIPT_SIG, receiptSig);
         } catch (JSONException e) {
             logger.e(
                 TAG, String.format("Failed to convert revenue object to JSON: %s", e.toString())

@@ -24,6 +24,7 @@ import java.util.UUID;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
 
+import static io.rakam.api.RakamClient.SUPER_PROPERTIES_KEY;
 import static io.rakam.api.RakamClient.USER_ID_KEY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
@@ -172,9 +173,9 @@ public class RakamClientTest extends BaseTest {
 
         JSONObject userPropertiesOperations = event.optJSONObject("data");
         assertEquals(userPropertiesOperations.length(), 1);
-        assertTrue(userPropertiesOperations.has(Constants.AMP_OP_SET));
+        assertTrue(userPropertiesOperations.has(Constants.OP_SET));
 
-        JSONObject setOperations = userPropertiesOperations.optJSONObject(Constants.AMP_OP_SET);
+        JSONObject setOperations = userPropertiesOperations.optJSONObject(Constants.OP_SET);
         assertTrue(compareJSONObjects(userProperties, setOperations));
     }
 
@@ -201,9 +202,9 @@ public class RakamClientTest extends BaseTest {
 
         JSONObject userProperties = event.optJSONObject("data");
         JSONObject expected = new JSONObject();
-        expected.put(Constants.AMP_OP_SET_ONCE, new JSONObject().put(property1, value1));
-        expected.put(Constants.AMP_OP_SET, new JSONObject().put(property3, value3));
-        expected.put(Constants.AMP_OP_UNSET, new JSONArray().put(property4));
+        expected.put(Constants.OP_SET_ONCE, new JSONObject().put(property1, value1));
+        expected.put(Constants.OP_SET, new JSONObject().put(property3, value3));
+        expected.put(Constants.OP_UNSET, new JSONArray().put(property4));
         assertTrue(compareJSONObjects(userProperties, expected));
     }
 
@@ -323,11 +324,11 @@ public class RakamClientTest extends BaseTest {
         JSONObject identify = getUserPropertiesFromRequest(request).optJSONObject(0);
         JSONObject userProperties = identify.getJSONObject("data");
         assertEquals(userProperties.length(), 1);
-        assertTrue(userProperties.has(Constants.AMP_OP_SET));
+        assertTrue(userProperties.has(Constants.OP_SET));
 
         JSONObject expected = new JSONObject();
         expected.put("key", "value");
-        assertTrue(compareJSONObjects(userProperties.getJSONObject(Constants.AMP_OP_SET), expected));
+        assertTrue(compareJSONObjects(userProperties.getJSONObject(Constants.OP_SET), expected));
 
         // verify db state
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
@@ -399,9 +400,9 @@ public class RakamClientTest extends BaseTest {
         assertEquals(getUnsentIdentifyCount(), 3);
         JSONArray events = getUnsentIdentifys(3);
 
-        JSONObject expectedIdentify1 = new JSONObject().put(Constants.AMP_OP_SET, new JSONObject().put("photo_count", 1));
-        JSONObject expectedIdentify2 = new JSONObject().put(Constants.AMP_OP_INCREMENT, new JSONObject().put("karma", 2));
-        JSONObject expectedIdentify3 = new JSONObject().put(Constants.AMP_OP_UNSET, new JSONArray().put("gender"));
+        JSONObject expectedIdentify1 = new JSONObject().put(Constants.OP_SET, new JSONObject().put("photo_count", 1));
+        JSONObject expectedIdentify2 = new JSONObject().put(Constants.OP_INCREMENT, new JSONObject().put("karma", 2));
+        JSONObject expectedIdentify3 = new JSONObject().put(Constants.OP_UNSET, new JSONArray().put("gender"));
 
         assertTrue(compareJSONObjects(
                 events.optJSONObject(0).optJSONObject("data"), expectedIdentify1
@@ -483,12 +484,12 @@ public class RakamClientTest extends BaseTest {
         assertEquals(event.optString("collection"), "_revenue");
 
         JSONObject obj = event.optJSONObject("properties");
-        assertEquals(obj.optDouble(Constants.AMP_REVENUE_PRICE), price, 0);
-        assertEquals(obj.optInt(Constants.AMP_REVENUE_QUANTITY), 15);
-        assertEquals(obj.optString(Constants.AMP_REVENUE_PRODUCT_ID), productId);
-        assertEquals(obj.optString(Constants.AMP_REVENUE_RECEIPT), receipt);
-        assertEquals(obj.optString(Constants.AMP_REVENUE_RECEIPT_SIG), receiptSig);
-        assertEquals(obj.optString(Constants.AMP_REVENUE_REVENUE_TYPE), revenueType);
+        assertEquals(obj.optDouble(Constants.REVENUE_PRICE), price, 0);
+        assertEquals(obj.optInt(Constants.REVENUE_QUANTITY), 15);
+        assertEquals(obj.optString(Constants.REVENUE_PRODUCT_ID), productId);
+        assertEquals(obj.optString(Constants.REVENUE_RECEIPT), receipt);
+        assertEquals(obj.optString(Constants.REVENUE_RECEIPT_SIG), receiptSig);
+        assertEquals(obj.optString(Constants.REVENUE_REVENUE_TYPE), revenueType);
     }
 
     @Test
@@ -768,7 +769,7 @@ public class RakamClientTest extends BaseTest {
         JSONObject events = getUserPropertiesFromRequest(request).optJSONObject(0).getJSONObject("data");
 
         assertEquals(
-                events.getJSONObject(Constants.AMP_OP_SET).getString("long_string"),
+                events.getJSONObject(Constants.OP_SET).getString("long_string"),
                 truncString);
     }
 
@@ -870,11 +871,38 @@ public class RakamClientTest extends BaseTest {
 
         JSONObject userPropertiesOperations = event.optJSONObject("data");
         assertEquals(userPropertiesOperations.length(), 1);
-        assertTrue(userPropertiesOperations.has(Constants.AMP_OP_CLEAR_ALL));
+        assertTrue(userPropertiesOperations.has(Constants.OP_CLEAR_ALL));
 
         assertEquals(
-                1, userPropertiesOperations.optInt(Constants.AMP_OP_CLEAR_ALL)
+                1, userPropertiesOperations.optInt(Constants.OP_CLEAR_ALL)
         );
+    }
+
+    @Test
+    public void testSuperProperties() throws JSONException {
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+
+        JSONObject obj = new JSONObject().put("test", 1).put("test1", 2);
+        rakam.setSuperProperties(obj);
+        looper.runToEndOfTasks();
+
+        DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
+        assertTrue(compareJSONObjects(new JSONObject(dbHelper.getValue(SUPER_PROPERTIES_KEY)), obj));
+
+        assertTrue(compareJSONObjects(rakam.getSuperProperties(), obj));
+    }
+
+    @Test
+    public void testClearSuperProperties() throws JSONException {
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+
+        JSONObject obj = new JSONObject().put("test", 1).put("test1", 2);
+        rakam.setSuperProperties(obj);
+        looper.runToEndOfTasks();
+
+        rakam.clearSuperProperties();
+
+        assertTrue(compareJSONObjects(rakam.getSuperProperties(), null));
     }
 
     @Test

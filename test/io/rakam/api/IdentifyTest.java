@@ -30,7 +30,7 @@ public class IdentifyTest extends BaseTest {
 
         JSONObject expected = new JSONObject();
         JSONArray expectedOperations = new JSONArray().put(property1).put(property2);
-        expected.put(Constants.AMP_OP_UNSET, expectedOperations);
+        expected.put(Constants.OP_UNSET, expectedOperations);
         assertTrue(compareJSONObjects(expected, identify.userPropertiesOperations));
     }
 
@@ -63,7 +63,7 @@ public class IdentifyTest extends BaseTest {
         JSONObject expectedOperations = new JSONObject().put(property1, value1);
         expectedOperations.put(property2, value2).put(property3, value3).put(property4, value4);
         expectedOperations.put(property5, value5Expected);
-        expected.put(Constants.AMP_OP_SET, expectedOperations);
+        expected.put(Constants.OP_SET, expectedOperations);
         assertTrue(compareJSONObjects(expected, identify.userPropertiesOperations));
     }
 
@@ -96,7 +96,7 @@ public class IdentifyTest extends BaseTest {
         JSONObject expectedOperations = new JSONObject().put(property1, value1);
         expectedOperations.put(property2, value2).put(property3, value3).put(property4, value4);
         expectedOperations.put(property5, value5Expected);
-        expected.put(Constants.AMP_OP_SET_ONCE, expectedOperations);
+        expected.put(Constants.OP_SET_ONCE, expectedOperations);
         assertTrue(compareJSONObjects(expected, identify.userPropertiesOperations));
     }
 
@@ -279,10 +279,10 @@ public class IdentifyTest extends BaseTest {
         identify.set(property4, value3);
 
         JSONObject expected = new JSONObject();
-        expected.put(Constants.AMP_OP_SET_ONCE, new JSONObject().put(property1, value1));
-        expected.put(Constants.AMP_OP_INCREMENT, new JSONObject().put(property2, value2));
-        expected.put(Constants.AMP_OP_SET, new JSONObject().put(property3, value3));
-        expected.put(Constants.AMP_OP_UNSET, new JSONArray().put(property4));
+        expected.put(Constants.OP_SET_ONCE, new JSONObject().put(property1, value1));
+        expected.put(Constants.OP_INCREMENT, new JSONObject().put(property2, value2));
+        expected.put(Constants.OP_SET, new JSONObject().put(property3, value3));
+        expected.put(Constants.OP_UNSET, new JSONArray().put(property4));
 //        expected.put(Constants.AMP_OP_APPEND, new JSONObject().put(property5, value5));
 //        expected.put(Constants.AMP_OP_PREPEND, new JSONObject().put(property6, value6));
         assertTrue(compareJSONObjects(expected, identify.userPropertiesOperations));
@@ -299,7 +299,7 @@ public class IdentifyTest extends BaseTest {
         identify.set(property, value3).unset(property);
 
         JSONObject expected = new JSONObject();
-        expected.put(Constants.AMP_OP_SET_ONCE, new JSONObject().put(property, value1));
+        expected.put(Constants.OP_SET_ONCE, new JSONObject().put(property, value1));
         assertTrue(compareJSONObjects(expected, identify.userPropertiesOperations));
     }
 
@@ -314,7 +314,7 @@ public class IdentifyTest extends BaseTest {
         identify.add(property, value2).set(property, value3).unset(property);
 
         JSONObject expected = new JSONObject();
-        expected.put(Constants.AMP_OP_CLEAR_ALL, 1);
+        expected.put(Constants.OP_CLEAR_ALL, 1);
         assertTrue(compareJSONObjects(expected, identify.userPropertiesOperations));
     }
 
@@ -329,7 +329,7 @@ public class IdentifyTest extends BaseTest {
         identify.set(property, value3).unset(property).clearAll();
 
         JSONObject expected = new JSONObject();
-        expected.put(Constants.AMP_OP_SET_ONCE, new JSONObject().put(property, value1));
+        expected.put(Constants.OP_SET_ONCE, new JSONObject().put(property, value1));
         assertTrue(compareJSONObjects(expected, identify.userPropertiesOperations));
     }
 }
