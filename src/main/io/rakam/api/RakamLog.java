@@ -2,9 +2,6 @@ package io.rakam.api;
 
 import android.util.Log;
 
-/**
- * Created by danieljih on 10/16/15.
- */
 public class RakamLog {
 
     private volatile boolean enableLogging = true;
