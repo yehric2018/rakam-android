@@ -2,6 +2,7 @@ package io.rakam.api;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -27,6 +28,7 @@ public class PinningTest extends BaseTest {
     }
 
     @Test
+    @Ignore
     public void testSslPinning() {
         rakam = PinnedRakamClient.getInstance();
         rakam.initialize(context, "1cc2c1978ebab0f6451112a8f5df4f4e");
