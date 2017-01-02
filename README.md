@@ -45,7 +45,7 @@ See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/java
 5. In the `onCreate()` of your main activity, initialize the SDK:
 
     ```java
-    Rakam.getInstance().initialize(this, "YOUR_API_KEY_HERE").enableForegroundTracking(getApplication());
+    Rakam.getInstance().initialize(this, "YOUR_WRITE_KEY_HERE").enableForegroundTracking(getApplication());
     ```
 
     Note: if your app has multiple entry points/exit points, you should make a `Rakam.getInstance().initialize()` at every `onCreate()` entry point.
