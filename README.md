@@ -46,6 +46,7 @@ See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/java
 
     ```java
     Rakam.getInstance().initialize(this, "YOUR_WRITE_KEY_HERE").enableForegroundTracking(getApplication());
+    Rakam.getInstance().setApiUrl(new URL("YOUR_RAKAM_API_URL")); // By default it's app.rakam.io
     ```
 
     Note: if your app has multiple entry points/exit points, you should make a `Rakam.getInstance().initialize()` at every `onCreate()` entry point.
