@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/buremba/rakam-android.svg?style=svg)](https://circleci.com/gh/buremba/rakam-android)
+[![Build Status](https://travis-ci.org/buremba/rakam-android.svg?branch=master)](https://travis-ci.org/buremba/rakam-android)
 
 Rakam Android SDK
 ====================
