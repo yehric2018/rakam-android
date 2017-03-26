@@ -5,8 +5,6 @@ Rakam Android SDK
 
 An Android SDK for tracking events and revenue to [Rakam](http://www.rakam.io).
 
-A [demo application](https://github.com/buremba/rakam-android-demo) is available to show a simple integration.
-
 See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/javadoc/index.html) for a description of all available SDK methods.
 
 # Setup #
@@ -45,7 +43,7 @@ See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/java
 5. In the `onCreate()` of your main activity, initialize the SDK:
 
     ```java
-    Rakam.getInstance().initialize(this, "YOUR_WRITE_KEY_HERE").enableForegroundTracking(getApplication());
+    Rakam.getInstance().initialize(this, "YOUR_PROJECT_WRITE_KEY").enableForegroundTracking(getApplication());
     Rakam.getInstance().setApiUrl(new URL("YOUR_RAKAM_API_URL")); // By default it's app.rakam.io
     ```
 
@@ -67,6 +65,8 @@ See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/java
     ```
 
 9. Events are saved locally. Uploads are batched to occur every 30 events and every 30 seconds. After calling `logEvent()` in your app, you will immediately see data appear on the Rakam website.
+
+A [demo application](https://github.com/buremba/rakam-android-demo) is available to show a simple integration.
 
 # Tracking Events #
 
