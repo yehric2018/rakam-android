@@ -43,8 +43,7 @@ See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/java
 5. In the `onCreate()` of your main activity, initialize the SDK:
 
     ```java
-    Rakam.getInstance().initialize(this, "YOUR_PROJECT_WRITE_KEY").enableForegroundTracking(getApplication());
-    Rakam.getInstance().setApiUrl(new URL("YOUR_RAKAM_API_URL")); // By default it's app.rakam.io
+    Rakam.getInstance().initialize(this, new URL("YOUR_PROJECT_API_URL"), "YOUR_PROJECT_WRITE_KEY").enableForegroundTracking(getApplication());
     ```
 
     Note: if your app has multiple entry points/exit points, you should make a `Rakam.getInstance().initialize()` at every `onCreate()` entry point.
@@ -123,7 +122,7 @@ Rakam.getInstance().setUserId("USER_ID_HERE");
 You can also add a user ID as an argument to the `initialize()` call:
 
 ```
-Rakam.getInstance().initialize(this, "YOUR_API_KEY_HERE", "USER_ID_HERE");
+Rakam.getInstance().initialize(this, new URL("YOUR_PROJECT_API_URL"), "YOUR_PROJECT_WRITE_KEY", "USER_ID_HERE");
 ```
 
 # Setting Event Properties #
