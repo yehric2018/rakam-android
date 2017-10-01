@@ -15,23 +15,23 @@ See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/java
   Alternatively, if you are using Maven in your project, the jar is available on [Maven Central](http://search.maven.org/#artifactdetails%7Cio.rakam%7Candroid-sdk%7C2.7.6%7Cjar) using the following configuration in your pom.xml:
 
 ```
-  <dependency>
-    <groupId>io.rakam</groupId>
-    <artifactId>android-sdk</artifactId>
-    <version>2.7.6</version>
-  </dependency>
+<dependency>
+  <groupId>io.rakam</groupId>
+  <artifactId>android-sdk</artifactId>
+  <version>2.7.6</version>
+</dependency>
 ```
 
   Or if you are using gradle in your project, include in your build.gradle file:
 
 ```
-  compile 'io.rakam:android-sdk:2.7.6'
+compile 'io.rakam:android-sdk:2.7.6'
 ```
 
 3. If you haven't already, add the [INTERNET](https://developer.android.com/reference/android/Manifest.permission.html#INTERNET) permission to your manifest file:
 
 ``` xml
-  <uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.INTERNET" />
 ```
 
 4.  In every file that uses analytics, import Rakam at the top:
@@ -60,8 +60,8 @@ Note: if your app has multiple entry points/exit points, you should make a `Raka
 8. If you are using Proguard, add these exceptions to ```proguard.pro``` for Google Play Advertising IDs and Rakam dependencies:
 
 ```yaml
-    -keep class com.google.android.gms.ads.** { *; }
-    -dontwarn okio.**
+-keep class com.google.android.gms.ads.** { *; }
+-dontwarn okio.**
 ```
 
 9. Events are saved locally. Uploads are batched to occur every 30 events and every 30 seconds. After calling `logEvent()` in your app, you will immediately see data appear on the Rakam website.
