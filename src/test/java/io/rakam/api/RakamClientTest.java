@@ -49,7 +49,7 @@ public class RakamClientTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
+        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
     }
 
     @After

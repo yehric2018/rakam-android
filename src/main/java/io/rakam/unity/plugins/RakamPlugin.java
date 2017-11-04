@@ -25,17 +25,6 @@ public class RakamPlugin {
         return properties;
     }
 
-    public static void init(Context context, String apiKey) {
-        URL apiUrl;
-        try {
-            apiUrl = new URL("https://app.rakam.io");
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-
-        Rakam.getInstance().initialize(context, apiUrl, apiKey);
-    }
-
     public static void init(Context context, String apiKey, String userId) {
         URL apiUrl;
         try {

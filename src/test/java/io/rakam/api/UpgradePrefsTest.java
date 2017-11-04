@@ -35,21 +35,6 @@ public class UpgradePrefsTest extends BaseTest {
     }
 
     @Test
-    public void testUpgradeOnInit() {
-        Constants.class.getPackage().getName();
-
-        rakam = new RakamClient();
-        URL apiUrl;
-        try {
-            apiUrl = new URL("https://app.rakam.io");
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-
-        rakam.initialize(context, apiUrl, "KEY");
-    }
-
-    @Test
     public void testUpgrade() {
         String sourceName = "io.rakam.a" + "." + context.getPackageName();
         context.getSharedPreferences(sourceName, Context.MODE_PRIVATE).edit()
