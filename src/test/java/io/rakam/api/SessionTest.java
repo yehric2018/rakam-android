@@ -11,6 +11,8 @@ import org.robolectric.annotation.Config;
 import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
+import java.net.URL;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -40,7 +42,7 @@ public class SessionTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp(true);
-        rakam.initialize(context, apiKey);
+        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
     }
 
     @After

@@ -6,26 +6,18 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Build;
 import android.text.TextUtils;
-
+import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.CookieManager;
-import java.net.HttpCookie;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 import static io.rakam.api.Constants.MAX_STRING_LENGTH;
 import static io.rakam.api.Constants.USER_SET_PROPERTIES_ENDPOINT;
@@ -190,12 +182,13 @@ public class RakamClient
      * user properties.
      *
      * @param context the Android application context
+     * @param apiUrl your Rakam API Url
      * @param apiKey your Rakam App API key
      * @return the RakamClient
      */
-    public RakamClient initialize(Context context, String apiKey)
+    public RakamClient initialize(Context context, URL apiUrl, String apiKey)
     {
-        return initialize(context, apiKey, null);
+        return initialize(context, apiUrl, apiKey, null);
     }
 
     /**
@@ -228,11 +221,12 @@ public class RakamClient
      * you log events and modify user properties.
      *
      * @param context the Android application context
+     * @param apiUrl your Rakam App API Url
      * @param apiKey your Rakam App API key
      * @param userId the user id to set
      * @return the RakamClient
      */
-    public synchronized RakamClient initialize(Context context, String apiKey, String userId)
+    public synchronized RakamClient initialize(Context context, URL apiUrl, String apiKey, String userId)
     {
         if (context == null) {
             logger.e(TAG, "Argument context cannot be null in initialize()");
@@ -241,6 +235,7 @@ public class RakamClient
 
         RakamClient.upgradePrefs(context);
         RakamClient.upgradeSharedPrefsToDB(context);
+        setApiUrl(apiUrl);
 
         if (TextUtils.isEmpty(apiKey)) {
             logger.e(TAG, "Argument apiKey cannot be null or blank in initialize()");
@@ -1584,10 +1579,13 @@ public class RakamClient
      */
     protected void makeEventUploadPostRequest(OkHttpClient client, String endpoint, String body, final long maxId, final CleanerFunction cleanerFunction)
     {
-        String url = apiUrl == null ? Constants.DEFAULT_EVENT_LOG_URL : apiUrl;
+        if(apiUrl == null) {
+            logger.e(TAG, "The API Url is not set, couldn't send the event data to the server. Please call client.setApiUrl()");
+            return;
+        }
 
         Request request = new Request.Builder()
-                .url(url + endpoint)
+                .url(apiUrl + endpoint)
                 .post(RequestBody.create(JSON, body))
                 .build();
 
@@ -1595,24 +1593,6 @@ public class RakamClient
 
         try {
             Response response = client.newCall(request).execute();
-
-            List<String> headers = response.headers("Set-Cookie");
-            if (headers != null && !headers.isEmpty()) {
-                String cookie = headers.get(0);
-                // parse cookies
-                List<HttpCookie> cookiesList = HttpCookie.parse(cookie);
-                for (HttpCookie httpCookie : cookiesList) {
-                    if (getUserId() == null && httpCookie.getName().equals("_anonymous_user")) {
-                        try {
-                            long userId = Long.parseLong(httpCookie.getValue());
-                            setUserId(userId);
-                        }
-                        catch (NumberFormatException e) {
-                            setUserId(httpCookie.getValue());
-                        }
-                    }
-                }
-            }
 
             String stringResponse = response.body().string();
             if (stringResponse.equals("1")) {
@@ -1778,6 +1758,11 @@ public class RakamClient
 
     public void setApiUrl(URL apiUrl)
     {
+        if(apiUrl == null) {
+            logger.e(TAG, "apiUrl can't be null");
+            return;
+        }
+
         String scheme = apiUrl.getProtocol();
         String serverName = apiUrl.getHost();
         int serverPort = apiUrl.getPort();

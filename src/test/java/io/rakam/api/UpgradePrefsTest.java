@@ -11,6 +11,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -36,7 +39,14 @@ public class UpgradePrefsTest extends BaseTest {
         Constants.class.getPackage().getName();
 
         rakam = new RakamClient();
-        rakam.initialize(context, "KEY");
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        rakam.initialize(context, apiUrl, "KEY");
     }
 
     @Test
@@ -108,8 +118,8 @@ public class UpgradePrefsTest extends BaseTest {
 
         assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
-            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY),
-            deviceId
+                DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY),
+                deviceId
         );
 
         // deviceId should be removed from sharedPrefs after upgrade
@@ -120,7 +130,7 @@ public class UpgradePrefsTest extends BaseTest {
     public void testUpgradeDeviceIdToDBEmpty() {
         assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertNull(
-            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY)
+                DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY)
         );
     }
 
@@ -139,8 +149,8 @@ public class UpgradePrefsTest extends BaseTest {
         String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertEquals(
-            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY),
-            deviceId
+                DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY),
+                deviceId
         );
 
         // deviceId should be removed from sharedPrefs after upgrade
@@ -162,7 +172,7 @@ public class UpgradePrefsTest extends BaseTest {
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertNull(target.getString(Constants.PREFKEY_DEVICE_ID, null));
         assertNull(
-            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY)
+                DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.DEVICE_ID_KEY)
         );
     }
 
@@ -174,9 +184,9 @@ public class UpgradePrefsTest extends BaseTest {
 
         assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
-            (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
-                RakamClient.OPT_OUT_KEY
-            ), 1L
+                (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
+                        RakamClient.OPT_OUT_KEY
+                ), 1L
         );
 
         // deviceId should be removed from sharedPrefs after upgrade
@@ -195,9 +205,9 @@ public class UpgradePrefsTest extends BaseTest {
 
         assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
-            (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
-                RakamClient.OPT_OUT_KEY
-            ), 0L
+                (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
+                        RakamClient.OPT_OUT_KEY
+                ), 0L
         );
 
         // shared prefs not deleted since migration skipped
@@ -219,9 +229,9 @@ public class UpgradePrefsTest extends BaseTest {
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertFalse(target.getBoolean(Constants.PREFKEY_DEVICE_ID, false));
         assertEquals(
-            (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
-                RakamClient.OPT_OUT_KEY
-            ), 1L
+                (long) DatabaseHelper.getDatabaseHelper(context).getLongValue(
+                        RakamClient.OPT_OUT_KEY
+                ), 1L
         );
     }
 
@@ -233,8 +243,8 @@ public class UpgradePrefsTest extends BaseTest {
 
         assertTrue(RakamClient.upgradeSharedPrefsToDB(context));
         assertEquals(
-            DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.USER_ID_KEY),
-            "testUserId"
+                DatabaseHelper.getDatabaseHelper(context).getValue(RakamClient.USER_ID_KEY),
+                "testUserId"
         );
 
         // deviceId should be removed from sharedPrefs after upgrade
@@ -255,7 +265,7 @@ public class UpgradePrefsTest extends BaseTest {
         SharedPreferences target = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         assertNull(target.getString(Constants.PREFKEY_USER_ID, null));
         assertEquals(DatabaseHelper.getDatabaseHelper(context).getValue(
-            RakamClient.USER_ID_KEY
+                RakamClient.USER_ID_KEY
         ), "testUserId2");
     }
 

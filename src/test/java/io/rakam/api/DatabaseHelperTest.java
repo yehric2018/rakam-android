@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.net.URL;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -24,7 +25,7 @@ public class DatabaseHelperTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp(false);
-        rakam.initialize(context, apiKey);
+        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
         dbInstance = DatabaseHelper.getDatabaseHelper(context);
     }
 

@@ -16,6 +16,9 @@ import org.robolectric.shadows.ShadowLooper;
 
 import okhttp3.mockwebserver.RecordedRequest;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -37,7 +40,7 @@ public class InitializeTest extends BaseTest {
     }
 
     @Test
-    public void testInitializeUserId() {
+    public void testInitializeUserId() throws MalformedURLException {
 
         // the userId passed to initialize should override any existing values
         String sourceName = Constants.PACKAGE_NAME + "." + context.getPackageName();
@@ -48,7 +51,7 @@ public class InitializeTest extends BaseTest {
         dbHelper.insertOrReplaceKeyValue(RakamClient.USER_ID_KEY, "oldUserId");
 
         String userId = "newUserId";
-        rakam.initialize(context, apiKey, userId);
+        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey, userId);
 
         // Test that the user id is set.
         assertEquals(userId, rakam.userId);
@@ -66,7 +69,7 @@ public class InitializeTest extends BaseTest {
     }
 
     @Test
-    public void testInitializeUserIdFromSharedPrefs() {
+    public void testInitializeUserIdFromSharedPrefs() throws MalformedURLException {
         String userId = "testUserId";
         String sourceName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
@@ -75,7 +78,7 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
 
-        rakam.initialize(context, apiKey);
+        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
 
         // Test that the user id is set.
         assertEquals(rakam.userId, userId);
@@ -86,7 +89,7 @@ public class InitializeTest extends BaseTest {
     }
 
     @Test
-    public void testInitializeUserIdFromDb() {
+    public void testInitializeUserIdFromDb() throws MalformedURLException {
         // since user id already exists in database, ignore old value in shared prefs
         String userId = "testUserId";
         String sourceName = Constants.PACKAGE_NAME + "." + context.getPackageName();
@@ -96,7 +99,7 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         dbHelper.insertOrReplaceKeyValue(RakamClient.USER_ID_KEY, userId);
 
-        rakam.initialize(context, apiKey);
+        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
 
         // Test that the user id is set.
         assertEquals(rakam.userId, userId);
@@ -107,7 +110,7 @@ public class InitializeTest extends BaseTest {
     }
 
     @Test
-    public void testInitializeOptOut() {
+    public void testInitializeOptOut() throws MalformedURLException {
         String sourceName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
@@ -115,7 +118,7 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertNull(dbHelper.getLongValue(RakamClient.OPT_OUT_KEY));
 
-        rakam.initialize(context, apiKey);
+        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
 
         assertTrue(rakam.isOptedOut());
         assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 1L);
@@ -137,7 +140,14 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         dbHelper.insertOrReplaceKeyLongValue(RakamClient.OPT_OUT_KEY, 0L);
 
-        rakam.initialize(context, apiKey);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        rakam.initialize(context, apiUrl, apiKey);
 
         assertFalse(rakam.isOptedOut());
         assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 0L);
@@ -155,7 +165,14 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_ID, 3L).commit();
 
-        rakam.initialize(context, apiKey);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        rakam.initialize(context, apiUrl, apiKey);
 
         assertEquals(rakam.getLastEventId(), 3L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY), 3L);
@@ -181,7 +198,14 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_PREVIOUS_SESSION_ID, 4000L).commit();
 
-        rakam.initialize(context, apiKey);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        rakam.initialize(context, apiUrl, apiKey);
 
         assertEquals(rakam.sessionId, 4000L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.PREVIOUS_SESSION_ID_KEY), 4000L);
@@ -199,7 +223,14 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_TIME, 4000L).commit();
 
-        rakam.initialize(context, apiKey);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        rakam.initialize(context, apiUrl, apiKey);
 
         assertEquals(rakam.getLastEventTime(), 5000L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_TIME_KEY), 5000L);
@@ -227,7 +258,14 @@ public class InitializeTest extends BaseTest {
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
         prefs.edit().putLong(Constants.PREFKEY_LAST_IDENTIFY_ID, 3000L).commit();
 
-        rakam.initialize(context, apiKey);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        rakam.initialize(context, apiUrl, apiKey);
         ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         assertEquals(dbHelper.getValue(RakamClient.DEVICE_ID_KEY), "testDeviceId");
@@ -270,7 +308,14 @@ public class InitializeTest extends BaseTest {
         long [] timestamps = {8000, 14000};
         clock.setTimestamps(timestamps);
 
-        rakam.initialize(context, apiKey);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        rakam.initialize(context, apiUrl, apiKey);
         ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         looper.runToEndOfTasks();
 

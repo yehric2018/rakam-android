@@ -6,8 +6,6 @@ public class Constants {
     public static final String PLATFORM = "Android";
     public static final String VERSION = "2.7.4";
 
-    public static final String DEFAULT_EVENT_LOG_URL = "https://app.rakam.io/";
-
     public static final String EVENT_BATCH_ENDPOINT = "/event/batch";
     public static final String USER_SET_PROPERTIES_ENDPOINT = "/user/batch";
 

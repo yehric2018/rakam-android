@@ -17,6 +17,7 @@ import org.robolectric.annotation.Config;
 import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class RakamClientTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        rakam.initialize(context, apiKey);
+        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
     }
 
     @After
@@ -346,56 +347,6 @@ public class RakamClientTest extends BaseTest {
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 0);
         assertEquals(getUnsentIdentifyCount(), 0);
-    }
-
-    @Test
-    public void testAnonymousIdString() throws JSONException {
-        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
-
-        looper.runToEndOfTasks();
-
-        rakam.logEvent("test", new JSONObject().put("test", 1));
-
-        looper.runToEndOfTasks();
-        looper.runToEndOfTasks();
-
-        server.enqueue(new MockResponse().setBody("1").setHeader("Set-Cookie", "_anonymous_user=test"));
-        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
-        httplooper.runToEndOfTasks();
-
-        try {
-            server.takeRequest(1, SECONDS);
-        }
-        catch (InterruptedException e) {
-            return;
-        }
-
-        assertEquals(rakam.getUserId(), "test");
-    }
-
-    @Test
-    public void testAnonymousIdLong() throws JSONException {
-        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
-
-        looper.runToEndOfTasks();
-
-        rakam.logEvent("test", new JSONObject().put("test", 1));
-
-        looper.runToEndOfTasks();
-        looper.runToEndOfTasks();
-
-        server.enqueue(new MockResponse().setBody("1").setHeader("Set-Cookie", "_anonymous_user=3425"));
-        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
-        httplooper.runToEndOfTasks();
-
-        try {
-            server.takeRequest(1, SECONDS);
-        }
-        catch (InterruptedException e) {
-            return;
-        }
-
-        assertEquals(rakam.getUserId(), 3425L);
     }
 
     @Test

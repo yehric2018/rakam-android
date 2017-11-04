@@ -358,9 +358,6 @@ By default, device IDs are a randomly generated UUID. If you would like to use G
 
 If you have your own system for tracking device IDs and would like to set a custom device ID, you can do so with `Rakam.getInstance().setDeviceId("CUSTOM_DEVICE_ID")`. **Note: this is not recommended unless you really know what you are doing.** Make sure the device ID you set is sufficiently unique (we recommend something like a UUID - we use `UUID.randomUUID().toString()`) to prevent conflicts with other devices in our system.
 
-### SSL Pinning ###
-The SDK includes support for SSL pinning, but it is undocumented and recommended against unless you have a specific need. Please contact Rakam support before you ship any products with SSL pinning enabled so that we are aware and can provide documentation and implementation help.
-
 ### SDK Logging ###
 You can disable all logging done in the SDK by calling `Rakam.getInstance().enableLogging(false)`. By default the logging level is Log.INFO, meaning info messages, errors, and asserts are logged, but verbose and debug messages are not. You can change the logging level, for example to enable debug messages you can do `Rakam.getInstance().setLogLevel(Log.DEBUG)`.
 

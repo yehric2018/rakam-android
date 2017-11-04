@@ -10,6 +10,9 @@ import io.rakam.api.Revenue;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public class RakamPlugin {
 
     public static JSONObject ToJSONObject(String jsonString) {
@@ -23,11 +26,25 @@ public class RakamPlugin {
     }
 
     public static void init(Context context, String apiKey) {
-        Rakam.getInstance().initialize(context, apiKey);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        Rakam.getInstance().initialize(context, apiUrl, apiKey);
     }
 
     public static void init(Context context, String apiKey, String userId) {
-        Rakam.getInstance().initialize(context, apiKey, userId);
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://app.rakam.io");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        Rakam.getInstance().initialize(context, apiUrl, apiKey, userId);
     }
 
     public static void enableForegroundTracking(Application app) {
