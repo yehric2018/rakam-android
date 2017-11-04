@@ -1,54 +1,53 @@
-[![CircleCI](https://circleci.com/gh/buremba/rakam-android.svg?style=svg)](https://circleci.com/gh/buremba/rakam-android)
+[![Build Status](https://travis-ci.org/buremba/rakam-android.svg?branch=master)](https://travis-ci.org/buremba/rakam-android)
 
 Rakam Android SDK
 ====================
 
 An Android SDK for tracking events and revenue to [Rakam](http://www.rakam.io).
 
-A [demo application](https://github.com/rakam/Android-Demo) is available to show a simple integration.
-
 See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/javadoc/index.html) for a description of all available SDK methods.
 
 # Setup #
-1. If you haven't already, go to https://rakam.io/signup and register for an account. Then, add an app. You will receive an API Key.
+1. If you haven't already, go to https://rakam.io/register and register for an account. Then, add an app. You will receive an API Key.
 
-2. [Download the jar](https://github.com/buremba/rakam-android/raw/master/rakam-android-2.7.4-with-dependencies.jar) and copy it into the "libs" folder in your Android project in Android Studio.
+2. [Download the jar](http://repo1.maven.org/maven2/io/rakam/android-sdk/2.7.6/android-sdk-2.7.6-jar-with-dependencies.jar) and copy it into the "libs" folder in your Android project in Android Studio.
 
-  Alternatively, if you are using Maven in your project, the jar is available on [Maven Central](http://search.maven.org/#artifactdetails%7Cio.rakam%7Candroid-sdk%7C2.7.4%7Cjar) using the following configuration in your pom.xml:
+  Alternatively, if you are using Maven in your project, the jar is available on [Maven Central](http://search.maven.org/#artifactdetails%7Cio.rakam%7Candroid-sdk%7C2.7.6%7Cjar) using the following configuration in your pom.xml:
 
-    ```
-    <dependency>
-      <groupId>io.rakam</groupId>
-      <artifactId>android-sdk</artifactId>
-      <version>2.7.4</version>
-    </dependency>
-    ```
+```
+<dependency>
+  <groupId>io.rakam</groupId>
+  <artifactId>android-sdk</artifactId>
+  <version>2.7.6</version>
+</dependency>
+```
 
   Or if you are using gradle in your project, include in your build.gradle file:
 
-    ```
-    compile 'io.rakam:android-sdk:2.7.4'
-    ```
+```
+compile 'io.rakam:android-sdk:2.7.6'
+```
 
 3. If you haven't already, add the [INTERNET](https://developer.android.com/reference/android/Manifest.permission.html#INTERNET) permission to your manifest file:
 
-    ``` xml
-    <uses-permission android:name="android.permission.INTERNET" />
-    ```
+``` xml
+<uses-permission android:name="android.permission.INTERNET" />
+```
 
 4.  In every file that uses analytics, import Rakam at the top:
 
-    ```java
-    import Rakam;
-    ```
+```java
+import Rakam;
+```
 
 5. In the `onCreate()` of your main activity, initialize the SDK:
 
-    ```java
-    Rakam.getInstance().initialize(this, "YOUR_API_KEY_HERE").enableForegroundTracking(getApplication());
-    ```
+```java
+Rakam.getInstance().initialize(this, new URL("YOUR_PROJECT_API_URL"), 
+  "YOUR_PROJECT_WRITE_KEY").enableForegroundTracking(getApplication());
+```
 
-    Note: if your app has multiple entry points/exit points, you should make a `Rakam.getInstance().initialize()` at every `onCreate()` entry point.
+Note: if your app has multiple entry points/exit points, you should make a `Rakam.getInstance().initialize()` at every `onCreate()` entry point.
 
 6. To track an event anywhere in the app, call:
 
@@ -60,12 +59,14 @@ See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/java
 
 8. If you are using Proguard, add these exceptions to ```proguard.pro``` for Google Play Advertising IDs and Rakam dependencies:
 
-    ```yaml
-        -keep class com.google.android.gms.ads.** { *; }
-        -dontwarn okio.**
-    ```
+```yaml
+-keep class com.google.android.gms.ads.** { *; }
+-dontwarn okio.**
+```
 
 9. Events are saved locally. Uploads are batched to occur every 30 events and every 30 seconds. After calling `logEvent()` in your app, you will immediately see data appear on the Rakam website.
+
+A [demo application](https://github.com/buremba/rakam-android-demo) is available to show a simple integration.
 
 # Tracking Events #
 
@@ -94,15 +95,15 @@ Other Session Options:
 
 1.  By default start and end session events are no longer sent. To re-enable add this line after initializing the SDK:
 
-    ```java
-    Rakam.getInstance().trackSessionEvents(true);
-    ```
+```java
+Rakam.getInstance().trackSessionEvents(true);
+```
 
 2. You can also log events as out of session. Out of session events have a `session_id` of `-1` and are not considered part of the current session, meaning they do not extend the current session. This might be useful for example if you are logging events triggered by push notifications. You can log events as out of session by setting input parameter `outOfSession` to `true` when calling `logEvent()`:
 
-    ```java
-    Rakam.getInstance().logEvent("EVENT", null, true);
-    ```
+```java
+Rakam.getInstance().logEvent("EVENT", null, true);
+```
 
 ### Getting the Session Id ###
 
@@ -122,7 +123,7 @@ Rakam.getInstance().setUserId("USER_ID_HERE");
 You can also add a user ID as an argument to the `initialize()` call:
 
 ```
-Rakam.getInstance().initialize(this, "YOUR_API_KEY_HERE", "USER_ID_HERE");
+Rakam.getInstance().initialize(this, new URL("YOUR_PROJECT_API_URL"), "YOUR_PROJECT_WRITE_KEY", "USER_ID_HERE");
 ```
 
 # Setting Event Properties #
@@ -156,48 +157,48 @@ import Identify;
 
 1. `set`: this sets the value of a user property.
 
-    ```java
-    Identify identify = new Identify().set('gender', 'female').set('age', 20);
-    Rakam.getInstance().identify(identify);
-    ```
+```java
+Identify identify = new Identify().set('gender', 'female').set('age', 20);
+Rakam.getInstance().identify(identify);
+```
 
 2. `setOnce`: this sets the value of a user property only once. Subsequent `setOnce` operations on that user property will be ignored. In the following example, `sign_up_date` will be set once to `08/24/2015`, and the following setOnce to `09/14/2015` will be ignored:
 
-    ```java
-    Identify identify1 = new Identify().setOnce('sign_up_date', '08/24/2015');
-    Rakam.getInstance().identify(identify1);
+```java
+Identify identify1 = new Identify().setOnce('sign_up_date', '08/24/2015');
+Rakam.getInstance().identify(identify1);
 
-    Identify identify2 = new Identify().setOnce('sign_up_date', '09/14/2015');
-    rakam.identify(identify2);
-    ```
+Identify identify2 = new Identify().setOnce('sign_up_date', '09/14/2015');
+rakam.identify(identify2);
+```
 
 3. `unset`: this will unset and remove a user property.
 
-    ```java
-    Identify identify = new Identify().unset('gender').unset('age');
-    Rakam.getInstance().identify(identify);
-    ```
+```java
+Identify identify = new Identify().unset('gender').unset('age');
+Rakam.getInstance().identify(identify);
+```
 
 4. `add`: this will increment a user property by some numerical value. If the user property does not have a value set yet, it will be initialized to 0 before being incremented.
 
-    ```java
-    Identify identify = new Identify().add('karma', 1).add('friends', 1);
-    Rakam.getInstance().identify(identify);
-    ```
+```java
+Identify identify = new Identify().add('karma', 1).add('friends', 1);
+Rakam.getInstance().identify(identify);
+```
 
 5. `append`: this will append a value or values to a user property. If the user property does not have a value set yet, it will be initialized to an empty list before the new values are appended. If the user property has an existing value and it is not a list, it will be converted into a list with the new value appended.
 
-    ```java
-    Identify identify = new Identify().append("ab-tests", "new-user-test").append("some_list", new JSONArray().put(1).put("some_string"));
-    Rakam.getInstance().identify(identify);
-    ```
+```java
+Identify identify = new Identify().append("ab-tests", "new-user-test").append("some_list", new JSONArray().put(1).put("some_string"));
+Rakam.getInstance().identify(identify);
+```
 
 6. `prepend`: this will prepend a value or values to a user property. Prepend means inserting the value(s) at the front of a given list. If the user property does not have a value set yet, it will be initialized to an empty list before the new values are prepended. If the user property has an existing value and it is not a list, it will be converted into a list with the new value prepended.
 
-    ```java
-    Identify identify = new Identify().prepend("ab-tests", "new-user-test").prepend("some_list", new JSONArray().put(1).put("some_string"));
-    Rakam.getInstance().identify(identify);
-    ```
+```java
+Identify identify = new Identify().prepend("ab-tests", "new-user-test").prepend("some_list", new JSONArray().put(1).put("some_string"));
+Rakam.getInstance().identify(identify);
+```
 
 Note: if a user property is used in multiple operations on the same `Identify` object, only the first operation will be saved, and the rest will be ignored. In this example, only the set operation will be saved, and the add and unset will be ignored:
 
@@ -360,5 +361,3 @@ If you have your own system for tracking device IDs and would like to set a cust
 
 ### SDK Logging ###
 You can disable all logging done in the SDK by calling `Rakam.getInstance().enableLogging(false)`. By default the logging level is Log.INFO, meaning info messages, errors, and asserts are logged, but verbose and debug messages are not. You can change the logging level, for example to enable debug messages you can do `Rakam.getInstance().setLogLevel(Log.DEBUG)`.
-
-**This library is a fork of [Amplitude-Android](https://github.com/amplitude/Amplitude-Android)** and adopted for Rakam
