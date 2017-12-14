@@ -72,6 +72,22 @@ public class RakamClientTest extends BaseTest {
     }
 
     @Test
+    public void testSuperPropertiesEvent() throws JSONException {
+        DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
+        rakam.setSuperProperties(new JSONObject().put("test" , "1"));
+        rakam.logEvent("test");
+        assertEquals("1", dbHelper.getEvents(1, 1).get(0).getJSONObject("properties").get("test"));
+    }
+
+    @Test
+    public void testSuperPropertiesEventOverride() throws JSONException {
+        DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
+        rakam.setSuperProperties(new JSONObject().put("test" , "1"));
+        rakam.logEvent("test", new JSONObject().put("test", "2"));
+        assertEquals("2", dbHelper.getEvents(1, 1).get(0).getJSONObject("properties").get("test"));
+    }
+
+    @Test
     public void testSetUserIdTwice() {
         ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
         String userId1 = "user_id1";

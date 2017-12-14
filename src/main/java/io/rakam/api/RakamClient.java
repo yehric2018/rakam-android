@@ -725,7 +725,10 @@ public class RakamClient {
                 Iterator<String> keys = superProperties.keys();
                 while (keys.hasNext()) {
                     String next = keys.next();
-                    properties.put(next, eventProperties.get(next));
+                    if (eventProperties != null && eventProperties.has(next)) {
+                        continue;
+                    }
+                    properties.put(next, superProperties.get(next));
                 }
             }
 
