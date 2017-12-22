@@ -545,6 +545,14 @@ public class RakamClient {
      * Setting Event Properties</a>
      */
     public void logEvent(String eventType, JSONObject eventProperties) {
+        if(eventType == null) {
+            logger.w(TAG, "Collection name can't be null, ignoring event");
+            return;
+        }
+        if(eventType.isEmpty()) {
+            logger.w(TAG, "Collection name can't be an empty string, ignoring event");
+            return;
+        }
         logEvent(eventType, eventProperties, getCurrentTimeMillis(), false);
     }
 
@@ -1501,6 +1509,9 @@ public class RakamClient {
                 });
             } else if (response.code() == 403) {
                 logger.e(TAG, "Invalid API key, make sure your API key is correct in initialize()");
+            } else if (response.code() == 400) {
+                uploadSuccess = true;
+                logger.e(TAG, "The data that's being sent is in invalid format, please check this error: " + stringResponse);
             } else if (stringResponse.equals("bad_checksum")) {
                 logger.w(TAG,
                         "Bad checksum, post request was mangled in transit, will attempt to reupload later");
