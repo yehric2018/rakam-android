@@ -74,7 +74,7 @@ public class RakamClientTest extends BaseTest {
     @Test
     public void testSuperPropertiesEvent() throws JSONException {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        rakam.setSuperProperties(new JSONObject().put("test" , "1"));
+        rakam.setSuperProperties(new JSONObject().put("test", "1"));
         rakam.logEvent("test");
         assertEquals("1", dbHelper.getEvents(1, 1).get(0).getJSONObject("properties").get("test"));
     }
@@ -82,7 +82,7 @@ public class RakamClientTest extends BaseTest {
     @Test
     public void testSuperPropertiesEventOverride() throws JSONException {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
-        rakam.setSuperProperties(new JSONObject().put("test" , "1"));
+        rakam.setSuperProperties(new JSONObject().put("test", "1"));
         rakam.logEvent("test", new JSONObject().put("test", "2"));
         assertEquals("2", dbHelper.getEvents(1, 1).get(0).getJSONObject("properties").get("test"));
     }
@@ -416,7 +416,7 @@ public class RakamClientTest extends BaseTest {
         JSONArray events = getUnsentIdentifys(3);
 
         assertTrue(compareJSONObjects(
-                events.optJSONObject(0).optJSONObject(Constants.OP_SET),  new JSONObject().put("photo_count", 1)
+                events.optJSONObject(0).optJSONObject(Constants.OP_SET), new JSONObject().put("photo_count", 1)
         ));
         assertTrue(compareJSONObjects(
                 events.optJSONObject(1).optJSONObject(Constants.OP_INCREMENT), new JSONObject().put("karma", 2)
@@ -802,6 +802,48 @@ public class RakamClientTest extends BaseTest {
 
         assertEquals(events1.length(), 2);
         assertEquals(getUnsentEventCount(), 0);
+        assertEquals(getUnsentIdentifyCount(), 0);
+    }
+
+    @Test
+    public void test400Error() throws JSONException, InterruptedException {
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+
+        rakam.logEvent("test1");
+        looper.runToEndOfTasks();
+        assertEquals(getUnsentEventCount(), 1);
+        assertEquals(getUnsentIdentifyCount(), 0);
+
+
+        server.enqueue(new MockResponse().setBody("{\"error\":\"test\"}").setResponseCode(400));
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
+        httplooper.runToEndOfTasks();
+
+        server.takeRequest(1, SECONDS);
+        looper.runToEndOfTasks();
+
+        assertEquals(getUnsentEventCount(), 0);
+        assertEquals(getUnsentIdentifyCount(), 0);
+    }
+
+    @Test
+    public void test403Error() throws JSONException, InterruptedException {
+        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+
+        rakam.logEvent("test1");
+        looper.runToEndOfTasks();
+        assertEquals(getUnsentEventCount(), 1);
+        assertEquals(getUnsentIdentifyCount(), 0);
+
+
+        server.enqueue(new MockResponse().setBody("{\"error\":\"test\"}").setResponseCode(403));
+        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
+        httplooper.runToEndOfTasks();
+
+        server.takeRequest(1, SECONDS);
+        looper.runToEndOfTasks();
+
+        assertEquals(getUnsentEventCount(), 1);
         assertEquals(getUnsentIdentifyCount(), 0);
     }
 
