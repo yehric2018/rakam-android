@@ -545,11 +545,11 @@ public class RakamClient {
      * Setting Event Properties</a>
      */
     public void logEvent(String eventType, JSONObject eventProperties) {
-        if(eventType == null) {
+        if (eventType == null) {
             logger.w(TAG, "Collection name can't be null, ignoring event");
             return;
         }
-        if(eventType.isEmpty()) {
+        if (eventType.isEmpty()) {
             logger.w(TAG, "Collection name can't be an empty string, ignoring event");
             return;
         }
@@ -1487,26 +1487,6 @@ public class RakamClient {
             String stringResponse = response.body().string();
             if (stringResponse.equals("1")) {
                 uploadSuccess = true;
-                logThread.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (maxId >= 0) {
-                            cleanerFunction.clean(maxId);
-                        }
-                        uploadingCurrently.set(false);
-                        if (dbHelper.getTotalEventCount() > eventUploadThreshold) {
-                            logThread.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    syncEventsWithServer(backoffUpload);
-                                }
-                            });
-                        } else {
-                            backoffUpload = false;
-                            backoffUploadBatchSize = eventUploadMaxBatchSize;
-                        }
-                    }
-                });
             } else if (response.code() == 403) {
                 logger.e(TAG, "Invalid API key, make sure your API key is correct in initialize()");
             } else if (response.code() == 400) {
@@ -1567,6 +1547,28 @@ public class RakamClient {
 
         if (!uploadSuccess) {
             uploadingCurrently.set(false);
+        } else {
+            logger.d(TAG, "Successfully synced with server");
+            logThread.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (maxId >= 0) {
+                        cleanerFunction.clean(maxId);
+                    }
+                    uploadingCurrently.set(false);
+                    if (dbHelper.getTotalEventCount() > eventUploadThreshold) {
+                        logThread.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                syncEventsWithServer(backoffUpload);
+                            }
+                        });
+                    } else {
+                        backoffUpload = false;
+                        backoffUploadBatchSize = eventUploadMaxBatchSize;
+                    }
+                }
+            });
         }
     }
 
