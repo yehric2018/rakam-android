@@ -1548,7 +1548,7 @@ public class RakamClient {
         if (!uploadSuccess) {
             uploadingCurrently.set(false);
         } else {
-            logger.d(TAG, "Successfully synced with server");
+            logger.d(TAG, "Successfully synced to server");
             logThread.post(new Runnable() {
                 @Override
                 public void run() {
