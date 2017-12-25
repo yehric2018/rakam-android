@@ -1487,6 +1487,7 @@ public class RakamClient {
             String stringResponse = response.body().string();
             if (stringResponse.equals("1")) {
                 uploadSuccess = true;
+                logger.d(TAG, "Successfully synced to server");
             } else if (response.code() == 403) {
                 logger.e(TAG, "Invalid API key, make sure your API key is correct in initialize()");
             } else if (response.code() == 400) {
@@ -1521,8 +1522,8 @@ public class RakamClient {
                     }
                 });
             } else {
-                logger.w(TAG, "Upload failed, " + stringResponse
-                        + ", will attempt to reupload later");
+                String message = (stringResponse == null || stringResponse.isEmpty()) ? " empty result" : stringResponse;
+                logger.w(TAG, "Upload failed with status code " + response.code() + " and " + message + ", will attempt to reupload later");
             }
         } catch (java.net.ConnectException e) {
             // logger.w(TAG,
@@ -1548,7 +1549,6 @@ public class RakamClient {
         if (!uploadSuccess) {
             uploadingCurrently.set(false);
         } else {
-            logger.d(TAG, "Successfully synced to server");
             logThread.post(new Runnable() {
                 @Override
                 public void run() {
