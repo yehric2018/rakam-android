@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.rakam</groupId>
     <artifactId>android-sdk</artifactId>
-    <version>2.7.11</version>
+    <version>2.7.12-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Rakam Android SDK</name>
@@ -99,7 +99,7 @@
         <connection>scm:git:git@github.com:buremba/rakam-Android.git</connection>
         <developerConnection>scm:git:git@github.com:buremba/rakam-android.git</developerConnection>
         <url>https://github.com/buremba/rakam-android.git</url>
-      <tag>android-sdk-2.7.11</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <build>
