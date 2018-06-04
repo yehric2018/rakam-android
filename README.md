@@ -65,10 +65,6 @@ A [demo application](https://github.com/buremba/rakam-android-demo) is available
 
 It's important to think about what types of events you care about as a developer. You should aim to track between 20 and 200 types of events on your site. Common event types are actions the user initiates (such as pressing a button) and events you want the user to complete (such as filling out a form, completing a level, or making a payment).
 
-Here are some resources to help you with your instrumentation planning:
-  * [Event Tracking Quick Start Guide](https://rakam.zendesk.com/hc/en-us/articles/207108137).
-  * [Event Taxonomy and Best Practices](https://rakam.zendesk.com/hc/en-us/articles/211988918).
-
 Having large amounts of distinct event types, event properties and user properties, however, can make visualizing and searching of the data very confusing. By default we only show the first:
   * 1000 distinct event types
   * 2000 distinct event properties
