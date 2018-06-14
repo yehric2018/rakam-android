@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,7 +15,9 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
-class DatabaseHelper extends SQLiteOpenHelper {
+class DatabaseHelper
+        extends SQLiteOpenHelper
+{
 
     static DatabaseHelper instance;
 
@@ -49,20 +50,23 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final RakamLog logger = RakamLog.getLogger();
 
-    static synchronized DatabaseHelper getDatabaseHelper(Context context) {
+    static synchronized DatabaseHelper getDatabaseHelper(Context context)
+    {
         if (instance == null) {
             instance = new DatabaseHelper(context.getApplicationContext());
         }
         return instance;
     }
 
-    private DatabaseHelper(Context context) {
+    private DatabaseHelper(Context context)
+    {
         super(context, Constants.DATABASE_NAME, null, Constants.DATABASE_VERSION);
         file = context.getDatabasePath(Constants.DATABASE_NAME);
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase db)
+    {
         db.execSQL(CREATE_STORE_TABLE);
         db.execSQL(CREATE_LONG_STORE_TABLE);
         // INTEGER PRIMARY KEY AUTOINCREMENT guarantees that all generated values
@@ -73,7 +77,8 @@ class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+    {
         if (oldVersion > newVersion) {
             logger.e(TAG, "onUpgrade() with invalid oldVersion and newVersion");
             resetDatabase(db);
@@ -87,12 +92,12 @@ class DatabaseHelper extends SQLiteOpenHelper {
         switch (oldVersion) {
             case 1:
                 db.execSQL(CREATE_STORE_TABLE);
-                if (newVersion <= 2) break;
+                if (newVersion <= 2) { break; }
 
             case 2:
                 db.execSQL(CREATE_IDENTIFYS_TABLE);
                 db.execSQL(CREATE_LONG_STORE_TABLE);
-                if (newVersion <= 3) break;
+                if (newVersion <= 3) { break; }
 
             case 3:
                 break;
@@ -103,7 +108,8 @@ class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    private void resetDatabase(SQLiteDatabase db) {
+    private void resetDatabase(SQLiteDatabase db)
+    {
         db.execSQL("DROP TABLE IF EXISTS " + STORE_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + LONG_STORE_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + EVENT_TABLE_NAME);
@@ -111,17 +117,20 @@ class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    synchronized long insertOrReplaceKeyValue(String key, Object value) {
+    synchronized long insertOrReplaceKeyValue(String key, Object value)
+    {
         return value == null ? deleteKeyFromTable(STORE_TABLE_NAME, key) :
-            insertOrReplaceKeyValueToTable(STORE_TABLE_NAME, key, value);
+                insertOrReplaceKeyValueToTable(STORE_TABLE_NAME, key, value);
     }
 
-    synchronized long insertOrReplaceKeyLongValue(String key, Long value) {
+    synchronized long insertOrReplaceKeyLongValue(String key, Long value)
+    {
         return value == null ? deleteKeyFromTable(LONG_STORE_TABLE_NAME, key) :
-            insertOrReplaceKeyValueToTable(LONG_STORE_TABLE_NAME, key, value);
+                insertOrReplaceKeyValueToTable(LONG_STORE_TABLE_NAME, key, value);
     }
 
-    synchronized long insertOrReplaceKeyValueToTable(String table, String key, Object value) {
+    synchronized long insertOrReplaceKeyValueToTable(String table, String key, Object value)
+    {
         long result = -1;
         try {
             SQLiteDatabase db = getWritableDatabase();
@@ -129,9 +138,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
             contentValues.put(KEY_FIELD, key);
             if (value instanceof Long) {
                 contentValues.put(VALUE_FIELD, (Long) value);
-            } else if (value instanceof Integer) {
+            }
+            else if (value instanceof Integer) {
                 contentValues.put(VALUE_FIELD, (Integer) value);
-            } else {
+            }
+            else {
                 contentValues.put(VALUE_FIELD, (String) value);
             }
             result = db.insertWithOnConflict(
@@ -143,38 +154,46 @@ class DatabaseHelper extends SQLiteOpenHelper {
             if (result == -1) {
                 logger.w(TAG, "Insert failed");
             }
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, "insertOrReplaceKeyValue failed", e);
             // Not much we can do, just start fresh
             delete();
-        } finally {
+        }
+        finally {
             close();
         }
         return result;
     }
 
-    synchronized long deleteKeyFromTable(String table, String key) {
+    synchronized long deleteKeyFromTable(String table, String key)
+    {
         long result = -1;
         try {
             SQLiteDatabase db = getWritableDatabase();
-            result = db.delete(table, KEY_FIELD + "=?", new String[]{key});
-        } catch (SQLiteException e) {
+            result = db.delete(table, KEY_FIELD + "=?", new String[] {key});
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, "deleteKeyFromTable failed", e);
-        } finally {
+        }
+        finally {
             close();
         }
         return result;
     }
 
-    synchronized long addEvent(String event) {
+    synchronized long addEvent(String event)
+    {
         return addEventToTable(EVENT_TABLE_NAME, event);
     }
 
-    synchronized long addIdentify(String identifyEvent) {
+    synchronized long addIdentify(String identifyEvent)
+    {
         return addEventToTable(IDENTIFY_TABLE_NAME, identifyEvent);
     }
 
-    private synchronized long addEventToTable(String table, String event) {
+    private synchronized long addEventToTable(String table, String event)
+    {
         long result = -1;
         try {
             SQLiteDatabase db = getWritableDatabase();
@@ -184,42 +203,49 @@ class DatabaseHelper extends SQLiteOpenHelper {
             if (result == -1) {
                 logger.w(TAG, String.format("Insert into %s failed", table));
             }
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, String.format("addEvent to %s failed", table), e);
             // Not much we can do, just start fresh
             delete();
-        } finally {
+        }
+        finally {
             close();
         }
         return result;
     }
 
-    synchronized String getValue(String key) {
+    synchronized String getValue(String key)
+    {
         return (String) getValueFromTable(STORE_TABLE_NAME, key);
     }
 
-    synchronized Long getLongValue(String key) {
+    synchronized Long getLongValue(String key)
+    {
         return (Long) getValueFromTable(LONG_STORE_TABLE_NAME, key);
     }
 
-    private synchronized Object getValueFromTable(String table, String key) {
+    private synchronized Object getValueFromTable(String table, String key)
+    {
         Object value = null;
         Cursor cursor = null;
         try {
             SQLiteDatabase db = getReadableDatabase();
             cursor = db.query(
                     table,
-                    new String[]{KEY_FIELD, VALUE_FIELD},
+                    new String[] {KEY_FIELD, VALUE_FIELD},
                     KEY_FIELD + " = ?",
-                    new String[]{key},
+                    new String[] {key},
                     null, null, null, null
             );
             if (cursor.moveToFirst()) {
                 value = table.equals(STORE_TABLE_NAME) ? cursor.getString(1) : cursor.getLong(1);
             }
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, "getValue failed", e);
-        } finally {
+        }
+        finally {
             if (cursor != null) {
                 cursor.close();
             }
@@ -229,22 +255,28 @@ class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     synchronized List<JSONObject> getEvents(
-                                        long upToId, long limit) throws JSONException {
+            long upToId, long limit)
+            throws JSONException
+    {
         return getEventsFromTable(EVENT_TABLE_NAME, upToId, limit);
     }
 
     synchronized List<JSONObject> getIdentifys(
-                                        long upToId, long limit) throws JSONException {
+            long upToId, long limit)
+            throws JSONException
+    {
         return getEventsFromTable(IDENTIFY_TABLE_NAME, upToId, limit);
     }
 
     private synchronized List<JSONObject> getEventsFromTable(
-                                    String table, long upToId, long limit) throws JSONException {
+            String table, long upToId, long limit)
+            throws JSONException
+    {
         List<JSONObject> events = new LinkedList<JSONObject>();
         Cursor cursor = null;
         try {
             SQLiteDatabase db = getReadableDatabase();
-            cursor = db.query(table, new String[] { ID_FIELD, EVENT_FIELD },
+            cursor = db.query(table, new String[] {ID_FIELD, EVENT_FIELD},
                     upToId >= 0 ? ID_FIELD + " <= " + upToId : null, null, null, null,
                     ID_FIELD + " ASC", limit >= 0 ? "" + limit : null);
 
@@ -256,9 +288,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
                 obj.put("event_id", eventId);
                 events.add(obj);
             }
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, String.format("getEvents from %s failed", table), e);
-        } finally {
+        }
+        finally {
             if (cursor != null) {
                 cursor.close();
             }
@@ -267,19 +301,23 @@ class DatabaseHelper extends SQLiteOpenHelper {
         return events;
     }
 
-    synchronized long getEventCount() {
+    synchronized long getEventCount()
+    {
         return getEventCountFromTable(EVENT_TABLE_NAME);
     }
 
-    synchronized long getIdentifyCount() {
+    synchronized long getIdentifyCount()
+    {
         return getEventCountFromTable(IDENTIFY_TABLE_NAME);
     }
 
-    synchronized long getTotalEventCount() {
+    synchronized long getTotalEventCount()
+    {
         return getEventCount() + getIdentifyCount();
     }
 
-    private synchronized long getEventCountFromTable(String table) {
+    private synchronized long getEventCountFromTable(String table)
+    {
         long numberRows = 0;
         SQLiteStatement statement = null;
         try {
@@ -287,9 +325,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
             String query = "SELECT COUNT(*) FROM " + table;
             statement = db.compileStatement(query);
             numberRows = statement.simpleQueryForLong();
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, String.format("getNumberRows for %s failed", table), e);
-        } finally {
+        }
+        finally {
             if (statement != null) {
                 statement.close();
             }
@@ -298,15 +338,18 @@ class DatabaseHelper extends SQLiteOpenHelper {
         return numberRows;
     }
 
-    synchronized long getNthEventId(long n) {
+    synchronized long getNthEventId(long n)
+    {
         return getNthEventIdFromTable(EVENT_TABLE_NAME, n);
     }
 
-    synchronized long getNthIdentifyId(long n) {
+    synchronized long getNthIdentifyId(long n)
+    {
         return getNthEventIdFromTable(IDENTIFY_TABLE_NAME, n);
     }
 
-    private synchronized long getNthEventIdFromTable(String table, long n) {
+    private synchronized long getNthEventIdFromTable(String table, long n)
+    {
         long nthEventId = -1;
         SQLiteStatement statement = null;
         try {
@@ -317,12 +360,15 @@ class DatabaseHelper extends SQLiteOpenHelper {
             nthEventId = -1;
             try {
                 nthEventId = statement.simpleQueryForLong();
-            } catch (SQLiteDoneException e) {
+            }
+            catch (SQLiteDoneException e) {
                 logger.w(TAG, e);
             }
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, String.format("getNthEventId from %s failed", table), e);
-        } finally {
+        }
+        finally {
             if (statement != null) {
                 statement.close();
             }
@@ -331,54 +377,67 @@ class DatabaseHelper extends SQLiteOpenHelper {
         return nthEventId;
     }
 
-    synchronized void removeEvents(long maxId) {
+    synchronized void removeEvents(long maxId)
+    {
         removeEventsFromTable(EVENT_TABLE_NAME, maxId);
     }
 
-    synchronized void removeIdentifys(long maxId) {
+    synchronized void removeIdentifys(long maxId)
+    {
         removeEventsFromTable(IDENTIFY_TABLE_NAME, maxId);
     }
 
-    private synchronized void removeEventsFromTable(String table, long maxId) {
+    private synchronized void removeEventsFromTable(String table, long maxId)
+    {
         try {
             SQLiteDatabase db = getWritableDatabase();
             db.delete(table, ID_FIELD + " <= " + maxId, null);
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, String.format("removeEvents from %s failed", table), e);
-        } finally {
+        }
+        finally {
             close();
         }
     }
 
-    synchronized void removeEvent(long id) {
+    synchronized void removeEvent(long id)
+    {
         removeEventFromTable(EVENT_TABLE_NAME, id);
     }
 
-    synchronized void removeIdentify(long id) {
+    synchronized void removeIdentify(long id)
+    {
         removeEventFromTable(IDENTIFY_TABLE_NAME, id);
     }
 
-    private synchronized void removeEventFromTable(String table, long id) {
+    private synchronized void removeEventFromTable(String table, long id)
+    {
         try {
             SQLiteDatabase db = getWritableDatabase();
             db.delete(table, ID_FIELD + " = " + id, null);
-        } catch (SQLiteException e) {
+        }
+        catch (SQLiteException e) {
             logger.e(TAG, String.format("removeEvent from %s failed", table), e);
-        } finally {
+        }
+        finally {
             close();
         }
     }
 
-    private void delete() {
+    private void delete()
+    {
         try {
             close();
             file.delete();
-        } catch (SecurityException e) {
+        }
+        catch (SecurityException e) {
             logger.e(TAG, "delete failed", e);
         }
     }
 
-    boolean dbFileExists() {
+    boolean dbFileExists()
+    {
         return file.exists();
     }
 }

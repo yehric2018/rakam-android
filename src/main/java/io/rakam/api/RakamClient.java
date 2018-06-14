@@ -179,6 +179,23 @@ public class RakamClient
     {
         logThread.start();
         httpThread.start();
+
+        logThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
+        {
+            @Override
+            public void uncaughtException(Thread t, Throwable e)
+            {
+                logger.e(TAG, "Unknown exception thrown from log thread.", e);
+            }
+        });
+        httpThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
+        {
+            @Override
+            public void uncaughtException(Thread t, Throwable e)
+            {
+                logger.e(TAG, "Unknown exception thrown from HTTP thread.", e);
+            }
+        });
     }
 
     /**
@@ -756,6 +773,8 @@ public class RakamClient
             properties.put("_platform", Constants.PLATFORM);
             properties.put("_library_name", Constants.LIBRARY);
             properties.put("_library_version", Constants.VERSION);
+            properties.put("_ip", true);
+            properties.put("_event_local_id", getLastEventId() + 1);
 
             Location location = deviceInfo.getMostRecentLocation();
             if (location != null) {
@@ -1050,6 +1069,7 @@ public class RakamClient
             {
                 refreshSessionTime(timestamp);
                 inForeground = false;
+                syncEventsWithServer();
             }
         });
     }
@@ -1481,6 +1501,7 @@ public class RakamClient
                         }
                         catch (JSONException e) {
                             logger.e(TAG, e.toString());
+                            uploadingCurrently.set(false);
                             return;
                         }
 
@@ -1577,6 +1598,7 @@ public class RakamClient
     }
 
     private JSONArray cleanEventIds(List<JSONObject> list)
+            throws JSONException
     {
         JSONArray array = new JSONArray();
         for (JSONObject event : list) {
@@ -1598,6 +1620,7 @@ public class RakamClient
     {
         if (apiUrl == null) {
             logger.e(TAG, "The API Url is not set, couldn't send the event data to the server. Please call client.setApiUrl()");
+            uploadingCurrently.set(false);
             return;
         }
 
@@ -1632,7 +1655,6 @@ public class RakamClient
                         "Couldn't write to request database on server, will attempt to reupload later");
             }
             else if (response.code() == 413) {
-
                 // If blocked by one massive event, drop it
                 if (backoffUpload && backoffUploadBatchSize == 1) {
                     if (maxId >= 0) {
@@ -1655,9 +1677,6 @@ public class RakamClient
                         syncEventsWithServer(true);
                     }
                 });
-            }
-            else if (response.code() == 409) {
-
             }
             else {
                 String message = (stringResponse == null || stringResponse.isEmpty()) ? "empty result" : stringResponse;
