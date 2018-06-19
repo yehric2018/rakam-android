@@ -13,6 +13,10 @@ public class Utils {
     private static RakamLog logger = RakamLog.getLogger();
 
 
+    public static boolean isEmptyString(String s) {
+        return (s == null || s.length() == 0);
+    }
+
     /**
      * Do a shallow copy of a JSONObject. Takes a bit of code to avoid
      * stringify and reparse given the API.

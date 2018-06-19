@@ -256,7 +256,9 @@ public class RakamClient
         }
 
         RakamClient.upgradePrefs(context);
-        RakamClient.upgradeSharedPrefsToDB(context);
+        if (!RakamClient.upgradeSharedPrefsToDB(context)) {
+            return this;
+        }
         setApiUrl(apiUrl);
 
         if (TextUtils.isEmpty(apiKey)) {
@@ -270,31 +272,39 @@ public class RakamClient
             this.apiKey = apiKey;
             initializeDeviceInfo();
 
-            if (userId != null) {
-                this.userId = userId;
-                dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
-            }
-            else {
-                this.userId = dbHelper.getValue(USER_ID_KEY);
-            }
-            Long optOut = dbHelper.getLongValue(OPT_OUT_KEY);
-            this.optOut = optOut != null && optOut == 1;
-
-            // try to restore previous session id
-            long previousSessionId = getPreviousSessionId();
-            if (previousSessionId >= 0) {
-                sessionId = previousSessionId;
-            }
-
-            initialized = true;
-            String value = dbHelper.getValue(SUPER_PROPERTIES_KEY);
-            if (value != null) {
-                try {
-                    superProperties = new JSONObject(value);
+            try {
+                if (userId != null) {
+                    this.userId = userId;
+                    dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
                 }
-                catch (JSONException e) {
-                    dbHelper.insertOrReplaceKeyValue(SUPER_PROPERTIES_KEY, null);
+                else {
+                    this.userId = dbHelper.getValue(USER_ID_KEY);
                 }
+                Long optOut = dbHelper.getLongValue(OPT_OUT_KEY);
+                this.optOut = optOut != null && optOut == 1;
+
+                // try to restore previous session id
+                long previousSessionId = getPreviousSessionId();
+                if (previousSessionId >= 0) {
+                    sessionId = previousSessionId;
+                }
+
+                initialized = true;
+                String value = dbHelper.getValue(SUPER_PROPERTIES_KEY);
+                if (value != null) {
+                    try {
+                        superProperties = new JSONObject(value);
+                    }
+                    catch (JSONException e) {
+                        dbHelper.insertOrReplaceKeyValue(SUPER_PROPERTIES_KEY, null);
+                    }
+                }
+            }catch (CursorWindowAllocationException e) {  // treat as uninitialized SDK
+                logger.e(TAG, String.format(
+                        "Failed to initialize Rakam SDK due to: %s", e.getMessage()
+                ));
+                this.apiKey = null;
+                this.apiUrl = null;
             }
         }
 
@@ -757,6 +767,7 @@ public class RakamClient
         try {
             JSONObject properties = new JSONObject();
             properties.put("_id", UUID.randomUUID().toString());
+            properties.put("_local_id", getLastEventId() + 1);
             properties.put("_time", timestamp);
             properties.put("_user", replaceWithJSONNull(userId));
             properties.put("_device_id", replaceWithJSONNull(deviceId));
@@ -774,7 +785,6 @@ public class RakamClient
             properties.put("_library_name", Constants.LIBRARY);
             properties.put("_library_version", Constants.VERSION);
             properties.put("_ip", true);
-            properties.put("_event_local_id", getLastEventId() + 1);
 
             Location location = deviceInfo.getMostRecentLocation();
             if (location != null) {
@@ -1517,7 +1527,15 @@ public class RakamClient
                     }
                 });
             }
-            catch (JSONException e) {
+            // handle CursorWindowAllocationException when fetching events, defer upload
+            catch (CursorWindowAllocationException e) {
+                uploadingCurrently.set(false);
+                logger.e(TAG, String.format(
+                        "Caught Cursor window exception during event upload, deferring upload: %s",
+                        e.getMessage()
+                ));
+            }
+            catch (Throwable e) {
                 uploadingCurrently.set(false);
                 logger.e(TAG, e.toString());
             }
@@ -1579,7 +1597,15 @@ public class RakamClient
                     }
                 });
             }
-            catch (JSONException e) {
+            // handle CursorWindowAllocationException when fetching events, defer upload
+            catch (CursorWindowAllocationException e) {
+                uploadingCurrently.set(false);
+                logger.e(TAG, String.format(
+                        "Caught Cursor window exception during event upload, deferring upload: %s",
+                        e.getMessage()
+                ));
+            }
+            catch (Throwable e) {
                 uploadingCurrently.set(false);
                 logger.e(TAG, e.toString());
             }
@@ -1995,7 +2021,13 @@ public class RakamClient
      */
     static boolean upgradeSharedPrefsToDB(Context context)
     {
-        return upgradeSharedPrefsToDB(context, null);
+        try {
+            return upgradeSharedPrefsToDB(context, null);
+        }
+        catch (Throwable e) {
+            logger.e(TAG, "Unknown exception thrown when upgrading DB.", e);
+            return false;
+        }
     }
 
     /**

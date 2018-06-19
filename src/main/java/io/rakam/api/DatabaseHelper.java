@@ -245,6 +245,14 @@ class DatabaseHelper
         catch (SQLiteException e) {
             logger.e(TAG, "getValue failed", e);
         }
+        catch (StackOverflowError e) {
+            logger.e(TAG, String.format("getValue from %s failed", table), e);
+            // potential stack overflow error when getting database on custom Android versions
+            delete();
+        }
+        catch (RuntimeException e) {
+            convertIfCursorWindowException(e);
+        }
         finally {
             if (cursor != null) {
                 cursor.close();
@@ -439,5 +447,21 @@ class DatabaseHelper
     boolean dbFileExists()
     {
         return file.exists();
+    }
+
+    /*
+        Checks if the RuntimeException is an android.database.CursorWindowAllocationException.
+        If it is, then wrap the message in Amplitude's CursorWindowAllocationException so the
+        AmplitudeClient can handle it. If not then rethrow.
+     */
+    private static void convertIfCursorWindowException(RuntimeException e)
+    {
+        String message = e.getMessage();
+        if (!Utils.isEmptyString(message) && message.startsWith("Cursor window allocation of")) {
+            throw new CursorWindowAllocationException(message);
+        }
+        else {
+            throw e;
+        }
     }
 }

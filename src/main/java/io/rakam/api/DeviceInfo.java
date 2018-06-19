@@ -76,8 +76,9 @@ public class DeviceInfo
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionName;
             }
-            catch (NameNotFoundException e) {
+            catch (Throwable e) {
             }
+
             return null;
         }
 
@@ -88,7 +89,13 @@ public class DeviceInfo
 
         private String getOsVersion()
         {
-            return Build.VERSION.RELEASE;
+            try {
+                // In some devices, it may not exist/
+                return Build.VERSION.RELEASE;
+            }
+            catch (Throwable e) {
+                return null;
+            }
         }
 
         private String getBrand()
