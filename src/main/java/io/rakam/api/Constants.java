@@ -4,7 +4,7 @@ public class Constants {
 
     public static final String LIBRARY = "rakam-android";
     public static final String PLATFORM = "Android";
-    public static final String VERSION = "2.7.12";
+    public static final String VERSION = "2.7.13";
 
     public static final String EVENT_BATCH_ENDPOINT = "/event/batch";
     public static final String USER_SET_PROPERTIES_ENDPOINT = "/user/batch";
