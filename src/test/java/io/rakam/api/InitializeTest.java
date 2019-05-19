@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
 import okhttp3.mockwebserver.RecordedRequest;
@@ -51,7 +51,8 @@ public class InitializeTest extends BaseTest {
         dbHelper.insertOrReplaceKeyValue(RakamClient.USER_ID_KEY, "oldUserId");
 
         String userId = "newUserId";
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey, userId);
+        rakam.initialize(context, new URL("test.com"), apiKey, userId);
+        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         // Test that the user id is set.
         assertEquals(userId, rakam.userId);
@@ -78,7 +79,8 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         // Test that the user id is set.
         assertEquals(rakam.userId, userId);
@@ -99,7 +101,8 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         dbHelper.insertOrReplaceKeyValue(RakamClient.USER_ID_KEY, userId);
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         // Test that the user id is set.
         assertEquals(rakam.userId, userId);
@@ -111,6 +114,8 @@ public class InitializeTest extends BaseTest {
 
     @Test
     public void testInitializeOptOut() throws MalformedURLException {
+        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+
         String sourceName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
@@ -118,12 +123,14 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertNull(dbHelper.getLongValue(RakamClient.OPT_OUT_KEY));
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        looper.runOneTask();
 
         assertTrue(rakam.isOptedOut());
         assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 1L);
 
         rakam.setOptOut(false);
+        looper.runOneTask();
         assertFalse(rakam.isOptedOut());
         assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 0L);
 
@@ -140,7 +147,8 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         dbHelper.insertOrReplaceKeyLongValue(RakamClient.OPT_OUT_KEY, 0L);
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         assertFalse(rakam.isOptedOut());
         assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 0L);
@@ -158,18 +166,22 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_ID, 3L).commit();
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
-        assertEquals(rakam.getLastEventId(), 3L);
+        assertEquals(rakam.lastEventId, 3L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY), 3L);
 
         rakam.logEvent("testEvent");
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
 
-        runRequest(rakam);
+        RecordedRequest request = runRequest(rakam);
+        JSONArray events = getEventsFromRequest(request);
 
-        assertEquals(rakam.getLastEventId(), 1L);
+        assertEquals(events.getJSONObject(0).getLong("event_id"), 1L);
+
+        assertEquals(rakam.lastEventId, 1L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY), 1L);
 
         // verify shared prefs deleted
@@ -184,7 +196,8 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_PREVIOUS_SESSION_ID, 4000L).commit();
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         assertEquals(rakam.sessionId, 4000L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.PREVIOUS_SESSION_ID_KEY), 4000L);
@@ -202,9 +215,10 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_TIME, 4000L).commit();
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
-        assertEquals(rakam.getLastEventTime(), 5000L);
+        assertEquals(rakam.lastEventTime, 5000L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_TIME_KEY), 5000L);
 
         // verify shared prefs deleted
@@ -230,8 +244,10 @@ public class InitializeTest extends BaseTest {
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
         prefs.edit().putLong(Constants.PREFKEY_LAST_IDENTIFY_ID, 3000L).commit();
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        looper.runOneTask();
+        looper.runToEndOfTasks();
 
         assertEquals(dbHelper.getValue(RakamClient.DEVICE_ID_KEY), "testDeviceId");
         assertEquals((long) dbHelper.getLongValue(RakamClient.PREVIOUS_SESSION_ID_KEY), 1000L);
@@ -248,8 +264,8 @@ public class InitializeTest extends BaseTest {
 
         // after upgrade, pref values still there since they weren't deleted
         assertEquals(rakam.deviceId, "testDeviceId");
-        assertEquals(rakam.getPreviousSessionId(), 1000L);
-        assertEquals(rakam.getLastEventTime(), 2000L);
+        assertEquals(rakam.previousSessionId, 1000L);
+        assertEquals(rakam.lastEventTime, 2000L);
         assertNull(rakam.userId);
     }
 
@@ -273,25 +289,112 @@ public class InitializeTest extends BaseTest {
         long [] timestamps = {8000, 14000};
         clock.setTimestamps(timestamps);
 
-        rakam.initialize(context, new URL(rakam.getApiUrl()), apiKey);
-        ShadowLooper looper = (ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper());
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        looper.runOneTask();
         looper.runToEndOfTasks();
 
         assertEquals(rakam.deviceId, "testDeviceId");
-        assertEquals(rakam.getPreviousSessionId(), 6000L);
-        assertEquals(rakam.getLastEventTime(), 7000L);
+        assertEquals(rakam.previousSessionId, 6000L);
+        assertEquals(rakam.lastEventTime, 7000L);
         assertNull(rakam.userId);
 
         // log first event
         rakam.logEvent("testEvent1");
         looper.runToEndOfTasks();
-        assertEquals(rakam.getPreviousSessionId(), 6000L);
-        assertEquals(rakam.getLastEventTime(), 8000L);
+        assertEquals(rakam.previousSessionId, 6000L);
+        assertEquals(rakam.lastEventTime, 8000L);
 
         // log second event
         rakam.logEvent("testEvent2");
         looper.runToEndOfTasks();
-        assertEquals(rakam.getPreviousSessionId(), 14000L);
-        assertEquals(rakam.getLastEventTime(), 14000L);
+        assertEquals(rakam.previousSessionId, 14000L);
+        assertEquals(rakam.lastEventTime, 14000L);
+    }
+
+    @Test
+    public void testReloadDeviceIdFromDatabase() throws MalformedURLException {
+        String deviceId = "test_device_id_from_database";
+        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        DatabaseHelper.getDatabaseHelper(context).insertOrReplaceKeyValue(
+            RakamClient.DEVICE_ID_KEY, deviceId
+        );
+        assertNull(Utils.getStringFromSharedPreferences(
+            context, rakam.instanceName, RakamClient.DEVICE_ID_KEY
+        ));
+
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        looper.runToEndOfTasks();
+        assertEquals(deviceId, rakam.getDeviceId());
+
+        String newSharedPrefsDeviceId = Utils.getStringFromSharedPreferences(
+            context, rakam.instanceName, RakamClient.DEVICE_ID_KEY
+        );
+        assertEquals(deviceId, newSharedPrefsDeviceId);
+    }
+
+    @Test
+    public void testReloadDeviceIdFromSharedPrefs() throws MalformedURLException {
+        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context, rakam.instanceName);
+        assertNull(dbHelper.getValue(RakamClient.DEVICE_ID_KEY));
+
+        String deviceId = "test_device_id_from_shared_prefs";
+        Utils.writeStringToSharedPreferences(
+            context, rakam.instanceName, RakamClient.DEVICE_ID_KEY, deviceId
+        );
+
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        looper.runToEndOfTasks();
+        assertEquals(deviceId, rakam.getDeviceId());
+        assertEquals(deviceId, dbHelper.getValue(RakamClient.DEVICE_ID_KEY));
+        assertEquals(deviceId, Utils.getStringFromSharedPreferences(
+            context, rakam.instanceName, RakamClient.DEVICE_ID_KEY
+        ));
+    }
+
+    @Test
+    public void testUpgradeDeviceIdFromLegacySharedPrefsToDatabase() throws MalformedURLException {
+        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+
+        // default instance migrates from legacy shared preferences into database
+        String testDeviceId = "test_device_id_from_legacy_shared_prefs";
+        String targetName = Constants.PACKAGE_NAME + "." + context.getPackageName();
+        SharedPreferences prefs = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
+        prefs.edit().putString(Constants.PREFKEY_DEVICE_ID, testDeviceId).commit();
+
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        looper.runToEndOfTasks();
+        String deviceId = rakam.getDeviceId();
+        assertEquals(deviceId, testDeviceId);
+        DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
+        assertEquals(testDeviceId, dbHelper.getValue(RakamClient.DEVICE_ID_KEY));
+
+        String newSharedPrefsDeviceId = Utils.getStringFromSharedPreferences(
+            context, rakam.instanceName, RakamClient.DEVICE_ID_KEY
+        );
+        assertEquals(testDeviceId, newSharedPrefsDeviceId);
+
+        // verify deviceId deleted from legacy shared prefs
+        assertNull(prefs.getString(Constants.PREFKEY_DEVICE_ID, null));
+    }
+
+    @Test
+    public void testInitializeDeviceIdWithRandomUUID() throws MalformedURLException {
+        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        rakam.initialize(context, new URL("test.com"), apiKey);
+        looper.runToEndOfTasks();
+
+        String deviceId = rakam.getDeviceId();
+        assertEquals(37, deviceId.length());
+        assertTrue(deviceId.endsWith("R"));
+        DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
+        assertEquals(deviceId, dbHelper.getValue(RakamClient.DEVICE_ID_KEY));
+
+        // verify deviceID persisted to SharedPrefs
+        String sharedPrefsDeviceId = Utils.getStringFromSharedPreferences(
+            context, rakam.instanceName, RakamClient.DEVICE_ID_KEY
+        );
+        assertEquals(deviceId, sharedPrefsDeviceId);
     }
 }

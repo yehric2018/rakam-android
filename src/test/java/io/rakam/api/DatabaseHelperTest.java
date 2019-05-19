@@ -7,13 +7,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 
-import java.net.URL;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(RobolectricTestRunner.class)
@@ -25,7 +28,6 @@ public class DatabaseHelperTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp(false);
-        rakam.initialize(context, new URL("https://app.rakam.io"), apiKey);
         dbInstance = DatabaseHelper.getDatabaseHelper(context);
     }
 
@@ -73,11 +75,115 @@ public class DatabaseHelperTest extends BaseTest {
     public void testCreate() {
         dbInstance.onCreate(dbInstance.getWritableDatabase());
         assertEquals(1, insertOrReplaceKeyValue("test_key", "test_value"));
-        // due to upgradeSharedPrefsToDb, there are already 5 entries in long table
-        // so this next insertion will be row 6
-        assertEquals(6, insertOrReplaceKeyLongValue("test_key", 1L));
+        assertEquals(1, insertOrReplaceKeyLongValue("test_key", 1L));
         assertEquals(1, addEvent("test_create"));
         assertEquals(1, addIdentify("test_create"));
+    }
+
+    // need separate tests for different version to version upgrades since insertion failure
+    // triggers database deletion and recreation - need to refetch writable database as well
+    @Test
+    public void testUpgradeVersion1ToVersion2() {
+        // store table doesn't exist in v1, insert will fail
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
+        String key = "test_key";
+        String value = "test_value";
+        assertEquals(-1, insertOrReplaceKeyValue(key, value));
+
+        // long store table doesn't exist in v1, insert will fail
+        Long longValue = 1L;
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
+        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
+
+        // identify table doesn't exist in v1, insert will fail
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
+        assertEquals(-1, addIdentify("test_upgrade"));
+
+        // only event inserts will work
+        assertEquals(1, addEvent("test_upgrade"));
+
+        // after v2 upgrade, can insert into store table
+        // still can't insert into identify table or long store table
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
+        dbInstance.onUpgrade(dbInstance.getWritableDatabase(), 1, 2);
+        assertEquals(2, addEvent("test_upgrade"));
+        assertEquals(1, insertOrReplaceKeyValue(key, value));
+        assertEquals(-1, addIdentify("test_upgrade"));
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
+        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
+    }
+
+    @Test
+    public void testUpgradeVersion2ToVersion3() {
+        // identify table doesn't exist in v2, insert will fail
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
+        assertEquals(-1, addIdentify("test_upgrade"));
+
+        // long store table doesn't exist in v2, insert will fail
+        String key = "test_key";
+        Long longValue = 1L;
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
+        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
+
+        // events and store inserts will work
+        String value = "test_value";
+        assertEquals(1, insertOrReplaceKeyValue(key, value));
+        assertEquals(1, addEvent("test_upgrade"));
+
+        // after v3 upgrade, can insert into identify table and long store
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
+        dbInstance.onUpgrade(dbInstance.getWritableDatabase(), 2, 3);
+        assertEquals(2, addEvent("test_upgrade"));
+        assertEquals(2, insertOrReplaceKeyValue(key, value));
+        assertEquals(1, addIdentify("test_upgrade"));
+        assertEquals(1, insertOrReplaceKeyLongValue(key, longValue));
+    }
+
+    @Test
+    public void testUpgradeVersion1ToVersion3() {
+        // store table doesn't exist in v1, insert will fail
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
+        String key = "test_key";
+        String value = "test_value";
+        assertEquals(-1, insertOrReplaceKeyValue(key, value));
+
+        // identify table doesn't exist in v1, insert will fail
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
+        assertEquals(-1, addIdentify("test_upgrade"));
+
+        // long store table doesn't exist in v1, insert will fail
+        Long longValue = 1L;
+        dbInstance.getWritableDatabase().execSQL(
+            "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
+        assertEquals(-1, insertOrReplaceKeyLongValue(key, longValue));
+
+        // only event inserts will work
+        assertEquals(1, addEvent("test_upgrade"));
+
+        // after v3 upgrade, can insert into store and identify tables
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.STORE_TABLE_NAME);
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.IDENTIFY_TABLE_NAME);
+        dbInstance.getWritableDatabase().execSQL(
+                "DROP TABLE IF EXISTS " + DatabaseHelper.LONG_STORE_TABLE_NAME);
+        dbInstance.onUpgrade(dbInstance.getWritableDatabase(), 1, 3);
+        assertEquals(2, addEvent("test_upgrade"));
+        assertEquals(1, insertOrReplaceKeyValue(key, value));
+        assertEquals(1, addIdentify("test_upgrade"));
+        assertEquals(1, insertOrReplaceKeyLongValue(key, longValue));
     }
 
     @Test
@@ -372,6 +478,75 @@ public class DatabaseHelperTest extends BaseTest {
         dbInstance.removeEvents(4);
         assertEquals(0, dbInstance.getEventCount());
         assertEquals(1, dbInstance.getIdentifyCount());
+    }
+
+    @Test
+    public void testNullEventString() throws JSONException {
+        dbInstance.addEvent(null);
+        List<JSONObject> events = dbInstance.getEvents(-1, -1);
+        assertTrue(events.isEmpty());
+    }
+
+    @Test
+    public void testGetDatabaseHelper() {
+        assertEquals(DatabaseHelper.instances.size(), 1);
+        DatabaseHelper oldDbHelper = DatabaseHelper.getDatabaseHelper(context);
+        assertEquals(oldDbHelper.getEventCount(), 0);  // run query to initialize db file
+
+        assertSame(oldDbHelper, DatabaseHelper.getDatabaseHelper(context, null));
+        assertSame(oldDbHelper, DatabaseHelper.getDatabaseHelper(context, ""));
+        assertSame(
+            oldDbHelper, DatabaseHelper.getDatabaseHelper(context, Constants.DEFAULT_INSTANCE)
+        );
+        DatabaseHelper a = DatabaseHelper.getDatabaseHelper(context, "a");
+        DatabaseHelper b = DatabaseHelper.getDatabaseHelper(context, "b");
+        assertNotSame(oldDbHelper, a);
+        assertNotSame(oldDbHelper, b);
+        assertNotSame(a, b);
+        assertSame(a, DatabaseHelper.getDatabaseHelper(context, "a"));
+        assertSame(b, DatabaseHelper.getDatabaseHelper(context, "b"));
+
+        assertEquals(DatabaseHelper.instances.size(), 3);
+        assertTrue(DatabaseHelper.instances.containsKey(Constants.DEFAULT_INSTANCE));
+        assertTrue(DatabaseHelper.instances.containsKey("a"));
+        assertTrue(DatabaseHelper.instances.containsKey("b"));
+
+        // test for instance name case insensitivity
+        assertSame(a, DatabaseHelper.getDatabaseHelper(context, "A"));
+        assertSame(b, DatabaseHelper.getDatabaseHelper(context, "B"));
+        assertSame(
+            oldDbHelper,
+            DatabaseHelper.getDatabaseHelper(context, Constants.DEFAULT_INSTANCE.toUpperCase())
+        );
+
+        // assert defaultInstance maintains old database filename while new instances have new names
+        a.addEvent("testEvent1");
+        b.addEvent("testEvent2");
+        assertTrue(context.getDatabasePath(Constants.DATABASE_NAME).exists());
+        assertTrue(context.getDatabasePath(Constants.DATABASE_NAME + "_a").exists());
+        assertTrue(context.getDatabasePath(Constants.DATABASE_NAME + "_b").exists());
+    }
+
+    @Test
+    public void testSeparateInstances() {
+        DatabaseHelper dbHelper1 = DatabaseHelper.getDatabaseHelper(context, "a");
+        DatabaseHelper dbHelper2 = DatabaseHelper.getDatabaseHelper(context, "b");
+        DatabaseHelper dbHelper3 = DatabaseHelper.getDatabaseHelper(context, "c");
+
+        dbHelper1.insertOrReplaceKeyValue("device_id", "testDeviceId");
+        assertEquals(dbHelper1.getValue("device_id"), "testDeviceId");
+        assertNull(dbHelper2.getValue("device_id"));
+        assertNull(dbHelper3.getValue("device_id"));
+
+        dbHelper2.addEvent("test_event");
+        assertEquals(dbHelper1.getEventCount(), 0);
+        assertEquals(dbHelper2.getEventCount(), 1);
+        assertEquals(dbHelper3.getEventCount(), 0);
+
+        dbHelper3.addIdentify("test_identify_1");
+        assertEquals(dbHelper1.getIdentifyCount(), 0);
+        assertEquals(dbHelper2.getIdentifyCount(), 0);
+        assertEquals(dbHelper3.getIdentifyCount(), 1);
     }
 }
 

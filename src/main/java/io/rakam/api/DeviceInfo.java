@@ -1,5 +1,6 @@
 package io.rakam.api;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -8,8 +9,8 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
+import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
-import android.text.TextUtils;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -19,12 +20,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-public class DeviceInfo
-{
+public class DeviceInfo {
 
-    public static final String TAG = "DeviceInfo";
+    public static final String TAG = "io.rakam.api.DeviceInfo";
 
     public static final String OS_NAME = "android";
+
+    private static final String SETTING_LIMIT_AD_TRACKING = "limit_ad_tracking";
+    private static final String SETTING_ADVERTISING_ID = "advertising_id";
 
     private boolean locationListening = true;
 
@@ -35,8 +38,7 @@ public class DeviceInfo
     /**
      * Internal class serves as a cache
      */
-    private class CachedInfo
-    {
+    private class CachedInfo {
         private String advertisingId;
         private String country;
         private String versionName;
@@ -50,8 +52,7 @@ public class DeviceInfo
         private boolean limitAdTrackingEnabled;
         private boolean gpsEnabled; // google play services
 
-        private CachedInfo()
-        {
+        private CachedInfo() {
             advertisingId = getAdvertisingId();
             versionName = getVersionName();
             osName = getOsName();
@@ -69,77 +70,67 @@ public class DeviceInfo
          * Internal methods for getting raw information
          */
 
-        private String getVersionName()
-        {
+        private String getVersionName() {
             PackageInfo packageInfo;
             try {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionName;
+            } catch (NameNotFoundException e) {
+                Diagnostics.getLogger().logError("Failed to get version name", e);
             }
-            catch (Throwable e) {
-            }
-
             return null;
         }
 
-        private String getOsName()
-        {
+        private String getOsName() {
             return OS_NAME;
         }
 
-        private String getOsVersion()
-        {
-            try {
-                // In some devices, it may not exist/
-                return Build.VERSION.RELEASE;
-            }
-            catch (Throwable e) {
-                return null;
-            }
+        private String getOsVersion() {
+            return Build.VERSION.RELEASE;
         }
 
-        private String getBrand()
-        {
+        private String getBrand() {
             return Build.BRAND;
         }
 
-        private String getManufacturer()
-        {
+        private String getManufacturer() {
             return Build.MANUFACTURER;
         }
 
-        private String getModel()
-        {
+        private String getModel() {
             return Build.MODEL;
         }
 
-        private String getCarrier()
-        {
-            TelephonyManager manager = (TelephonyManager) context
-                    .getSystemService(Context.TELEPHONY_SERVICE);
-            return manager.getNetworkOperatorName();
+        private String getCarrier() {
+            try {
+                TelephonyManager manager = (TelephonyManager) context
+                        .getSystemService(Context.TELEPHONY_SERVICE);
+                return manager.getNetworkOperatorName();
+            } catch (Exception e) {
+                // Failed to get network operator name from network
+                Diagnostics.getLogger().logError("Failed to get carrier", e);
+            }
+            return null;
         }
 
-        private String getCountry()
-        {
+        private String getCountry() {
             // This should not be called on the main thread.
 
             // Prioritize reverse geocode, but until we have a result from that,
             // we try to grab the country from the network, and finally the locale
             String country = getCountryFromLocation();
-            if (!TextUtils.isEmpty(country)) {
+            if (!Utils.isEmptyString(country)) {
                 return country;
             }
 
             country = getCountryFromNetwork();
-            if (!TextUtils.isEmpty(country)) {
+            if (!Utils.isEmptyString(country)) {
                 return country;
             }
             return getCountryFromLocale();
         }
 
-        private String getCountryFromLocation()
-        {
+        private String getCountryFromLocation() {
             if (!isLocationListening()) {
                 return null;
             }
@@ -159,25 +150,27 @@ public class DeviceInfo
                             }
                         }
                     }
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     // Failed to reverse geocode location
-                }
-                catch (NullPointerException e) {
+                    Diagnostics.getLogger().logError("Failed to get country from location", e);
+                } catch (NullPointerException e) {
                     // Failed to reverse geocode location
-                }
-                catch (NoSuchMethodError e) {
+                    Diagnostics.getLogger().logError("Failed to get country from location", e);
+                } catch (NoSuchMethodError e) {
                     // failed to fetch geocoder
-                }
-                catch (IllegalArgumentException e) {
-                    // Bad lat / lon values can cause Geocoder to throw IllegalArgumentException
+                    Diagnostics.getLogger().logError("Failed to get country from location", e);
+                } catch (IllegalArgumentException e) {
+                    // Bad lat / lon values can cause Geocoder to throw IllegalArgumentExceptions
+                    Diagnostics.getLogger().logError("Failed to get country from location", e);
+                } catch (IllegalStateException e) {
+                    // sometimes the location manager is unavailable
+                    Diagnostics.getLogger().logError("Failed to get country from location", e);
                 }
             }
             return null;
         }
 
-        private String getCountryFromNetwork()
-        {
+        private String getCountryFromNetwork() {
             try {
                 TelephonyManager manager = (TelephonyManager) context
                         .getSystemService(Context.TELEPHONY_SERVICE);
@@ -187,26 +180,40 @@ public class DeviceInfo
                         return country.toUpperCase(Locale.US);
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 // Failed to get country from network
+                Diagnostics.getLogger().logError("Failed to get country from network", e);
             }
             return null;
         }
 
-        private String getCountryFromLocale()
-        {
+        private String getCountryFromLocale() {
             return Locale.getDefault().getCountry();
         }
 
-        private String getLanguage()
-        {
+        private String getLanguage() {
             return Locale.getDefault().getLanguage();
         }
 
-        private String getAdvertisingId()
-        {
+        private String getAdvertisingId() {
             // This should not be called on the main thread.
+            if ("Amazon".equals(getManufacturer())) {
+                return getAndCacheAmazonAdvertisingId();
+            } else {
+                return getAndCacheGoogleAdvertisingId();
+            }
+        }
+
+        private String getAndCacheAmazonAdvertisingId() {
+            ContentResolver cr = context.getContentResolver();
+
+            limitAdTrackingEnabled = Secure.getInt(cr, SETTING_LIMIT_AD_TRACKING, 0) == 1;
+            advertisingId = Secure.getString(cr, SETTING_ADVERTISING_ID);
+
+            return advertisingId;
+        }
+
+        private String getAndCacheGoogleAdvertisingId() {
             try {
                 Class AdvertisingIdClient = Class
                         .forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
@@ -221,21 +228,21 @@ public class DeviceInfo
                         limitAdTrackingEnabled != null && limitAdTrackingEnabled;
                 Method getId = advertisingInfo.getClass().getMethod("getId");
                 advertisingId = (String) getId.invoke(advertisingInfo);
-            }
-            catch (ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 RakamLog.getLogger().w(TAG, "Google Play Services SDK not found!");
-            }
-            catch (InvocationTargetException e) {
+                Diagnostics.getLogger().logError("Failed to get ADID", e);
+            } catch (InvocationTargetException e) {
                 RakamLog.getLogger().w(TAG, "Google Play Services not available");
-            }
-            catch (Exception e) {
+                Diagnostics.getLogger().logError("Failed to get ADID", e);
+            } catch (Exception e) {
                 RakamLog.getLogger().e(TAG, "Encountered an error connecting to Google Play Services", e);
+                Diagnostics.getLogger().logError("Failed to get ADID", e);
             }
+
             return advertisingId;
         }
 
-        private boolean checkGPSEnabled()
-        {
+        private boolean checkGPSEnabled() {
             // This should not be called on the main thread.
             try {
                 Class GPSUtil = Class
@@ -245,112 +252,96 @@ public class DeviceInfo
                 Integer status = (Integer) getGPSAvailable.invoke(null, context);
                 // status 0 corresponds to com.google.android.gms.common.ConnectionResult.SUCCESS;
                 return status != null && status.intValue() == 0;
-            }
-            catch (NoClassDefFoundError e) {
+            } catch (NoClassDefFoundError e) {
                 RakamLog.getLogger().w(TAG, "Google Play Services Util not found!");
-            }
-            catch (ClassNotFoundException e) {
+                Diagnostics.getLogger().logError("Failed to check GPS enabled", e);
+            } catch (ClassNotFoundException e) {
                 RakamLog.getLogger().w(TAG, "Google Play Services Util not found!");
-            }
-            catch (NoSuchMethodException e) {
+                Diagnostics.getLogger().logError("Failed to check GPS enabled", e);
+            } catch (NoSuchMethodException e) {
                 RakamLog.getLogger().w(TAG, "Google Play Services not available");
-            }
-            catch (InvocationTargetException e) {
+                Diagnostics.getLogger().logError("Failed to check GPS enabled", e);
+            } catch (InvocationTargetException e) {
                 RakamLog.getLogger().w(TAG, "Google Play Services not available");
-            }
-            catch (IllegalAccessException e) {
+                Diagnostics.getLogger().logError("Failed to check GPS enabled", e);
+            } catch (IllegalAccessException e) {
                 RakamLog.getLogger().w(TAG, "Google Play Services not available");
-            }
-            catch (Exception e) {
+                Diagnostics.getLogger().logError("Failed to check GPS enabled", e);
+            } catch (Exception e) {
                 RakamLog.getLogger().w(TAG,
                         "Error when checking for Google Play Services: " + e);
+                Diagnostics.getLogger().logError("Failed to check GPS enabled", e);
             }
             return false;
         }
     }
 
-    public DeviceInfo(Context context)
-    {
+    public DeviceInfo(Context context) {
         this.context = context;
     }
 
-    private CachedInfo getCachedInfo()
-    {
+    private CachedInfo getCachedInfo() {
         if (cachedInfo == null) {
             cachedInfo = new CachedInfo();
         }
         return cachedInfo;
     }
 
-    public void prefetch()
-    {
+    public void prefetch() {
         getCachedInfo();
     }
 
-    public String generateUUID()
-    {
+    public static String generateUUID() {
         return UUID.randomUUID().toString();
     }
 
-    public String getVersionName()
-    {
+    public String getVersionName() {
         return getCachedInfo().versionName;
     }
 
-    public String getOsName()
-    {
+    public String getOsName() {
         return getCachedInfo().osName;
     }
 
-    public String getOsVersion()
-    {
+    public String getOsVersion() {
         return getCachedInfo().osVersion;
     }
 
-    public String getBrand()
-    {
+    public String getBrand() {
         return getCachedInfo().brand;
     }
 
-    public String getManufacturer()
-    {
+    public String getManufacturer() {
         return getCachedInfo().manufacturer;
     }
 
-    public String getModel()
-    {
+    public String getModel() {
         return getCachedInfo().model;
     }
 
-    public String getCarrier()
-    {
+    public String getCarrier() {
         return getCachedInfo().carrier;
     }
 
-    public String getCountry()
-    {
+    public String getCountry() {
         return getCachedInfo().country;
     }
 
-    public String getLanguage()
-    {
+    public String getLanguage() {
         return getCachedInfo().language;
     }
 
-    public String getAdvertisingId()
-    {
+    public String getAdvertisingId() {
         return getCachedInfo().advertisingId;
     }
 
-    public boolean isLimitAdTrackingEnabled()
-    {
+    public boolean isLimitAdTrackingEnabled() {
         return getCachedInfo().limitAdTrackingEnabled;
     }
 
     public boolean isGooglePlayServicesEnabled() { return getCachedInfo().gpsEnabled; }
 
-    public Location getMostRecentLocation()
-    {
+    public Location getMostRecentLocation() {
         if (!isLocationListening()) {
             return null;
         }
@@ -368,9 +359,9 @@ public class DeviceInfo
         List<String> providers = null;
         try {
             providers = locationManager.getProviders(true);
-        }
-        catch (SecurityException e) {
+        } catch (SecurityException e) {
             // failed to get providers list
+            Diagnostics.getLogger().logError("Failed to get most recent location", e);
         }
         if (providers == null) {
             return null;
@@ -381,12 +372,12 @@ public class DeviceInfo
             Location location = null;
             try {
                 location = locationManager.getLastKnownLocation(provider);
-            }
-            catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 // failed to get last known location from provider
-            }
-            catch (SecurityException e) {
+                Diagnostics.getLogger().logError("Failed to get most recent location", e);
+            } catch (SecurityException e) {
                 // failed to get last known location from provider
+                Diagnostics.getLogger().logError("Failed to get most recent location", e);
             }
             if (location != null) {
                 locations.add(location);
@@ -405,19 +396,17 @@ public class DeviceInfo
         return bestLocation;
     }
 
-    public boolean isLocationListening()
-    {
+    public boolean isLocationListening() {
         return locationListening;
     }
 
-    public void setLocationListening(boolean locationListening)
-    {
+    public void setLocationListening(boolean locationListening) {
         this.locationListening = locationListening;
     }
 
     // @VisibleForTesting
-    protected Geocoder getGeocoder()
-    {
+    protected Geocoder getGeocoder() {
         return new Geocoder(context, Locale.ENGLISH);
     }
+
 }

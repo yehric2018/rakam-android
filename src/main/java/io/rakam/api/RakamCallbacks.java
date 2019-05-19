@@ -6,15 +6,15 @@ import android.os.Bundle;
 
 class RakamCallbacks implements Application.ActivityLifecycleCallbacks {
 
-    public static final String TAG = "RakamCallbacks";
-    private static final String NULL_MESSAGE = "Need to initialize RakamCallbacks with RakamClient instance";
+    public static final String TAG = "io.rakam.api.RakamCallbacks";
+    private static final String NULLMSG = "Need to initialize RakamCallbacks with RakamClient instance";
 
     private RakamClient clientInstance = null;
     private static RakamLog logger = RakamLog.getLogger();
 
     public RakamCallbacks(RakamClient clientInstance) {
         if (clientInstance == null) {
-            logger.e(TAG, NULL_MESSAGE);
+            logger.e(TAG, NULLMSG);
             return;
         }
 
@@ -31,7 +31,7 @@ class RakamCallbacks implements Application.ActivityLifecycleCallbacks {
     @Override
     public void onActivityPaused(Activity activity) {
         if (clientInstance == null) {
-            logger.e(TAG, NULL_MESSAGE);
+            logger.e(TAG, NULLMSG);
             return;
         }
 
@@ -41,7 +41,7 @@ class RakamCallbacks implements Application.ActivityLifecycleCallbacks {
     @Override
     public void onActivityResumed(Activity activity) {
         if (clientInstance == null) {
-            logger.e(TAG, NULL_MESSAGE);
+            logger.e(TAG, NULLMSG);
             return;
         }
 

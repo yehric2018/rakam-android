@@ -65,7 +65,7 @@ public class MD5Test {
     @Test
     public void testMD5WithRakamData() {
 
-        String apiVersionString = "" + Constants.API_VERSION;
+        String apiVersionString = "" + Constants.VERSION;
         String apiKey = "1cc2c1978ebab0f6451112a8f5df4f4e";
         String timestampString = "" + System.currentTimeMillis();
         String events = "[{\"version_name\":null,\"device_manufacturer\":\"unknown\",\"user_" +

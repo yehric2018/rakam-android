@@ -1,17 +1,22 @@
 package io.rakam.api;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.robolectric.internal.ShadowExtractor;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 
-import java.net.URL;
-import java.util.Iterator;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -20,21 +25,17 @@ import okhttp3.mockwebserver.RecordedRequest;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.fail;
 
-public class BaseTest
-{
+public class BaseTest {
 
-    protected class MockClock
-    {
+    protected class MockClock {
         int index = 0;
-        long timestamps[];
+        long timestamps [];
 
-        public void setTimestamps(long[] timestamps)
-        {
+        public void setTimestamps(long [] timestamps) {
             this.timestamps = timestamps;
         }
 
-        public long currentTimeMillis()
-        {
+        public long currentTimeMillis() {
             if (timestamps == null || index >= timestamps.length) {
                 return System.currentTimeMillis();
             }
@@ -43,9 +44,7 @@ public class BaseTest
     }
 
     // override getCurrentTimeMillis to enforce time progression in tests
-    protected class RakamClientWithTime
-            extends RakamClient
-    {
+    protected class RakamClientWithTime extends RakamClient {
         MockClock mockClock;
 
         public RakamClientWithTime(MockClock mockClock) { this.mockClock = mockClock; }
@@ -54,15 +53,31 @@ public class BaseTest
         protected long getCurrentTimeMillis() { return mockClock.currentTimeMillis(); }
     }
 
+    // override RakamDatabaseHelper to throw Cursor Allocation Exception
+    protected class MockDatabaseHelper extends DatabaseHelper {
+
+        protected MockDatabaseHelper(Context context) {
+            super(context);
+        }
+
+        @Override
+        Cursor queryDb(
+            SQLiteDatabase db, String table, String[] columns, String selection,
+            String[] selectionArgs, String groupBy, String having, String orderBy, String limit
+        ) {
+            // cannot import CursorWindowAllocationException, so we throw the base class instead
+            throw new RuntimeException("Cursor window allocation of 2048 kb failed.");
+        }
+    }
+
     protected RakamClient rakam;
     protected Context context;
     protected MockWebServer server;
     protected MockClock clock;
     protected String apiKey = "1cc2c1978ebab0f6451112a8f5df4f4e";
+    protected String[] instanceNames = {Constants.DEFAULT_INSTANCE, "app1", "app2", "newApp1", "newApp2", "new_app"};
 
-    public void setUp()
-            throws Exception
-    {
+    public void setUp() throws Exception {
         setUp(true);
     }
 
@@ -71,16 +86,22 @@ public class BaseTest
      * override the defaults by providing an rakam object before
      * calling this method or passing false for withServer.
      */
-    public void setUp(boolean withServer)
-            throws Exception
-    {
+    public void setUp(boolean withServer) throws Exception {
         ShadowApplication.getInstance().setPackageName("io.rakam.test");
         context = ShadowApplication.getInstance().getApplicationContext();
 
         // Clear the database helper for each test. Better to have isolation.
         // See https://github.com/robolectric/robolectric/issues/569
         // and https://github.com/robolectric/robolectric/issues/1622
-        DatabaseHelper.instance = null;
+        Rakam.instances.clear();
+        DatabaseHelper.instances.clear();
+
+        // Clear shared prefs for each test
+        for (String instanceName: instanceNames) {
+            SharedPreferences.Editor editor = Utils.getRakamSharedPreferences(context, instanceName).edit();
+            editor.clear();
+            editor.apply();
+        }
 
         if (withServer) {
             server = new MockWebServer();
@@ -99,14 +120,11 @@ public class BaseTest
         }
 
         if (server != null) {
-            rakam.apiKey = server.url("/").toString();
-            rakam.setApiUrl(new URL("http://" + server.getHostName() + ":" + server.getPort()));
+            rakam.setApiUrl(server.url("/").url());
         }
     }
 
-    public void tearDown()
-            throws Exception
-    {
+    public void tearDown() throws Exception {
         if (rakam != null) {
             rakam.logThread.getLooper().quit();
             rakam.httpThread.getLooper().quit();
@@ -117,77 +135,73 @@ public class BaseTest
             server.shutdown();
         }
 
-        DatabaseHelper.instance = null;
+        Rakam.instances.clear();
+        DatabaseHelper.instances.clear();
+
+        if (Diagnostics.instance != null) {
+            Diagnostics.instance = null;
+        }
+
     }
 
-    public RecordedRequest runRequest(RakamClient rakam)
-    {
-        server.enqueue(new MockResponse().setBody("1"));
-        ShadowLooper httplooper = (ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper());
+    public RecordedRequest runRequest(RakamClient rakam) {
+        server.enqueue(new MockResponse().setBody("success"));
+        ShadowLooper httplooper = Shadows.shadowOf(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 
         try {
             return server.takeRequest(1, SECONDS);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             return null;
         }
     }
 
-    public RecordedRequest sendEvent(RakamClient rakam, String name, JSONObject props)
-    {
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+    public RecordedRequest sendEvent(RakamClient rakam, String name, JSONObject props) {
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
         rakam.logEvent(name, props);
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
 
         return runRequest(rakam);
     }
 
-    public RecordedRequest sendIdentify(RakamClient rakam, Identify identify)
-    {
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+    public RecordedRequest sendIdentify(RakamClient rakam, Identify identify) {
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
         rakam.identify(identify);
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
-        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
 
         return runRequest(rakam);
     }
 
-    public long getUnsentEventCount()
-    {
+    public long getUnsentEventCount() {
         return DatabaseHelper.getDatabaseHelper(context).getEventCount();
     }
 
-    public long getUnsentIdentifyCount()
-    {
+    public long getUnsentIdentifyCount() {
         return DatabaseHelper.getDatabaseHelper(context).getIdentifyCount();
     }
 
-    public JSONObject getLastUnsentEvent()
-    {
+
+    public JSONObject getLastUnsentEvent() {
         JSONArray events = getUnsentEventsFromTable(DatabaseHelper.EVENT_TABLE_NAME, 1);
-        return (JSONObject) events.opt(events.length() - 1);
+        return (JSONObject)events.opt(events.length() - 1);
     }
 
-    public JSONObject getLastUnsentIdentify()
-    {
+    public JSONObject getLastUnsentIdentify() {
         JSONArray events = getUnsentEventsFromTable(DatabaseHelper.IDENTIFY_TABLE_NAME, 1);
-        return (JSONObject) events.opt(events.length() - 1);
+        return (JSONObject)events.opt(events.length() - 1);
     }
 
-    public JSONArray getUnsentEvents(int limit)
-    {
+    public JSONArray getUnsentEvents(int limit) {
         return getUnsentEventsFromTable(DatabaseHelper.EVENT_TABLE_NAME, limit);
     }
 
-    public JSONArray getUnsentIdentifys(int limit)
-    {
+    public JSONArray getUnsentIdentifys(int limit) {
         return getUnsentEventsFromTable(DatabaseHelper.IDENTIFY_TABLE_NAME, limit);
     }
 
-    public JSONArray getUnsentEventsFromTable(String table, int limit)
-    {
+    public JSONArray getUnsentEventsFromTable(String table, int limit) {
         try {
             DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
             List<JSONObject> events = table.equals(DatabaseHelper.IDENTIFY_TABLE_NAME) ?
@@ -199,89 +213,54 @@ public class BaseTest
                 out.put(i, events.get(events.size() - limit + i));
             }
             return out;
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
             fail(e.toString());
         }
 
         return null;
     }
 
-    public JSONObject getLastEvent()
-    {
+    public JSONObject getLastEvent() {
         return getLastEventFromTable(DatabaseHelper.EVENT_TABLE_NAME);
     }
 
-    public JSONObject getLastIdentify()
-    {
+    public JSONObject getLastIdentify() {
         return getLastEventFromTable(DatabaseHelper.IDENTIFY_TABLE_NAME);
     }
 
-    public JSONObject getLastEventFromTable(String table)
-    {
+    public JSONObject getLastEventFromTable(String table) {
         try {
             DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
             List<JSONObject> events = table.equals(DatabaseHelper.IDENTIFY_TABLE_NAME) ?
                     dbHelper.getIdentifys(-1, -1) : dbHelper.getEvents(-1, -1);
             return events.get(events.size() - 1);
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
             fail(e.toString());
         }
         return null;
     }
 
-    public boolean compareJSONObjects(JSONObject o1, JSONObject o2)
-            throws JSONException
-    {
-        if (o1 == o2) {
-            return true;
+    public JSONArray getEventsFromRequest(RecordedRequest request) throws JSONException {
+        Map<String, String> parsedBody = parseRequest(request.getUtf8Body());
+        if (parsedBody == null && !parsedBody.containsKey("e")) {
+            return null;
         }
-
-        if ((o1 != null && o2 == null) || (o1 == null && o2 != null)) {
-            return false;
-        }
-
-        if (o1.length() != o2.length()) {
-            return false;
-        }
-
-        Iterator<?> keys = o1.keys();
-        while (keys.hasNext()) {
-            String key = (String) keys.next();
-            if (!o2.has(key)) {
-                return false;
-            }
-
-            Object value1 = o1.get(key);
-            Object value2 = o2.get(key);
-
-            if (!value1.getClass().equals(value2.getClass())) {
-                return false;
-            }
-
-            if (value1.getClass() == JSONObject.class) {
-                if (!compareJSONObjects((JSONObject) value1, (JSONObject) value2)) {
-                    return false;
-                }
-            }
-            else if (!value1.equals(value2)) {
-                return false;
-            }
-        }
-
-        return true;
+        return new JSONArray(parsedBody.get("e"));
     }
 
-    public JSONArray getEventsFromRequest(RecordedRequest request)
-            throws JSONException
-    {
-        return new JSONObject(request.getBody().readUtf8()).getJSONArray("events");
-    }
-
-    public JSONArray getUserPropertiesFromRequest(RecordedRequest request)
-            throws JSONException
-    {
-        return new JSONObject(request.getBody().readUtf8()).getJSONArray("data");
+    // parse request string into a key:value map
+    public static Map<String, String> parseRequest(String request) {
+        try {
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            String[] pairs = request.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf("=");
+                query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+            }
+            return query_pairs;
+        } catch (UnsupportedEncodingException e) {
+            fail(e.toString());
+        }
+        return null;
     }
 }

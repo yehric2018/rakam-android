@@ -3,20 +3,21 @@ package io.rakam.api;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.os.Build;
 import android.text.TextUtils;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import android.util.Pair;
+import io.rakam.security.MD5;
+import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -24,8 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static io.rakam.api.Constants.MAX_STRING_LENGTH;
-import static io.rakam.api.Constants.USER_SET_PROPERTIES_ENDPOINT;
+import static io.rakam.api.Constants.*;
 
 /**
  * <h1>RakamClient</h1>
@@ -86,26 +86,6 @@ public class RakamClient
      */
     public static final String PREVIOUS_SESSION_ID_KEY = "previous_session_id";
 
-    /**
-     * The default shared instance. This is fetched by {@code Rakam.getInstance()}
-     */
-    protected static RakamClient instance = new RakamClient();
-
-    /**
-     * The Rakam API url that will store the events.
-     */
-    private String apiUrl;
-
-    /**
-     * Gets the default RakamClient instance.
-     *
-     * @return the default instance
-     */
-    public static RakamClient getInstance()
-    {
-        return instance;
-    }
-
     private static final RakamLog logger = RakamLog.getLogger();
 
     /**
@@ -125,24 +105,43 @@ public class RakamClient
      */
     protected String apiKey;
     /**
+     * The name for this instance of RakamClient.
+     */
+    protected String instanceName;
+    /**
      * The user's ID value.
      */
-    protected Object userId;
+    protected String userId;
     /**
      * The user's Device ID value.
      */
     protected String deviceId;
+    private boolean newDeviceIdPerInstall = false;
     private boolean useAdvertisingIdForDeviceId = false;
-    private boolean initialized = false;
+    protected boolean initialized = false;
     private boolean optOut = false;
     private boolean offline = false;
+    TrackingOptions trackingOptions = new TrackingOptions();
+    JSONObject apiPropertiesTrackingOptions;
+    /**
+     * The device's Platform value.
+     */
+    protected String platform;
+
+    /**
+     * Event metadata
+     */
+    long sessionId = -1;
+    long lastEventId = -1;
+    long lastIdentifyId = -1;
+    long lastEventTime = -1;
+    long previousSessionId = -1;
 
     private DeviceInfo deviceInfo;
 
     /**
      * The current session ID value.
      */
-    long sessionId = -1;
     private int eventUploadThreshold = Constants.EVENT_UPLOAD_THRESHOLD;
     private int eventUploadMaxBatchSize = Constants.EVENT_UPLOAD_MAX_BATCH_SIZE;
     private int eventMaxCount = Constants.EVENT_MAX_COUNT;
@@ -155,14 +154,22 @@ public class RakamClient
     private boolean trackingSessionEvents = false;
     private boolean inForeground = false;
     private JSONObject superProperties;
+    private boolean flushEventsOnClose = true;
 
     private AtomicBoolean updateScheduled = new AtomicBoolean(false);
     /**
-     * Whether or not the SDK is in the process of uploading events and identifys.
+     * Whether or not the SDK is in the process of uploading events.
      */
     AtomicBoolean uploadingCurrently = new AtomicBoolean(false);
 
+    /**
+     * The last SDK error - used for testing.
+     */
     Throwable lastError;
+    /**
+     * The Rakam API url that will store the events.
+     */
+    private String apiUrl;
     /**
      * The background event logging worker thread instance.
      */
@@ -173,10 +180,18 @@ public class RakamClient
     WorkerThread httpThread = new WorkerThread("httpThread");
 
     /**
+     * Instantiates a new default instance RakamClient and starts worker threads.
+     */
+    public RakamClient() {
+        this(null);
+    }
+
+    /**
      * Instantiates a new RakamClient and starts worker threads.
      */
-    public RakamClient()
+    public RakamClient(String instance)
     {
+        this.instanceName = Utils.normalizeInstanceName(instance);
         logThread.start();
         httpThread.start();
 
@@ -214,6 +229,130 @@ public class RakamClient
     }
 
     /**
+     * Initialize the Rakam SDK with the Android application context and your Rakam
+     * App API key. <b>Note:</b> initialization is required before you log events and modify
+     * user properties.
+     *
+     * @param context the Android application context
+     * @param apiUrl your Rakam API Url
+     * @param apiKey your Rakam App API key
+     * @param userId your Application User Id
+     * @return the RakamClient
+     */
+    public synchronized RakamClient initialize(Context context, URL apiUrl, String apiKey, String userId)
+    {
+        return initialize(context, apiUrl, apiKey, userId, null, true);
+    }
+
+    /**
+     * Initialize the Rakam SDK with the Android application context, your Rakam App API
+     * key, and a user ID for the current user. <b>Note:</b> initialization is required before
+     * you log events and modify user properties.
+     *
+     * @param context the Android application context
+     * @param apiUrl your Rakam App API Url
+     * @param apiKey your Rakam App API key
+     * @param userId your Application User Id
+     * @param platform The platform name
+     * @param enableDiagnosticLogging Enable error tracking to Rakam APIs
+     * @return the RakamClient
+     */
+    public synchronized RakamClient initialize(final Context context, final URL apiUrl, final String apiKey, final String userId, final String platform, final boolean enableDiagnosticLogging)
+    {
+        if (context == null) {
+            logger.e(TAG, "Argument context cannot be null in initialize()");
+            return this;
+        }
+
+        setApiUrl(apiUrl);
+
+        if (TextUtils.isEmpty(apiKey)) {
+            logger.e(TAG, "Argument apiKey cannot be null or blank in initialize()");
+            return this;
+        }
+
+        this.context = context.getApplicationContext();
+        this.apiKey = apiKey;
+        this.dbHelper = DatabaseHelper.getDatabaseHelper(this.context, this.instanceName);
+        this.platform = Utils.isEmptyString(platform) ? Constants.PLATFORM : platform;
+
+        final RakamClient client = this;
+        runOnLogThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!initialized) {
+                    // this try block is idempotent, so it's safe to retry initialize if failed
+                    try {
+                        if (instanceName.equals(Constants.DEFAULT_INSTANCE)) {
+                            RakamClient.upgradePrefs(context);
+                            RakamClient.upgradeSharedPrefsToDB(context);
+                        }
+                        httpClient = new OkHttpClient();
+                        deviceInfo = new DeviceInfo(context);
+                        deviceId = initializeDeviceId();
+                        if (enableDiagnosticLogging) {
+                            Diagnostics.getLogger().enableLogging(httpClient, apiKey, deviceId);
+                        }
+                        deviceInfo.prefetch();
+
+                        if (userId != null) {
+                            client.userId = userId;
+                            dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
+                        } else {
+                            client.userId = dbHelper.getValue(USER_ID_KEY);
+                        }
+                        final Long optOutLong = dbHelper.getLongValue(OPT_OUT_KEY);
+                        optOut = optOutLong != null && optOutLong == 1;
+
+                        // try to restore previous session id
+                        previousSessionId = getLongvalue(PREVIOUS_SESSION_ID_KEY, -1);
+                        if (previousSessionId >= 0) {
+                            sessionId = previousSessionId;
+                        }
+
+                        // reload event meta data
+                        lastEventId = getLongvalue(LAST_EVENT_ID_KEY, -1);
+                        lastIdentifyId = getLongvalue(LAST_IDENTIFY_ID_KEY, -1);
+                        lastEventTime = getLongvalue(LAST_EVENT_TIME_KEY, -1);
+
+                        // install database reset listener to re-insert metadata in memory
+                        dbHelper.setDatabaseResetListener(new DatabaseResetListener() {
+                            @Override
+                            public void onDatabaseReset(SQLiteDatabase db) {
+                                dbHelper.insertOrReplaceKeyValueToTable(db, DatabaseHelper.STORE_TABLE_NAME, DEVICE_ID_KEY, client.deviceId);
+                                dbHelper.insertOrReplaceKeyValueToTable(db, DatabaseHelper.STORE_TABLE_NAME, USER_ID_KEY, client.userId);
+                                dbHelper.insertOrReplaceKeyValueToTable(db, DatabaseHelper.LONG_STORE_TABLE_NAME, OPT_OUT_KEY, client.optOut ? 1L : 0L);
+                                dbHelper.insertOrReplaceKeyValueToTable(db, DatabaseHelper.LONG_STORE_TABLE_NAME, PREVIOUS_SESSION_ID_KEY, client.sessionId);
+                                dbHelper.insertOrReplaceKeyValueToTable(db, DatabaseHelper.LONG_STORE_TABLE_NAME, LAST_EVENT_TIME_KEY, client.lastEventTime);
+                            }
+                        });
+
+                        initialized = true;
+
+                        String value = dbHelper.getValue(SUPER_PROPERTIES_KEY);
+                        if (value != null) {
+                            try {
+                                superProperties = new JSONObject(value);
+                            } catch (JSONException e) {
+                                dbHelper.insertOrReplaceKeyValue(SUPER_PROPERTIES_KEY, null);
+                            }
+                        }
+
+                    } catch (CursorWindowAllocationException e) {  // treat as uninitialized SDK
+                        logger.e(TAG, String.format(
+                                "Failed to initialize Rakam SDK due to: %s", e.getMessage()
+                        ));
+                        Diagnostics.getLogger().logError("Failed to initialize Rakam SDK", e);
+                        client.apiKey = null;
+                    }
+                }
+            }
+        });
+
+        return this;
+    }
+
+    /**
      * Sets super property keys for the user.
      * Super properties allow you to continuously attach a property to every event you track automatically.
      *
@@ -238,80 +377,6 @@ public class RakamClient
     }
 
     /**
-     * Initialize the Rakam SDK with the Android application context, your Rakam App API
-     * key, and a user ID for the current user. <b>Note:</b> initialization is required before
-     * you log events and modify user properties.
-     *
-     * @param context the Android application context
-     * @param apiUrl your Rakam App API Url
-     * @param apiKey your Rakam App API key
-     * @param userId the user id to set
-     * @return the RakamClient
-     */
-    public synchronized RakamClient initialize(Context context, URL apiUrl, String apiKey, String userId)
-    {
-        if (context == null) {
-            logger.e(TAG, "Argument context cannot be null in initialize()");
-            return this;
-        }
-
-        RakamClient.upgradePrefs(context);
-        if (!RakamClient.upgradeSharedPrefsToDB(context)) {
-            return this;
-        }
-        setApiUrl(apiUrl);
-
-        if (TextUtils.isEmpty(apiKey)) {
-            logger.e(TAG, "Argument apiKey cannot be null or blank in initialize()");
-            return this;
-        }
-        if (!initialized) {
-            this.context = context.getApplicationContext();
-            this.httpClient = new OkHttpClient();
-            this.dbHelper = DatabaseHelper.getDatabaseHelper(this.context);
-            this.apiKey = apiKey;
-            initializeDeviceInfo();
-
-            try {
-                if (userId != null) {
-                    this.userId = userId;
-                    dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
-                }
-                else {
-                    this.userId = dbHelper.getValue(USER_ID_KEY);
-                }
-                Long optOut = dbHelper.getLongValue(OPT_OUT_KEY);
-                this.optOut = optOut != null && optOut == 1;
-
-                // try to restore previous session id
-                long previousSessionId = getPreviousSessionId();
-                if (previousSessionId >= 0) {
-                    sessionId = previousSessionId;
-                }
-
-                initialized = true;
-                String value = dbHelper.getValue(SUPER_PROPERTIES_KEY);
-                if (value != null) {
-                    try {
-                        superProperties = new JSONObject(value);
-                    }
-                    catch (JSONException e) {
-                        dbHelper.insertOrReplaceKeyValue(SUPER_PROPERTIES_KEY, null);
-                    }
-                }
-            }catch (CursorWindowAllocationException e) {  // treat as uninitialized SDK
-                logger.e(TAG, String.format(
-                        "Failed to initialize Rakam SDK due to: %s", e.getMessage()
-                ));
-                this.apiKey = null;
-                this.apiUrl = null;
-            }
-        }
-
-        return this;
-    }
-
-    /**
      * Enable foreground tracking for the SDK. This is <b>HIGHLY RECOMMENDED</b>, and will allow
      * for accurate session tracking.
      *
@@ -333,19 +398,35 @@ public class RakamClient
         return this;
     }
 
-    private void initializeDeviceInfo()
-    {
-        deviceInfo = new DeviceInfo(context);
-        runOnLogThread(new Runnable()
-        {
+    public RakamClient enableDiagnosticLogging() {
+        if (!contextAndApiKeySet("enableDiagnosticLogging")) {
+            return this;
+        }
+        Diagnostics.getLogger().enableLogging(httpClient, apiKey, deviceId);
+        return this;
+    }
 
-            @Override
-            public void run()
-            {
-                deviceId = initializeDeviceId();
-                deviceInfo.prefetch();
-            }
-        });
+    public RakamClient disableDiagnosticLogging() {
+        Diagnostics.getLogger().disableLogging();
+        return this;
+    }
+
+    public RakamClient setDiagnosticEventMaxCount(int eventMaxCount) {
+        Diagnostics.getLogger().setDiagnosticEventMaxCount(eventMaxCount);
+        return this;
+    }
+
+    /**
+     * Whether to set a new device ID per install. If true, then the SDK will always generate a new
+     * device ID on app install (as opposed to re-using an existing value like ADID).
+     *
+     * @param newDeviceIdPerInstall whether to set a new device ID on app install.
+     * @return the RakamClient
+     * @deprecated
+     */
+    public RakamClient enableNewDeviceIdPerInstall(boolean newDeviceIdPerInstall) {
+        this.newDeviceIdPerInstall = newDeviceIdPerInstall;
+        return this;
     }
 
     /**
@@ -365,13 +446,17 @@ public class RakamClient
      *
      * @return the RakamClient
      */
-    public RakamClient enableLocationListening()
-    {
-        if (deviceInfo == null) {
-            throw new IllegalStateException(
-                    "Must initialize before acting on location listening.");
-        }
-        deviceInfo.setLocationListening(true);
+    public RakamClient enableLocationListening() {
+        runOnLogThread(new Runnable() {
+            @Override
+            public void run() {
+                if (deviceInfo == null) {
+                    throw new IllegalStateException(
+                            "Must initialize before acting on location listening.");
+                }
+                deviceInfo.setLocationListening(true);
+            }
+        });
         return this;
     }
 
@@ -381,13 +466,17 @@ public class RakamClient
      *
      * @return the RakamClient
      */
-    public RakamClient disableLocationListening()
-    {
-        if (deviceInfo == null) {
-            throw new IllegalStateException(
-                    "Must initialize before acting on location listening.");
-        }
-        deviceInfo.setLocationListening(false);
+    public RakamClient disableLocationListening() {
+        runOnLogThread(new Runnable() {
+            @Override
+            public void run() {
+                if (deviceInfo == null) {
+                    throw new IllegalStateException(
+                            "Must initialize before acting on location listening.");
+                }
+                deviceInfo.setLocationListening(false);
+            }
+        });
         return this;
     }
 
@@ -474,20 +563,34 @@ public class RakamClient
         return this;
     }
 
+    public RakamClient setTrackingOptions(TrackingOptions trackingOptions) {
+        this.trackingOptions = trackingOptions;
+        this.apiPropertiesTrackingOptions = trackingOptions.getApiPropertiesTrackingOptions();
+        return this;
+    }
+
     /**
      * Sets opt out. If true then the SDK does not track any events for the user.
      *
      * @param optOut whether or not to opt the user out of tracking
      * @return the RakamClient
      */
-    public RakamClient setOptOut(boolean optOut)
-    {
+    public RakamClient setOptOut(final boolean optOut) {
         if (!contextAndApiKeySet("setOptOut()")) {
             return this;
         }
 
-        this.optOut = optOut;
-        dbHelper.insertOrReplaceKeyLongValue(OPT_OUT_KEY, optOut ? 1L : 0L);
+        final RakamClient client = this;
+        runOnLogThread(new Runnable() {
+            @Override
+            public void run() {
+                if (Utils.isEmptyString(apiKey)) { // in case initialization failed
+                    return;
+                }
+                client.optOut = optOut;
+                dbHelper.insertOrReplaceKeyLongValue(OPT_OUT_KEY, optOut ? 1L : 0L);
+            }
+        });
         return this;
     }
 
@@ -542,6 +645,17 @@ public class RakamClient
             uploadEvents();
         }
 
+        return this;
+    }
+
+    /**
+     * Enable/disable flushing of unsent events on app close (enabled by default).
+     *
+     * @param flushEventsOnClose whether to flush unsent events on app close
+     * @return the RakamClient
+     */
+    public RakamClient setFlushEventsOnClose(boolean flushEventsOnClose) {
+        this.flushEventsOnClose = flushEventsOnClose;
         return this;
     }
 
@@ -610,15 +724,7 @@ public class RakamClient
      */
     public void logEvent(String eventType, JSONObject eventProperties)
     {
-        if (eventType == null) {
-            logger.w(TAG, "Collection name can't be null, ignoring event");
-            return;
-        }
-        if (eventType.isEmpty()) {
-            logger.w(TAG, "Collection name can't be an empty string, ignoring event");
-            return;
-        }
-        logEvent(eventType, eventProperties, getCurrentTimeMillis(), false);
+        logEvent(eventType, eventProperties, false);
     }
 
     /**
@@ -633,7 +739,9 @@ public class RakamClient
      */
     public void logEvent(String eventType, JSONObject eventProperties, boolean outOfSession)
     {
-        logEvent(eventType, eventProperties, getCurrentTimeMillis(), outOfSession);
+        if (validateLogEvent(eventType)) {
+            logEvent(eventType, eventProperties, getCurrentTimeMillis(), outOfSession);
+        }
     }
 
     /**
@@ -678,7 +786,9 @@ public class RakamClient
      */
     public void logEventSync(String eventType, JSONObject eventProperties, boolean outOfSession)
     {
-        logEvent(eventType, eventProperties, getCurrentTimeMillis(), outOfSession);
+        if (validateLogEvent(eventType)) {
+            logEvent(eventType, eventProperties, getCurrentTimeMillis(), outOfSession);
+        }
     }
 
     /**
@@ -707,7 +817,7 @@ public class RakamClient
      * @param outOfSession the out of session
      */
     protected void logEventAsync(final String eventType, JSONObject properties,
-            final long timestamp, final boolean outOfSession)
+                                 final long timestamp, final boolean outOfSession)
     {
         // Clone the incoming eventProperties object before sending over
         // to the log thread. Helps avoid ConcurrentModificationException
@@ -724,6 +834,10 @@ public class RakamClient
             @Override
             public void run()
             {
+                if (Utils.isEmptyString(apiKey)) {  // in case initialization failed
+                    return;
+                }
+
                 logEvent(
                         eventType, copyProperties, timestamp, outOfSession
                 );
@@ -763,11 +877,11 @@ public class RakamClient
             }
         }
 
-        JSONObject event = new JSONObject();
+        long result = -1;
+        JSONObject properties = new JSONObject();
         try {
-            JSONObject properties = new JSONObject();
             properties.put("_id", UUID.randomUUID().toString());
-            properties.put("_local_id", getLastEventId() + 1);
+            properties.put("_local_id", lastEventId);
             properties.put("_time", timestamp);
             properties.put("_user", replaceWithJSONNull(userId));
             properties.put("_device_id", replaceWithJSONNull(deviceId));
@@ -818,64 +932,63 @@ public class RakamClient
                 }
             }
 
-            event.put("properties", truncate(properties));
-            event.put("collection", replaceWithJSONNull(eventType));
+            result = saveEvent(eventType, truncate(properties));
         }
         catch (JSONException e) {
-            logger.e(TAG, e.toString());
+            logger.e(TAG, String.format(
+                    "JSON Serialization of event type %s failed, skipping: %s", eventType, e.toString()
+            ));
+            Diagnostics.getLogger().logError(
+                    String.format("Failed to JSON serialize event type %s", eventType), e
+            );
         }
 
-        return recordAction(event);
+        return result;
     }
 
     /**
-     * Save event log. Internal method to save an event to the database.
+     * Save event long. Internal method to save an event to the database.
      *
-     * @param event the event
+     * @param eventType the event type
+     * @param event     the event
      * @return the event ID if succeeded, else -1
      */
-    protected long recordAction(JSONObject event)
-    {
-        long eventId;
-        eventId = dbHelper.addEvent(event.toString());
-        setLastEventId(eventId);
+    protected long saveEvent(String eventType, JSONObject event) {
+        String eventString = event.toString();
+        if (Utils.isEmptyString(eventString)) {
+            logger.e(TAG, String.format(
+                    "Detected empty event string for event type %s, skipping", eventType
+            ));
+            return -1;
+        }
+
+        lastEventId = dbHelper.addEvent(eventString);
+        setLastEventId(lastEventId);
 
         int numEventsToRemove = Math.min(
-                Math.max(1, eventMaxCount / 10),
+                Math.max(1, eventMaxCount/10),
                 Constants.EVENT_REMOVE_BATCH_SIZE
         );
         if (dbHelper.getEventCount() > eventMaxCount) {
             dbHelper.removeEvents(dbHelper.getNthEventId(numEventsToRemove));
         }
 
-        long totalEventCount = dbHelper.getEventCount(); // counts may have changed, re-fetch
+        long totalEventCount = dbHelper.getTotalEventCount(); // counts may have changed, refetch
         if ((totalEventCount % eventUploadThreshold) == 0 &&
                 totalEventCount >= eventUploadThreshold) {
-            syncEventsWithServer();
-        }
-        else {
-            syncServerLater(eventUploadPeriodMillis);
+            updateServer();
+        } else {
+            updateServerLater(eventUploadPeriodMillis);
         }
 
-        return eventId;
+        return lastEventId;
     }
 
     // fetches key from dbHelper longValueStore
     // if key does not exist, return defaultValue instead
-    private long getLongvalue(String key, long defaultValue)
-    {
+    private long getLongvalue(String key, long defaultValue) {
         Long value = dbHelper.getLongValue(key);
         return value == null ? defaultValue : value;
-    }
-
-    /**
-     * Internal method to get the last event time.
-     *
-     * @return the last event time
-     */
-    long getLastEventTime()
-    {
-        return getLongvalue(LAST_EVENT_TIME_KEY, -1);
     }
 
     /**
@@ -883,19 +996,9 @@ public class RakamClient
      *
      * @param timestamp the timestamp
      */
-    void setLastEventTime(long timestamp)
-    {
+    void setLastEventTime(long timestamp) {
+        lastEventTime = timestamp;
         dbHelper.insertOrReplaceKeyLongValue(LAST_EVENT_TIME_KEY, timestamp);
-    }
-
-    /**
-     * Internal method to get the last event id.
-     *
-     * @return the last event id
-     */
-    long getLastEventId()
-    {
-        return getLongvalue(LAST_EVENT_ID_KEY, -1);
     }
 
     /**
@@ -903,19 +1006,9 @@ public class RakamClient
      *
      * @param eventId the event id
      */
-    void setLastEventId(long eventId)
-    {
+    void setLastEventId(long eventId) {
+        lastEventId = eventId;
         dbHelper.insertOrReplaceKeyLongValue(LAST_EVENT_ID_KEY, eventId);
-    }
-
-    /**
-     * Internal method to get the last identify id.
-     *
-     * @return the last identify id
-     */
-    long getLastIdentifyId()
-    {
-        return getLongvalue(LAST_IDENTIFY_ID_KEY, -1);
     }
 
     /**
@@ -923,8 +1016,8 @@ public class RakamClient
      *
      * @param identifyId the identify id
      */
-    void setLastIdentifyId(long identifyId)
-    {
+    void setLastIdentifyId(long identifyId) {
+        lastIdentifyId = identifyId;
         dbHelper.insertOrReplaceKeyLongValue(LAST_IDENTIFY_ID_KEY, identifyId);
     }
 
@@ -933,19 +1026,8 @@ public class RakamClient
      *
      * @return The current sessionId value.
      */
-    public long getSessionId()
-    {
+    public long getSessionId() {
         return sessionId;
-    }
-
-    /**
-     * Internal method to get the previous session id.
-     *
-     * @return the previous session id
-     */
-    long getPreviousSessionId()
-    {
-        return getLongvalue(PREVIOUS_SESSION_ID_KEY, -1);
     }
 
     /**
@@ -953,19 +1035,18 @@ public class RakamClient
      *
      * @param timestamp the timestamp
      */
-    void setPreviousSessionId(long timestamp)
-    {
+    void setPreviousSessionId(long timestamp) {
+        previousSessionId = timestamp;
         dbHelper.insertOrReplaceKeyLongValue(PREVIOUS_SESSION_ID_KEY, timestamp);
     }
 
     /**
-     * Internal method to start a new session if needed.
+     * Public method to start a new session if needed.
      *
      * @param timestamp the timestamp
      * @return whether or not a new session was started
      */
-    boolean startNewSessionIfNeeded(long timestamp)
-    {
+    public boolean startNewSessionIfNeeded(long timestamp) {
         if (inSession()) {
 
             if (isWithinMinTimeBetweenSessions(timestamp)) {
@@ -979,7 +1060,6 @@ public class RakamClient
 
         // no current session - check for previous session
         if (isWithinMinTimeBetweenSessions(timestamp)) {
-            long previousSessionId = getPreviousSessionId();
             if (previousSessionId == -1) {
                 startNewSession(timestamp);
                 return true;
@@ -995,8 +1075,7 @@ public class RakamClient
         return true;
     }
 
-    private void startNewSession(long timestamp)
-    {
+    private void startNewSession(long timestamp) {
         // end previous session
         if (trackingSessionEvents) {
             sendSessionEvent(END_SESSION_EVENT);
@@ -1010,21 +1089,17 @@ public class RakamClient
         }
     }
 
-    private boolean inSession()
-    {
+    private boolean inSession() {
         return sessionId >= 0;
     }
 
-    private boolean isWithinMinTimeBetweenSessions(long timestamp)
-    {
-        long lastEventTime = getLastEventTime();
+    private boolean isWithinMinTimeBetweenSessions(long timestamp) {
         long sessionLimit = usingForegroundTracking ?
                 minTimeBetweenSessionsMillis : sessionTimeoutMillis;
         return (timestamp - lastEventTime) < sessionLimit;
     }
 
-    private void setSessionId(long timestamp)
-    {
+    private void setSessionId(long timestamp) {
         sessionId = timestamp;
         setPreviousSessionId(timestamp);
     }
@@ -1034,8 +1109,7 @@ public class RakamClient
      *
      * @param timestamp the timestamp
      */
-    void refreshSessionTime(long timestamp)
-    {
+    void refreshSessionTime(long timestamp) {
         if (!inSession()) {
             return;
         }
@@ -1043,8 +1117,7 @@ public class RakamClient
         setLastEventTime(timestamp);
     }
 
-    private void sendSessionEvent(final String sessionEvent)
-    {
+    private void sendSessionEvent(final String sessionEvent) {
         if (!contextAndApiKeySet(String.format("sendSessionEvent('%s')", sessionEvent))) {
             return;
         }
@@ -1056,13 +1129,14 @@ public class RakamClient
         JSONObject apiProperties = new JSONObject();
         try {
             apiProperties.put("special", sessionEvent);
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
+            Diagnostics.getLogger().logError(
+                    String.format("Failed to generate API Properties JSON for session event %s", sessionEvent), e
+            );
             return;
         }
 
-        long timestamp = getLastEventTime();
-        logEvent(sessionEvent, null, timestamp, false);
+        logEvent(sessionEvent, apiProperties, lastEventTime, false);
     }
 
     /**
@@ -1070,16 +1144,25 @@ public class RakamClient
      *
      * @param timestamp the timestamp
      */
-    void onExitForeground(final long timestamp)
-    {
-        runOnLogThread(new Runnable()
-        {
+    void onExitForeground(final long timestamp) {
+        runOnLogThread(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
+                if (Utils.isEmptyString(apiKey)) {
+                    return;
+                }
                 refreshSessionTime(timestamp);
                 inForeground = false;
-                syncEventsWithServer();
+                if (flushEventsOnClose) {
+                    updateServer();
+                }
+
+                // re-persist metadata into database for good measure
+                dbHelper.insertOrReplaceKeyValue(DEVICE_ID_KEY, deviceId);
+                dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
+                dbHelper.insertOrReplaceKeyLongValue(OPT_OUT_KEY, optOut ? 1L : 0L);
+                dbHelper.insertOrReplaceKeyLongValue(PREVIOUS_SESSION_ID_KEY, sessionId);
+                dbHelper.insertOrReplaceKeyLongValue(LAST_EVENT_TIME_KEY, lastEventTime);
             }
         });
     }
@@ -1089,18 +1172,19 @@ public class RakamClient
      *
      * @param timestamp the timestamp
      */
-    void onEnterForeground(final long timestamp)
-    {
-        runOnLogThread(new Runnable()
-        {
+    void onEnterForeground(final long timestamp) {
+        runOnLogThread(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
+                if (Utils.isEmptyString(apiKey)) {
+                    return;
+                }
                 startNewSessionIfNeeded(timestamp);
                 inForeground = true;
             }
         });
     }
+
 
     /**
      * Log revenue. Create a {@link io.rakam.api.Revenue} object to hold your revenue data and
@@ -1108,7 +1192,7 @@ public class RakamClient
      *
      * @param revenue a {@link io.rakam.api.Revenue} object
      * @see io.rakam.api.Revenue
-     * @see <a href="https://github.com/amplitude/Amplitude-Android#tracking-revenue">
+     * @see <a href="https://github.com/rakam/Rakam-Android#tracking-revenue">
      * Tracking Revenue</a>
      */
     public void logRevenue(Revenue revenue)
@@ -1122,59 +1206,63 @@ public class RakamClient
 
     /**
      * Sets user properties. This is a convenience wrapper around the
-     * {@link Identify} API to set multiple user properties with a single
+     * {@link io.rakam.api.Identify} API to set multiple user properties with a single
+     * command. <b>Note:</b> the replace parameter is deprecated and has no effect.
+     *
+     * @param userProperties the user properties
+     * @param replace        the replace - has no effect
+     * @deprecated
+     * @see <a href="https://github.com/rakam/Rakam-Android#user-properties-and-user-property-operations">
+     *     User Properties</a>
+     */
+    public void setUserProperties(final JSONObject userProperties, final boolean replace) {
+        setUserProperties(userProperties);
+    }
+
+    /**
+     * Sets user properties. This is a convenience wrapper around the
+     * {@link io.rakam.api.Identify} API to set multiple user properties with a single
      * command.
      *
      * @param userProperties the user properties
-     * @see <a href="https://github.com/buremba/rakam-android#user-properties-and-user-property-operations">
-     * User Properties</a>
+     * @see <a href="https://github.com/rakam/Rakam-Android#user-properties-and-user-property-operations">
+     *     User Properties</a>
      */
-    public void setUserProperties(final JSONObject userProperties)
-    {
-        if (userProperties == null || userProperties.length() == 0 || !contextAndApiKeySet("setUserProperties()")) {
+    public void setUserProperties(final JSONObject userProperties) {
+        if (userProperties == null || userProperties.length() == 0 ||
+                !contextAndApiKeySet("setUserProperties")) {
             return;
         }
 
-        runOnLogThread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                // Create deep copy to try and prevent ConcurrentModificationException
-                JSONObject copy;
-                try {
-                    copy = new JSONObject(userProperties.toString());
-                }
-                catch (JSONException e) {
-                    logger.e(TAG, e.toString());
-                    return; // could not create copy
-                }
+        // sanitize and truncate properties before trying to convert to identify
+        JSONObject sanitized = truncate(userProperties);
+        if (sanitized.length() == 0) {
+            return;
+        }
 
-                Identify identify = new Identify();
-                Iterator<?> keys = copy.keys();
-                while (keys.hasNext()) {
-                    String key = (String) keys.next();
-                    try {
-                        identify.setUserProperty(key, copy.get(key));
-                    }
-                    catch (JSONException e) {
-                        logger.e(TAG, e.toString());
-                    }
-                }
-                identify(identify);
+        Identify identify = new Identify();
+        Iterator<?> keys = sanitized.keys();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
+            try {
+                identify.setUserProperty(key, sanitized.get(key));
+            } catch (JSONException e) {
+                logger.e(TAG, e.toString());
+                Diagnostics.getLogger().logError(
+                        String.format("Failed to set user property %s", key), e
+                );
             }
-        });
+        }
+        identify(identify);
     }
 
     /**
      * Clear user properties. This will clear all user properties at once. <b>Note: the
      * result is irreversible!</b>
-     *
-     * @see <a href="https://github.com/buremba/rakam-android#user-properties-and-user-property-operations">
-     * User Properties</a>
+     * @see <a href="https://github.com/rakam/Rakam-Android#user-properties-and-user-property-operations">
+     *     User Properties</a>
      */
-    public void clearUserProperties()
-    {
+    public void clearUserProperties() {
         Identify identify = new Identify().clearAll();
         identify(identify);
     }
@@ -1192,60 +1280,39 @@ public class RakamClient
         superProperties = null;
     }
 
+
     /**
-     * Identify. Use this to send an {@link Identify} object containing
+     * Identify. Use this to send an {@link io.rakam.api.Identify} object containing
      * user property operations to Rakam server.
      *
-     * @param identify an {@link Identify} object
-     * @see Identify
-     * @see <a href="https://github.com/buremba/rakam-android#user-properties-and-user-property-operations">
-     * User Properties</a>
+     * @param identify an {@link io.rakam.api.Identify} object
+     * @see io.rakam.api.Identify
+     * @see <a href="https://github.com/rakam/Rakam-Android#user-properties-and-user-property-operations">
+     *     User Properties</a>
      */
-    public void identify(final Identify identify)
-    {
-        if (identify == null || identify.userPropertiesOperations.length() == 0
-                || !contextAndApiKeySet("identify()")) {
-            return;
-        }
-
-        final String body;
-        try {
-            JSONObject truncate = truncate(identify.userPropertiesOperations);
-            body = truncate.put("time", getCurrentTimeMillis()).toString();
-        }
-        catch (JSONException e) {
-            uploadingCurrently.set(false);
-            logger.e(TAG, e.toString());
-            return;
-        }
-
-        recordIdentify(body);
+    public void identify(Identify identify) {
+        identify(identify, false);
     }
 
-    protected long recordIdentify(String identify)
-    {
-        long identifyId;
-        identifyId = dbHelper.addIdentify(identify);
-        setLastIdentifyId(identifyId);
-
-        int numEventsToRemove = Math.min(
-                Math.max(1, eventMaxCount / 10),
-                Constants.EVENT_REMOVE_BATCH_SIZE
+    /**
+     * Identify. Use this to send an {@link io.rakam.api.Identify} object containing
+     * user property operations to Rakam server. If outOfSession is true, then the identify
+     * event is sent with a session id of -1, and does not trigger any session-handling logic.
+     *
+     * @param identify an {@link io.rakam.api.Identify} object
+     * @param outOfSession whther to log the identify event out of session
+     * @see io.rakam.api.Identify
+     * @see <a href="https://github.com/rakam/Rakam-Android#user-properties-and-user-property-operations">
+     *     User Properties</a>
+     */
+    public void identify(Identify identify, boolean outOfSession) {
+        if (
+                identify == null || identify.userPropertiesOperations.length() == 0 ||
+                        !contextAndApiKeySet("identify()")
+        ) return;
+        logEventAsync(
+                Constants.IDENTIFY_EVENT, identify.userPropertiesOperations, getCurrentTimeMillis(), outOfSession
         );
-        if (dbHelper.getIdentifyCount() > eventMaxCount) {
-            dbHelper.removeIdentifys(dbHelper.getNthEventId(numEventsToRemove));
-        }
-
-        long totalEventCount = dbHelper.getIdentifyCount(); // counts may have changed, re-fetch
-        if ((totalEventCount % eventUploadThreshold) == 0 &&
-                totalEventCount >= eventUploadThreshold) {
-            syncEventsWithServer();
-        }
-        else {
-            syncServerLater(eventUploadPeriodMillis);
-        }
-
-        return identifyId;
     }
 
     /**
@@ -1255,28 +1322,31 @@ public class RakamClient
      * @param object the object
      * @return the truncated JSON object
      */
-    protected JSONObject truncate(JSONObject object)
-    {
+    public JSONObject truncate(JSONObject object) {
         if (object == null) {
-            return null;
+            return new JSONObject();
+        }
+
+        if (object.length() > Constants.MAX_PROPERTY_KEYS) {
+            logger.w(TAG, "Warning: too many properties (more than 1000), ignoring");
+            return new JSONObject();
         }
 
         Iterator<?> keys = object.keys();
         while (keys.hasNext()) {
             String key = (String) keys.next();
+
             try {
                 Object value = object.get(key);
+                // do not truncate revenue receipt and receipt sig fields
                 if (value.getClass().equals(String.class)) {
                     object.put(key, truncate((String) value));
-                }
-                else if (value.getClass().equals(JSONObject.class)) {
+                } else if (value.getClass().equals(JSONObject.class)) {
                     object.put(key, truncate((JSONObject) value));
-                }
-                else if (value.getClass().equals(JSONArray.class)) {
+                } else if (value.getClass().equals(JSONArray.class)) {
                     object.put(key, truncate((JSONArray) value));
                 }
-            }
-            catch (JSONException e) {
+            } catch (JSONException e) {
                 logger.e(TAG, e.toString());
             }
         }
@@ -1292,22 +1362,18 @@ public class RakamClient
      * @return the truncated JSON array
      * @throws JSONException the json exception
      */
-    protected JSONArray truncate(JSONArray array)
-            throws JSONException
-    {
+    public JSONArray truncate(JSONArray array) throws JSONException {
         if (array == null) {
-            return null;
+            return new JSONArray();
         }
 
         for (int i = 0; i < array.length(); i++) {
             Object value = array.get(i);
             if (value.getClass().equals(String.class)) {
                 array.put(i, truncate((String) value));
-            }
-            else if (value.getClass().equals(JSONObject.class)) {
+            } else if (value.getClass().equals(JSONObject.class)) {
                 array.put(i, truncate((JSONObject) value));
-            }
-            else if (value.getClass().equals(JSONArray.class)) {
+            } else if (value.getClass().equals(JSONArray.class)) {
                 array.put(i, truncate((JSONArray) value));
             }
         }
@@ -1320,7 +1386,7 @@ public class RakamClient
      * @param value the value
      * @return the truncated string
      */
-    protected String truncate(String value)
+    static String truncate(String value)
     {
         return value.length() <= MAX_STRING_LENGTH ? value : value.substring(0, MAX_STRING_LENGTH);
     }
@@ -1341,31 +1407,50 @@ public class RakamClient
      * @param userId the user id
      * @return the RakamClient
      */
-    public RakamClient setUserId(String userId)
-    {
-        if (!contextAndApiKeySet("setUserId()")) {
-            return this;
-        }
-
-        this.userId = userId;
-        dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
-        return this;
+    public RakamClient setUserId(final String userId) {
+        return setUserId(userId, false);
     }
 
     /**
      * Sets the user id (can be null).
+     * If startNewSession is true, ends the session for the previous user and starts a new
+     * session for the new user id.
      *
      * @param userId the user id
      * @return the RakamClient
      */
-    public RakamClient setUserId(long userId)
-    {
+    public RakamClient setUserId(final String userId, final boolean startNewSession) {
         if (!contextAndApiKeySet("setUserId()")) {
             return this;
         }
 
-        this.userId = userId;
-        dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
+        final RakamClient client = this;
+        runOnLogThread(new Runnable() {
+            @Override
+            public void run() {
+                if (Utils.isEmptyString(client.apiKey)) {  // in case initialization failed
+                    return;
+                }
+
+                // end previous session
+                if (startNewSession && trackingSessionEvents) {
+                    sendSessionEvent(END_SESSION_EVENT);
+                }
+
+                client.userId = userId;
+                dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
+
+                // start new session
+                if (startNewSession) {
+                    long timestamp = getCurrentTimeMillis();
+                    setSessionId(timestamp);
+                    refreshSessionTime(timestamp);
+                    if (trackingSessionEvents) {
+                        sendSessionEvent(START_SESSION_EVENT);
+                    }
+                }
+            }
+        });
         return this;
     }
 
@@ -1377,13 +1462,7 @@ public class RakamClient
      */
     public RakamClient setUserId(int userId)
     {
-        if (!contextAndApiKeySet("setUserId()")) {
-            return this;
-        }
-
-        this.userId = userId;
-        dbHelper.insertOrReplaceKeyValue(USER_ID_KEY, userId);
-        return this;
+       return setUserId(String.valueOf(userId));
     }
 
     /**
@@ -1397,48 +1476,82 @@ public class RakamClient
     public RakamClient setDeviceId(final String deviceId)
     {
         Set<String> invalidDeviceIds = getInvalidDeviceIds();
-        if (!contextAndApiKeySet("setDeviceId()") || TextUtils.isEmpty(deviceId) ||
+        if (!contextAndApiKeySet("setDeviceId()") || Utils.isEmptyString(deviceId) ||
                 invalidDeviceIds.contains(deviceId)) {
             return this;
         }
 
-        this.deviceId = deviceId;
-        dbHelper.insertOrReplaceKeyValue(DEVICE_ID_KEY, deviceId);
+        final RakamClient client = this;
+        runOnLogThread(new Runnable() {
+            @Override
+            public void run() {
+                if (Utils.isEmptyString(client.apiKey)) {  // in case initialization failed
+                    return;
+                }
+                client.deviceId = deviceId;
+                saveDeviceId(deviceId);
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Regenerates a new random deviceId for current user. Note: this is not recommended unless you
+     * know what you are doing. This can be used in conjunction with setUserId(null) to anonymize
+     * users after they log out. With a null userId and a completely new deviceId, the current user
+     * would appear as a brand new user in dashboard.
+     *
+     * @see <a href="https://github.com/rakam/Rakam-Android#logging-out-and-anonymous-users">
+     *     Logging Out Users</a>
+     */
+    public RakamClient regenerateDeviceId() {
+        if (!contextAndApiKeySet("regenerateDeviceId()")) {
+            return this;
+        }
+
+        final RakamClient client = this;
+        runOnLogThread(new Runnable() {
+            @Override
+            public void run() {
+                if (Utils.isEmptyString(client.apiKey)) { // in case initialization failed
+                    return;
+                }
+                String randomId = DeviceInfo.generateUUID() + "R";
+                setDeviceId(randomId);
+            }
+        });
         return this;
     }
 
     /**
      * Force SDK to upload any unsent events.
      */
-    public void uploadEvents()
-    {
+    public void uploadEvents() {
         if (!contextAndApiKeySet("uploadEvents()")) {
             return;
         }
 
-        logThread.post(new Runnable()
-        {
+        logThread.post(new Runnable() {
             @Override
-            public void run()
-            {
-                syncEventsWithServer();
+            public void run() {
+                if (Utils.isEmptyString(apiKey)) {  // in case initialization failed
+                    return;
+                }
+                updateServer();
             }
         });
     }
 
-    private void syncServerLater(long delayMillis)
-    {
+    private void updateServerLater(long delayMillis) {
         if (updateScheduled.getAndSet(true)) {
             return;
         }
 
-        logThread.postDelayed(new Runnable()
-        {
+        logThread.postDelayed(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 updateScheduled.set(false);
-                syncEventsWithServer();
+                updateServer();
             }
         }, delayMillis);
     }
@@ -1446,9 +1559,9 @@ public class RakamClient
     /**
      * Internal method to upload unsent events.
      */
-    protected void syncEventsWithServer()
-    {
-        syncEventsWithServer(false);
+    protected void updateServer() {
+        updateServer(false);
+        Diagnostics.getLogger().flushEvents();
     }
 
     /**
@@ -1457,21 +1570,14 @@ public class RakamClient
      *
      * @param limit the limit
      */
-    protected void syncEventsWithServer(boolean limit)
-    {
+    protected void updateServer(boolean limit) {
         if (optOut || offline) {
             return;
         }
 
-        updateEvents(limit);
-        updateIdentifys(limit);
-    }
-
-    private void updateIdentifys(boolean limit)
-    {
         // if returning out of this block, always be sure to set uploadingCurrently to false!!
         if (!uploadingCurrently.getAndSet(true)) {
-            long totalEventCount = dbHelper.getIdentifyCount();
+            long totalEventCount = dbHelper.getTotalEventCount();
             long batchSize = Math.min(
                     limit ? backoffUploadBatchSize : eventUploadMaxBatchSize,
                     totalEventCount
@@ -1483,133 +1589,101 @@ public class RakamClient
             }
 
             try {
-                final List<JSONObject> identifys = dbHelper.getIdentifys(getLastIdentifyId(), batchSize);
+                List<JSONObject> events = dbHelper.getEvents(lastEventId, batchSize);
+                List<JSONObject> identifys = dbHelper.getIdentifys(lastIdentifyId, batchSize);
 
-                if (identifys.size() == 0) {
+                final Pair<Pair<Long, Long>, JSONArray> merged = mergeEventsAndIdentifys(events, identifys, batchSize);
+                final JSONArray mergedEvents = merged.second;
+                if (mergedEvents.length() == 0) {
                     uploadingCurrently.set(false);
                     return;
                 }
+                final long maxEventId = merged.first.first;
+                final long maxIdentifyId = merged.first.second;
+                final String mergedEventsString = merged.second.toString();
 
-                int maxEventId = -1;
-                for (JSONObject event : identifys) {
-                    maxEventId = Math.max(event.getInt("event_id"), maxEventId);
-                }
-
-                final int finalMaxEventId = maxEventId;
-                httpThread.post(new Runnable()
-                {
+                httpThread.post(new Runnable() {
                     @Override
-                    public void run()
-                    {
-
-                        String body;
-                        try {
-                            body = new JSONObject()
-                                    .put("data", cleanEventIds(identifys))
-                                    .put("id", getUserId())
-                                    .put("api", getApi()).toString();
-                        }
-                        catch (JSONException e) {
-                            logger.e(TAG, e.toString());
-                            uploadingCurrently.set(false);
-                            return;
-                        }
-
-                        makeEventUploadPostRequest(httpClient, USER_SET_PROPERTIES_ENDPOINT, body,
-                                finalMaxEventId, new CleanerFunction()
-                                {
-                                    @Override
-                                    public void clean(long id)
-                                    {
-                                        dbHelper.removeIdentifys(id);
-                                    }
-                                });
+                    public void run() {
+                        makeEventUploadPostRequest(httpClient, mergedEventsString, maxEventId, maxIdentifyId);
                     }
                 });
-            }
-            // handle CursorWindowAllocationException when fetching events, defer upload
-            catch (CursorWindowAllocationException e) {
+            } catch (JSONException e) {
+                uploadingCurrently.set(false);
+                logger.e(TAG, e.toString());
+                Diagnostics.getLogger().logError("Failed to update server", e);
+
+                // handle CursorWindowAllocationException when fetching events, defer upload
+            } catch (CursorWindowAllocationException e) {
                 uploadingCurrently.set(false);
                 logger.e(TAG, String.format(
                         "Caught Cursor window exception during event upload, deferring upload: %s",
                         e.getMessage()
                 ));
-            }
-            catch (Throwable e) {
-                uploadingCurrently.set(false);
-                logger.e(TAG, e.toString());
+                Diagnostics.getLogger().logError("Failed to update server", e);
             }
         }
     }
 
-    private void updateEvents(boolean limit)
-    {
-        // if returning out of this block, always be sure to set uploadingEventsCurrently to false!!
-        if (!uploadingCurrently.getAndSet(true)) {
-            long totalEventCount = dbHelper.getEventCount();
-            long batchSize = Math.min(
-                    limit ? backoffUploadBatchSize : eventUploadMaxBatchSize,
-                    totalEventCount
-            );
+    /**
+     * Internal method to merge unsent events and identifies into a single array by sequence number.
+     *
+     * @param events    the events
+     * @param identifys the identifys
+     * @param numEvents the num events
+     * @return the merged array, max event id, and max identify id
+     * @throws JSONException the json exception
+     */
+    protected Pair<Pair<Long,Long>, JSONArray> mergeEventsAndIdentifys(List<JSONObject> events,
+                                                                       List<JSONObject> identifys, long numEvents) throws JSONException {
+        JSONArray merged = new JSONArray();
+        long maxEventId = -1;
+        long maxIdentifyId = -1;
 
-            if (batchSize <= 0) {
-                uploadingCurrently.set(false);
-                return;
-            }
+        while (merged.length() < numEvents) {
+            boolean noEvents = events.isEmpty();
+            boolean noIdentifys = identifys.isEmpty();
 
-            try {
-                final List<JSONObject> events = dbHelper.getEvents(getLastEventId(), batchSize);
+            // case 0: no events or identifys, nothing to grab
+            // this case should never happen, as it means there are less identifys and events
+            // than expected
+            if (noEvents && noIdentifys) {
+                logger.w(TAG, String.format(
+                        "mergeEventsAndIdentifys: number of events and identifys " +
+                                "less than expected by %d", numEvents - merged.length())
+                );
+                break;
 
-                if (events.size() == 0) {
-                    uploadingCurrently.set(false);
-                    return;
+                // case 1: no identifys, grab from events
+            } else if (noIdentifys) {
+                JSONObject event = events.remove(0);
+                maxEventId = event.getLong("event_id");
+                merged.put(event);
+
+                // case 2: no events, grab from identifys
+            } else if (noEvents) {
+                JSONObject identify = identifys.remove(0);
+                maxIdentifyId = identify.getLong("event_id");
+                merged.put(identify);
+
+                // case 3: need to compare sequence numbers
+            } else {
+                // events logged before v2.1.0 won't have a sequence number, put those first
+                if (!events.get(0).has("sequence_number") ||
+                        events.get(0).getLong("sequence_number") <
+                                identifys.get(0).getLong("sequence_number")) {
+                    JSONObject event = events.remove(0);
+                    maxEventId = event.getLong("event_id");
+                    merged.put(event);
+                } else {
+                    JSONObject identify = identifys.remove(0);
+                    maxIdentifyId = identify.getLong("event_id");
+                    merged.put(identify);
                 }
-                int maxEventId = -1;
-                for (JSONObject event : events) {
-                    maxEventId = Math.max(event.getInt("event_id"), maxEventId);
-                }
-
-                final int finalMaxEventId = maxEventId;
-                httpThread.post(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        String body;
-                        try {
-                            body = new JSONObject().put("api", getApi()).put("events", cleanEventIds(events)).toString();
-                        }
-                        catch (JSONException e) {
-                            uploadingCurrently.set(false);
-                            logger.e(TAG, e.toString());
-                            return;
-                        }
-
-                        makeEventUploadPostRequest(httpClient, Constants.EVENT_BATCH_ENDPOINT, body,
-                                finalMaxEventId, new CleanerFunction()
-                                {
-                                    @Override
-                                    public void clean(long id)
-                                    {
-                                        dbHelper.removeEvents(id);
-                                    }
-                                });
-                    }
-                });
-            }
-            // handle CursorWindowAllocationException when fetching events, defer upload
-            catch (CursorWindowAllocationException e) {
-                uploadingCurrently.set(false);
-                logger.e(TAG, String.format(
-                        "Caught Cursor window exception during event upload, deferring upload: %s",
-                        e.getMessage()
-                ));
-            }
-            catch (Throwable e) {
-                uploadingCurrently.set(false);
-                logger.e(TAG, e.toString());
             }
         }
+
+        return new Pair<Pair<Long, Long>, JSONArray>(new Pair<Long,Long>(maxEventId, maxIdentifyId), merged);
     }
 
     private JSONObject getApi()
@@ -1624,7 +1698,6 @@ public class RakamClient
     }
 
     private JSONArray cleanEventIds(List<JSONObject> list)
-            throws JSONException
     {
         JSONArray array = new JSONArray();
         for (JSONObject event : list) {
@@ -1634,136 +1707,132 @@ public class RakamClient
         return array;
     }
 
-    public interface CleanerFunction
-    {
-        void clean(long id);
-    }
-
     /**
      * Internal method to generate the event upload post request.
+     *
+     * @param client        the client
+     * @param events        the events
+     * @param maxEventId    the max event id
+     * @param maxIdentifyId the max identify id
      */
-    protected void makeEventUploadPostRequest(OkHttpClient client, String endpoint, String body, final long maxId, final CleanerFunction cleanerFunction)
-    {
-        if (apiUrl == null) {
-            logger.e(TAG, "The API Url is not set, couldn't send the event data to the server. Please call client.setApiUrl()");
+    protected void makeEventUploadPostRequest(OkHttpClient client, String events, final long maxEventId, final long maxIdentifyId) {
+        String body;
+        try {
+//            body = new JSONObject().put("api", getApi()).put("events", cleanEventIds(events)).toString();
+            body = new JSONObject().put("api", getApi()).put("events", events).toString();
+        }
+        catch (JSONException e) {
             uploadingCurrently.set(false);
+            logger.e(TAG, e.toString());
             return;
         }
 
-        Request request = new Request.Builder()
-                .url(apiUrl + endpoint)
-                .post(RequestBody.create(JSON, body))
-                .build();
+        Request request;
+        try {
+            request = new Request.Builder()
+                    .url(apiUrl + EVENT_BATCH_ENDPOINT)
+                    .post(RequestBody.create(JSON, body))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            logger.e(TAG, e.toString());
+            uploadingCurrently.set(false);
+            Diagnostics.getLogger().logError("Failed to build upload request", e);
+            return;
+        }
 
         boolean uploadSuccess = false;
 
         try {
             Response response = client.newCall(request).execute();
-
             String stringResponse = response.body().string();
             if (stringResponse.equals("1")) {
                 uploadSuccess = true;
-                logger.d(TAG, "Successfully synced to server");
-            }
-            else if (response.code() == 403) {
+                logThread.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (maxEventId >= 0) dbHelper.removeEvents(maxEventId);
+                        if (maxIdentifyId >= 0) dbHelper.removeIdentifys(maxIdentifyId);
+                        uploadingCurrently.set(false);
+                        if (dbHelper.getTotalEventCount() > eventUploadThreshold) {
+                            logThread.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateServer(backoffUpload);
+                                }
+                            });
+                        }
+                        else {
+                            backoffUpload = false;
+                            backoffUploadBatchSize = eventUploadMaxBatchSize;
+                        }
+                    }
+                });
+            } else if (response.code() == 403) {
                 logger.e(TAG, "Invalid API key, make sure your API key is correct in initialize()");
-            }
-            else if (response.code() == 400) {
-                uploadSuccess = true;
-                logger.e(TAG, "The data that's being sent is in invalid format, please check this error: " + stringResponse);
-            }
-            else if (stringResponse.equals("bad_checksum")) {
+            } else if (stringResponse.equals("bad_checksum")) {
                 logger.w(TAG,
                         "Bad checksum, post request was mangled in transit, will attempt to reupload later");
-            }
-            else if (response.code() == 500) {
+            } else if (stringResponse.equals("request_db_write_failed")) {
                 logger.w(TAG,
                         "Couldn't write to request database on server, will attempt to reupload later");
-            }
-            else if (response.code() == 413) {
+            } else if (response.code() == 413) {
+
                 // If blocked by one massive event, drop it
                 if (backoffUpload && backoffUploadBatchSize == 1) {
-                    if (maxId >= 0) {
-                        cleanerFunction.clean(maxId);
-                    }
+                    if (maxEventId >= 0) dbHelper.removeEvent(maxEventId);
+                    if (maxIdentifyId >= 0) dbHelper.removeIdentify(maxIdentifyId);
                     // maybe we want to reset backoffUploadBatchSize after dropping massive event
                 }
 
                 // Server complained about length of request, backoff and try again
                 backoffUpload = true;
-                int numEvents = Math.min((int) dbHelper.getEventCount(), backoffUploadBatchSize);
-                backoffUploadBatchSize = (int) Math.ceil(numEvents / 2.0);
+                int numEvents = Math.min((int)dbHelper.getEventCount(), backoffUploadBatchSize);
+                backoffUploadBatchSize = (int)Math.ceil(numEvents / 2.0);
                 logger.w(TAG, "Request too large, will decrease size and attempt to reupload");
-                logThread.post(new Runnable()
-                {
+                logThread.post(new Runnable() {
                     @Override
-                    public void run()
-                    {
+                    public void run() {
                         uploadingCurrently.set(false);
-                        syncEventsWithServer(true);
+                        updateServer(true);
                     }
                 });
             }
-            else {
-                String message = (stringResponse == null || stringResponse.isEmpty()) ? "empty result" : stringResponse;
-                logger.w(TAG, "Upload failed with status code " + response.code() + " and " + message + ", will attempt to reupload later");
+            else if (response.code() == 500) {
+                logger.w(TAG,
+                        "A server error occurred, will attempt to reupload later");
+            } else {
+                logger.w(TAG, "Upload failed, " + stringResponse + ", will attempt to reupload later");
             }
-        }
-        catch (java.net.ConnectException e) {
+        } catch (java.net.ConnectException e) {
             // logger.w(TAG,
-            // "No internet connection found, unable to upload bodyList");
+            // "No internet connection found, unable to upload events");
             lastError = e;
-        }
-        catch (java.net.UnknownHostException e) {
+            Diagnostics.getLogger().logError("Failed to post upload request", e);
+        } catch (java.net.UnknownHostException e) {
             // logger.w(TAG,
-            // "No internet connection found, unable to upload bodyList");
+            // "No internet connection found, unable to upload events");
             lastError = e;
-        }
-        catch (IOException e) {
+            Diagnostics.getLogger().logError("Failed to post upload request", e);
+        } catch (IOException e) {
             logger.e(TAG, e.toString());
             lastError = e;
-        }
-        catch (AssertionError e) {
+            Diagnostics.getLogger().logError("Failed to post upload request", e);
+        } catch (AssertionError e) {
             // This can be caused by a NoSuchAlgorithmException thrown by DefaultHttpClient
             logger.e(TAG, "Exception:", e);
             lastError = e;
-        }
-        catch (Exception e) {
+            Diagnostics.getLogger().logError("Failed to post upload request", e);
+        } catch (Exception e) {
             // Just log any other exception so things don't crash on upload
             logger.e(TAG, "Exception:", e);
             lastError = e;
+            Diagnostics.getLogger().logError("Failed to post upload request", e);
         }
 
         if (!uploadSuccess) {
             uploadingCurrently.set(false);
         }
-        else {
-            logThread.post(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    if (maxId >= 0) {
-                        cleanerFunction.clean(maxId);
-                    }
-                    uploadingCurrently.set(false);
-                    if (dbHelper.getTotalEventCount() > eventUploadThreshold) {
-                        logThread.post(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                syncEventsWithServer(backoffUpload);
-                            }
-                        });
-                    }
-                    else {
-                        backoffUpload = false;
-                        backoffUploadBatchSize = eventUploadMaxBatchSize;
-                    }
-                }
-            });
-        }
+
     }
 
     /**
@@ -1790,23 +1859,34 @@ public class RakamClient
         return invalidDeviceIds;
     }
 
-    private String initializeDeviceId()
-    {
+    private String initializeDeviceId() {
         Set<String> invalidIds = getInvalidDeviceIds();
 
         // see if device id already stored in db
         String deviceId = dbHelper.getValue(DEVICE_ID_KEY);
-        if (!(TextUtils.isEmpty(deviceId) || invalidIds.contains(deviceId))) {
+        String sharedPrefDeviceId = Utils.getStringFromSharedPreferences(context, instanceName, DEVICE_ID_KEY);
+        if (!(Utils.isEmptyString(deviceId) || invalidIds.contains(deviceId))) {
+            // compare against device id stored in backup storage and update if necessary
+            if (!deviceId.equals(sharedPrefDeviceId)) {
+                saveDeviceId(deviceId);
+            }
+
             return deviceId;
         }
 
-        if (useAdvertisingIdForDeviceId) {
+        // backup #1: check if device id is stored in shared preferences
+        if (!(Utils.isEmptyString(sharedPrefDeviceId) || invalidIds.contains(sharedPrefDeviceId))) {
+            saveDeviceId(sharedPrefDeviceId);
+            return sharedPrefDeviceId;
+        }
+
+        if (!newDeviceIdPerInstall && useAdvertisingIdForDeviceId && !deviceInfo.isLimitAdTrackingEnabled()) {
             // Android ID is deprecated by Google.
             // We are required to use Advertising ID, and respect the advertising ID preference
 
             String advertisingId = deviceInfo.getAdvertisingId();
-            if (!(TextUtils.isEmpty(advertisingId) || invalidIds.contains(advertisingId))) {
-                dbHelper.insertOrReplaceKeyValue(DEVICE_ID_KEY, advertisingId);
+            if (!(Utils.isEmptyString(advertisingId) || invalidIds.contains(advertisingId))) {
+                saveDeviceId(advertisingId);
                 return advertisingId;
             }
         }
@@ -1814,8 +1894,13 @@ public class RakamClient
         // If this still fails, generate random identifier that does not persist
         // across installations. Append R to distinguish as randomly generated
         String randomId = deviceInfo.generateUUID() + "R";
-        dbHelper.insertOrReplaceKeyValue(DEVICE_ID_KEY, randomId);
+        saveDeviceId(randomId);
         return randomId;
+    }
+
+    private void saveDeviceId(String deviceId) {
+        dbHelper.insertOrReplaceKeyValue(DEVICE_ID_KEY, deviceId);
+        Utils.writeStringToSharedPreferences(context, instanceName, DEVICE_ID_KEY, deviceId);
     }
 
     private void runOnLogThread(Runnable r)
@@ -1897,10 +1982,9 @@ public class RakamClient
      * @param bytes the bytes
      * @return the string
      */
-    protected String bytesToHexString(byte[] bytes)
-    {
-        final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
-                'c', 'd', 'e', 'f'};
+    protected String bytesToHexString(byte[] bytes) {
+        final char[] hexArray = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+                'c', 'd', 'e', 'f' };
         char[] hexChars = new char[bytes.length * 2];
         int v;
         for (int j = 0; j < bytes.length; j++) {
@@ -2005,6 +2089,7 @@ public class RakamClient
         }
         catch (Exception e) {
             logger.e(TAG, "Error upgrading shared preferences", e);
+            Diagnostics.getLogger().logError("Failed to upgrade shared prefs", e);
             return false;
         }
     }
@@ -2021,24 +2106,16 @@ public class RakamClient
      */
     static boolean upgradeSharedPrefsToDB(Context context)
     {
-        try {
-            return upgradeSharedPrefsToDB(context, null);
-        }
-        catch (Throwable e) {
-            logger.e(TAG, "Unknown exception thrown when upgrading DB.", e);
-            return false;
-        }
+        return upgradeSharedPrefsToDB(context, null);
     }
-
     /**
      * Upgrade shared prefs to db boolean.
      *
-     * @param context the context
+     * @param context       the context
      * @param sourcePkgName the source pkg name
      * @return the boolean
      */
-    private static boolean upgradeSharedPrefsToDB(Context context, String sourcePkgName)
-    {
+    static boolean upgradeSharedPrefsToDB(Context context, String sourcePkgName) {
         if (sourcePkgName == null) {
             sourcePkgName = Constants.PACKAGE_NAME;
         }
@@ -2048,7 +2125,7 @@ public class RakamClient
         String deviceId = dbHelper.getValue(DEVICE_ID_KEY);
         Long previousSessionId = dbHelper.getLongValue(PREVIOUS_SESSION_ID_KEY);
         Long lastEventTime = dbHelper.getLongValue(LAST_EVENT_TIME_KEY);
-        if (!TextUtils.isEmpty(deviceId) && previousSessionId != null && lastEventTime != null) {
+        if (!Utils.isEmptyString(deviceId) && previousSessionId != null && lastEventTime != null) {
             return true;
         }
 
@@ -2088,8 +2165,7 @@ public class RakamClient
         return true;
     }
 
-    private static void migrateLongValue(SharedPreferences prefs, String prefKey, long defValue, DatabaseHelper dbHelper, String dbKey)
-    {
+    private static void migrateLongValue(SharedPreferences prefs, String prefKey, long defValue, DatabaseHelper dbHelper, String dbKey) {
         Long value = dbHelper.getLongValue(dbKey);
         if (value != null) { // if value already exists don't need to migrate
             return;
@@ -2099,21 +2175,19 @@ public class RakamClient
         prefs.edit().remove(prefKey).apply();
     }
 
-    private static void migrateStringValue(SharedPreferences prefs, String prefKey, String defValue, DatabaseHelper dbHelper, String dbKey)
-    {
+    private static void migrateStringValue(SharedPreferences prefs, String prefKey, String defValue, DatabaseHelper dbHelper, String dbKey) {
         String value = dbHelper.getValue(dbKey);
-        if (!TextUtils.isEmpty(value)) {
+        if (!Utils.isEmptyString(value)) {
             return;
         }
         String oldValue = prefs.getString(prefKey, defValue);
-        if (!TextUtils.isEmpty(oldValue)) {
+        if (!Utils.isEmptyString(oldValue)) {
             dbHelper.insertOrReplaceKeyValue(dbKey, oldValue);
             prefs.edit().remove(prefKey).apply();
         }
     }
 
-    private static void migrateBooleanValue(SharedPreferences prefs, String prefKey, boolean defValue, DatabaseHelper dbHelper, String dbKey)
-    {
+    private static void migrateBooleanValue(SharedPreferences prefs, String prefKey, boolean defValue, DatabaseHelper dbHelper, String dbKey) {
         Long value = dbHelper.getLongValue(dbKey);
         if (value != null) {
             return;
@@ -2128,8 +2202,5 @@ public class RakamClient
      *
      * @return the current time millis
      */
-    protected long getCurrentTimeMillis()
-    {
-        return System.currentTimeMillis();
-    }
+    protected long getCurrentTimeMillis() { return System.currentTimeMillis(); }
 }

@@ -1,11 +1,14 @@
 package io.rakam.api;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
+import android.provider.Settings.Secure;
+import android.telephony.TelephonyManager;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.ConnectionResult;
@@ -21,26 +24,32 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowConfiguration;
 import org.robolectric.shadows.ShadowGeocoder;
 import org.robolectric.shadows.ShadowLocationManager;
+import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowTelephonyManager;
 import org.robolectric.util.ReflectionHelpers;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
 @RunWith(RobolectricTestRunner.class)
-@PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*" })
+@PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*", "javax.net.ssl.*" })
 @PrepareForTest({AdvertisingIdClient.class, GooglePlayServicesUtil.class})
 @Config(manifest = Config.NONE)
 public class DeviceInfoTest {
@@ -74,18 +83,18 @@ public class DeviceInfoTest {
     @Before
     public void setUp() throws Exception {
         context = ShadowApplication.getInstance().getApplicationContext();
-        ShadowApplication.getInstance().getApplicationContext().getPackageManager()
+        ShadowApplication.getInstance().getPackageManager()
                 .getPackageInfo(context.getPackageName(), 0).versionName = TEST_VERSION_NAME;
         ReflectionHelpers.setStaticField(Build.class, "BRAND", TEST_BRAND);
         ReflectionHelpers.setStaticField(Build.class, "MANUFACTURER", TEST_MANUFACTURER);
         ReflectionHelpers.setStaticField(Build.class, "MODEL", TEST_MODEL);
 
         Configuration c = context.getResources().getConfiguration();
-        ((ShadowConfiguration) ShadowExtractor.extract(c)).setLocale(TEST_LOCALE);
+        Shadows.shadowOf(c).setLocale(TEST_LOCALE);
         Locale.setDefault(TEST_LOCALE);
 
-        ShadowTelephonyManager manager = ((ShadowTelephonyManager) ShadowExtractor.extract(context
-                .getSystemService(Context.TELEPHONY_SERVICE)));
+        ShadowTelephonyManager manager = Shadows.shadowOf((TelephonyManager) context
+                .getSystemService(Context.TELEPHONY_SERVICE));
         manager.setNetworkOperatorName(TEST_CARRIER);
         deviceInfo = new DeviceInfo(context);
     }
@@ -125,7 +134,7 @@ public class DeviceInfoTest {
 
     @Test
     public void testGetCountryFromNetwork() {
-        ShadowTelephonyManager manager = (ShadowTelephonyManager) ShadowExtractor.extract(context
+        ShadowTelephonyManager manager = Shadows.shadowOf((TelephonyManager) context
                 .getSystemService(Context.TELEPHONY_SERVICE));
         manager.setNetworkCountryIso(TEST_NETWORK_COUNTRY);
 
@@ -136,10 +145,10 @@ public class DeviceInfoTest {
     @Test
     @Config(shadows={MockGeocoder.class})
     public void testGetCountryFromLocation() {
-        ShadowTelephonyManager telephonyManager = (ShadowTelephonyManager) ShadowExtractor.extract(context
+        ShadowTelephonyManager telephonyManager = Shadows.shadowOf((TelephonyManager) context
                 .getSystemService(Context.TELEPHONY_SERVICE));
         telephonyManager.setNetworkCountryIso(TEST_NETWORK_COUNTRY);
-        ShadowLocationManager locationManager = (ShadowLocationManager) ShadowExtractor.extract(context
+        ShadowLocationManager locationManager = Shadows.shadowOf((LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE));
         locationManager.simulateLocation(makeLocation(LocationManager.NETWORK_PROVIDER,
                 TEST_LOCATION_LAT, TEST_LOCATION_LNG));
@@ -165,7 +174,7 @@ public class DeviceInfoTest {
     }
 
     @Test
-    public void testGetAdvertisingId() {
+    public void testGetAdvertisingIdFromGoogleDevice() {
         PowerMockito.mockStatic(AdvertisingIdClient.class);
         String advertisingId = "advertisingId";
         AdvertisingIdClient.Info info = new AdvertisingIdClient.Info(
@@ -183,6 +192,23 @@ public class DeviceInfoTest {
         // still get advertisingId even if limit ad tracking disabled
         assertEquals(advertisingId, deviceInfo.getAdvertisingId());
         assertFalse(deviceInfo.isLimitAdTrackingEnabled());
+    }
+
+    @Test
+    public void testGetAdvertisingIdFromAmazonDevice() {
+        ReflectionHelpers.setStaticField(Build.class, "MANUFACTURER", "Amazon");
+
+        String advertisingId = "advertisingId";
+        ContentResolver cr = context.getContentResolver();
+
+        Secure.putInt(cr, "limit_ad_tracking", 1);
+        Secure.putString(cr, "advertising_id", advertisingId);
+
+        DeviceInfo deviceInfo = new DeviceInfo(context);
+
+        // still get advertisingID even if limit ad tracking enabled
+        assertEquals(advertisingId, deviceInfo.getAdvertisingId());
+        assertTrue(deviceInfo.isLimitAdTrackingEnabled());
     }
 
     @Test
@@ -217,7 +243,7 @@ public class DeviceInfoTest {
     @Test
     public void testGetMostRecentLocation() {
         DeviceInfo deviceInfo = new DeviceInfo(context);
-        ShadowLocationManager locationManager = (ShadowLocationManager) ShadowExtractor.extract(context
+        ShadowLocationManager locationManager = Shadows.shadowOf((LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE));
         Location loc = makeLocation(LocationManager.NETWORK_PROVIDER, TEST_LOCATION_LAT,
                 TEST_LOCATION_LNG);
@@ -231,5 +257,58 @@ public class DeviceInfoTest {
         DeviceInfo deviceInfo = new DeviceInfo(context);
         Location recent = deviceInfo.getMostRecentLocation();
         assertNull(recent);
+    }
+
+    @Test
+    public void testUseAdvertisingIdAsDeviceId() throws MalformedURLException {
+        PowerMockito.mockStatic(AdvertisingIdClient.class);
+        String advertisingId = "advertisingId";
+        AdvertisingIdClient.Info info = new AdvertisingIdClient.Info(
+            advertisingId,
+            false
+        );
+
+        try {
+            Mockito.when(AdvertisingIdClient.getAdvertisingIdInfo(context)).thenReturn(info);
+        } catch (Exception e) {
+            fail(e.toString());
+        }
+
+        Robolectric.getForegroundThreadScheduler().advanceTo(1);
+
+        RakamClient client = Rakam.getInstance("ADID");
+        client.useAdvertisingIdForDeviceId();
+        client.initialize(context, new URL("test.com"), "1cc2c1978ebab0f6451112a8f5df4f4e");
+        ShadowLooper looper = Shadows.shadowOf(client.logThread.getLooper());
+        looper.runToEndOfTasks();
+
+        assertEquals(advertisingId, client.getDeviceId());
+    }
+
+    @Test
+    public void testDontUseAdvertisingIdAsDeviceId() throws MalformedURLException {
+        PowerMockito.mockStatic(AdvertisingIdClient.class);
+        String advertisingId = "advertisingId";
+        AdvertisingIdClient.Info info = new AdvertisingIdClient.Info(
+            advertisingId,
+            true
+        );
+
+        try {
+            Mockito.when(AdvertisingIdClient.getAdvertisingIdInfo(context)).thenReturn(info);
+        } catch (Exception e) {
+            fail(e.toString());
+        }
+
+        Robolectric.getForegroundThreadScheduler().advanceTo(1);
+
+        RakamClient client = Rakam.getInstance("NoADID");
+        client.useAdvertisingIdForDeviceId();
+        client.initialize(context, new URL("test.com"), "1cc2c1978ebab0f6451112a8f5df4f4e");
+        ShadowLooper looper = Shadows.shadowOf(client.logThread.getLooper());
+        looper.runToEndOfTasks();
+
+        assertNotEquals(advertisingId, client.getDeviceId());
+        assertTrue(client.getDeviceId().endsWith("R"));
     }
 }
