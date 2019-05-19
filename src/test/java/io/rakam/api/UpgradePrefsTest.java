@@ -39,7 +39,7 @@ public class UpgradePrefsTest extends BaseTest {
         Constants.class.getPackage().getName();
 
         rakam = new RakamClient();
-        rakam.initialize(context, new URL("test.com"), "KEY");
+        rakam.initialize(context, server.url("/").url(), "KEY");
     }
 
     @Test

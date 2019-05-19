@@ -54,7 +54,7 @@ public class RakamClientTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
     }
 
@@ -783,7 +783,7 @@ public class RakamClientTest extends BaseTest {
 
         looper.runToEndOfTasks();
 
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         ShadowLooper httplooper = Shadows.shadowOf(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 
@@ -822,7 +822,7 @@ public class RakamClientTest extends BaseTest {
         // unsent events will be threshold (+1 for start session)
         assertEquals(getUnsentEventCount(), Constants.EVENT_UPLOAD_THRESHOLD + 1);
 
-        server.enqueue(new MockResponse().setBody("invalid_api_key"));
+        server.enqueue(new MockResponse().setResponseCode(403));
         server.enqueue(new MockResponse().setBody("bad_checksum"));
         ShadowLooper httpLooper = Shadows.shadowOf(rakam.httpThread.getLooper());
         httpLooper.runToEndOfTasks();
@@ -875,7 +875,7 @@ public class RakamClientTest extends BaseTest {
         assertEquals(events.optJSONObject(1).optString("event_type"), "test");
 
         // upload limit persists until event count below threshold
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         looper.runToEndOfTasks(); // retry uploading after removing large event
         httpLooper.runToEndOfTasks(); // send success --> 1 event sent
         looper.runToEndOfTasks(); // event count below threshold --> disable backoff
@@ -888,7 +888,7 @@ public class RakamClientTest extends BaseTest {
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(getUnsentEventCount(), 3);
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         httpLooper.runToEndOfTasks();
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
@@ -928,7 +928,7 @@ public class RakamClientTest extends BaseTest {
         assertEquals(dbHelper.getTotalEventCount(), 7);
 
         // server response
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         ShadowLooper httpLooper = Shadows.shadowOf(rakam.httpThread.getLooper());
         httpLooper.runToEndOfTasks();
 
@@ -940,7 +940,7 @@ public class RakamClientTest extends BaseTest {
         assertEquals(dbHelper.getTotalEventCount(), 5);
 
         // 2nd server response
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         httpLooper.runToEndOfTasks();
         looper.runToEndOfTasks(); // remove uploaded events
         assertEquals(dbHelper.getEventCount(), 3);
@@ -948,7 +948,7 @@ public class RakamClientTest extends BaseTest {
         assertEquals(dbHelper.getTotalEventCount(), 3);
 
         // 3rd server response
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         httpLooper.runToEndOfTasks();
         looper.runToEndOfTasks(); // remove uploaded events
         looper.runToEndOfTasks();
@@ -1264,7 +1264,7 @@ public class RakamClientTest extends BaseTest {
 
         // make sure we catch it during initialization and treat as uninitialized
         rakam.initialized = false;
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         looper.runToEndOfTasks();
         assertNull(rakam.apiKey);
 
@@ -1423,7 +1423,7 @@ public class RakamClientTest extends BaseTest {
 
         // force re-initialize to override platform
         rakam.initialized = false;
-        rakam.initialize(context, new URL("test.com"), apiKey, null, customPlatform, false);
+        rakam.initialize(context, server.url("/").url(), apiKey, null, customPlatform, false);
         looper.runToEndOfTasks();
         looper.runToEndOfTasks();
         assertEquals(rakam.platform, customPlatform);

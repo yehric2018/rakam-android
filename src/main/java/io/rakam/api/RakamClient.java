@@ -932,7 +932,10 @@ public class RakamClient
                 }
             }
 
-            result = saveEvent(eventType, truncate(properties));
+            JSONObject event = new JSONObject();
+            event.put("properties", truncate(properties));
+            event.put("collection", replaceWithJSONNull(eventType));
+            result = saveEvent(eventType, event);
         }
         catch (JSONException e) {
             logger.e(TAG, String.format(
@@ -1126,17 +1129,7 @@ public class RakamClient
             return;
         }
 
-        JSONObject apiProperties = new JSONObject();
-        try {
-            apiProperties.put("special", sessionEvent);
-        } catch (JSONException e) {
-            Diagnostics.getLogger().logError(
-                    String.format("Failed to generate API Properties JSON for session event %s", sessionEvent), e
-            );
-            return;
-        }
-
-        logEvent(sessionEvent, apiProperties, lastEventTime, false);
+        logEvent(sessionEvent, null, lastEventTime, false);
     }
 
     /**
@@ -1697,16 +1690,6 @@ public class RakamClient
                 .put("upload_time", getCurrentTimeMillis());
     }
 
-    private JSONArray cleanEventIds(List<JSONObject> list)
-    {
-        JSONArray array = new JSONArray();
-        for (JSONObject event : list) {
-            event.remove("event_id");
-            array.put(event);
-        }
-        return array;
-    }
-
     /**
      * Internal method to generate the event upload post request.
      *
@@ -1718,7 +1701,6 @@ public class RakamClient
     protected void makeEventUploadPostRequest(OkHttpClient client, String events, final long maxEventId, final long maxIdentifyId) {
         String body;
         try {
-//            body = new JSONObject().put("api", getApi()).put("events", cleanEventIds(events)).toString();
             body = new JSONObject().put("api", getApi()).put("events", events).toString();
         }
         catch (JSONException e) {
@@ -1931,7 +1913,7 @@ public class RakamClient
 
         String address = scheme + "://" + serverName;
 
-        if (apiUrl.getPath() != null && apiUrl.getPath().length() > 0) {
+        if (apiUrl.getPath() != null && !(apiUrl.getPath().equals("/") || apiUrl.getPath().isEmpty())) {
             throw new IllegalStateException(String.format("Please set root address of the API address." +
                     " A valid example is %s, %s is not valid.", address, apiUrl.toString()));
         }

@@ -47,7 +47,7 @@ public class SessionTest extends BaseTest {
     @Before
     public void setUp() throws Exception {
         super.setUp(true);
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
     }
 

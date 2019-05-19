@@ -34,7 +34,7 @@ public class DiagnosticsTest extends BaseTest {
     private String deviceId;
 
     public RecordedRequest runRequest() {
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         looper.runToEndOfTasks();
 
         try {

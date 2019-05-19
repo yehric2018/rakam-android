@@ -190,7 +190,7 @@ public class Diagnostics {
         try {
             Response response = httpClient.newCall(request).execute();
             String stringResponse = response.body().string();
-            if (stringResponse.equals("success")) {
+            if (stringResponse.equals("1")) {
                 unsentErrors.clear();
                 unsentErrorStrings.clear();
             }

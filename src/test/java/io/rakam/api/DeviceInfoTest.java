@@ -278,7 +278,7 @@ public class DeviceInfoTest {
 
         RakamClient client = Rakam.getInstance("ADID");
         client.useAdvertisingIdForDeviceId();
-        client.initialize(context, new URL("test.com"), "1cc2c1978ebab0f6451112a8f5df4f4e");
+        client.initialize(context, new URL("https://test.com"), "1cc2c1978ebab0f6451112a8f5df4f4e");
         ShadowLooper looper = Shadows.shadowOf(client.logThread.getLooper());
         looper.runToEndOfTasks();
 
@@ -304,7 +304,7 @@ public class DeviceInfoTest {
 
         RakamClient client = Rakam.getInstance("NoADID");
         client.useAdvertisingIdForDeviceId();
-        client.initialize(context, new URL("test.com"), "1cc2c1978ebab0f6451112a8f5df4f4e");
+        client.initialize(context, new URL("https://test.com"), "1cc2c1978ebab0f6451112a8f5df4f4e");
         ShadowLooper looper = Shadows.shadowOf(client.logThread.getLooper());
         looper.runToEndOfTasks();
 

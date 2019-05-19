@@ -51,7 +51,7 @@ public class InitializeTest extends BaseTest {
         dbHelper.insertOrReplaceKeyValue(RakamClient.USER_ID_KEY, "oldUserId");
 
         String userId = "newUserId";
-        rakam.initialize(context, new URL("test.com"), apiKey, userId);
+        rakam.initialize(context, server.url("/").url(), apiKey, userId);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         // Test that the user id is set.
@@ -79,7 +79,7 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         // Test that the user id is set.
@@ -101,7 +101,7 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         dbHelper.insertOrReplaceKeyValue(RakamClient.USER_ID_KEY, userId);
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         // Test that the user id is set.
@@ -123,7 +123,7 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         assertNull(dbHelper.getLongValue(RakamClient.OPT_OUT_KEY));
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         looper.runOneTask();
 
         assertTrue(rakam.isOptedOut());
@@ -147,7 +147,7 @@ public class InitializeTest extends BaseTest {
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context);
         dbHelper.insertOrReplaceKeyLongValue(RakamClient.OPT_OUT_KEY, 0L);
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         assertFalse(rakam.isOptedOut());
@@ -166,7 +166,7 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_ID, 3L).commit();
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         assertEquals(rakam.lastEventId, 3L);
@@ -196,7 +196,7 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_PREVIOUS_SESSION_ID, 4000L).commit();
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         assertEquals(rakam.sessionId, 4000L);
@@ -215,7 +215,7 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_TIME, 4000L).commit();
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
 
         assertEquals(rakam.lastEventTime, 5000L);
@@ -244,7 +244,7 @@ public class InitializeTest extends BaseTest {
         prefs.edit().putBoolean(Constants.PREFKEY_OPT_OUT, true).commit();
         prefs.edit().putLong(Constants.PREFKEY_LAST_IDENTIFY_ID, 3000L).commit();
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
         looper.runOneTask();
         looper.runToEndOfTasks();
@@ -289,7 +289,7 @@ public class InitializeTest extends BaseTest {
         long [] timestamps = {8000, 14000};
         clock.setTimestamps(timestamps);
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
         looper.runOneTask();
         looper.runToEndOfTasks();
@@ -323,7 +323,7 @@ public class InitializeTest extends BaseTest {
             context, rakam.instanceName, RakamClient.DEVICE_ID_KEY
         ));
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         looper.runToEndOfTasks();
         assertEquals(deviceId, rakam.getDeviceId());
 
@@ -344,7 +344,7 @@ public class InitializeTest extends BaseTest {
             context, rakam.instanceName, RakamClient.DEVICE_ID_KEY, deviceId
         );
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         looper.runToEndOfTasks();
         assertEquals(deviceId, rakam.getDeviceId());
         assertEquals(deviceId, dbHelper.getValue(RakamClient.DEVICE_ID_KEY));
@@ -363,7 +363,7 @@ public class InitializeTest extends BaseTest {
         SharedPreferences prefs = context.getSharedPreferences(targetName, Context.MODE_PRIVATE);
         prefs.edit().putString(Constants.PREFKEY_DEVICE_ID, testDeviceId).commit();
 
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         looper.runToEndOfTasks();
         String deviceId = rakam.getDeviceId();
         assertEquals(deviceId, testDeviceId);
@@ -382,7 +382,7 @@ public class InitializeTest extends BaseTest {
     @Test
     public void testInitializeDeviceIdWithRandomUUID() throws MalformedURLException {
         ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
-        rakam.initialize(context, new URL("test.com"), apiKey);
+        rakam.initialize(context, server.url("/").url(), apiKey);
         looper.runToEndOfTasks();
 
         String deviceId = rakam.getDeviceId();

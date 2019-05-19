@@ -145,7 +145,7 @@ public class BaseTest {
     }
 
     public RecordedRequest runRequest(RakamClient rakam) {
-        server.enqueue(new MockResponse().setBody("success"));
+        server.enqueue(new MockResponse().setBody("1"));
         ShadowLooper httplooper = Shadows.shadowOf(rakam.httpThread.getLooper());
         httplooper.runToEndOfTasks();
 

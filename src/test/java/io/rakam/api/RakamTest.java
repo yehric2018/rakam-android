@@ -86,7 +86,7 @@ public class RakamTest extends BaseTest {
         oldDbHelper.addIdentify("oldIdentify2");
 
         // Verify persistence of old database file in default instance
-        Rakam.getInstance().initialize(context, new URL("test.com"), apiKey);
+        Rakam.getInstance().initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(Rakam.getInstance().logThread.getLooper()).runToEndOfTasks();
         assertEquals(Rakam.getInstance().getDeviceId(), "oldDeviceId");
         assertTrue(oldDbHelper.dbFileExists());
@@ -94,7 +94,7 @@ public class RakamTest extends BaseTest {
         assertFalse(newDbHelper2.dbFileExists());
 
         // init first new app and verify separate database file
-        Rakam.getInstance(newInstance1).initialize(context, new URL("test.com"), newApiKey1);
+        Rakam.getInstance(newInstance1).initialize(context, server.url("/").url(), newApiKey1);
         Shadows.shadowOf(
             Rakam.getInstance(newInstance1).logThread.getLooper()
         ).runToEndOfTasks();
@@ -108,7 +108,7 @@ public class RakamTest extends BaseTest {
         assertEquals(newDbHelper1.getIdentifyCount(), 0);
 
         // init second new app and verify separate database file
-        Rakam.getInstance(newInstance2).initialize(context, new URL("test.com"), newApiKey2);
+        Rakam.getInstance(newInstance2).initialize(context, server.url("/").url(), newApiKey2);
         Shadows.shadowOf(
             Rakam.getInstance(newInstance2).logThread.getLooper()
         ).runToEndOfTasks();
@@ -162,7 +162,7 @@ public class RakamTest extends BaseTest {
         preferences.edit().putLong(Constants.PREFKEY_PREVIOUS_SESSION_ID, timestamp).commit();
 
         // init default instance, which should load preferences values
-        Rakam.getInstance().initialize(context, new URL("test.com"), apiKey);
+        Rakam.getInstance().initialize(context, server.url("/").url(), apiKey);
         Shadows.shadowOf(Rakam.getInstance().logThread.getLooper()).runToEndOfTasks();
         assertEquals(Rakam.getInstance().lastEventId, 1000L);
         assertEquals(Rakam.getInstance().lastEventTime, timestamp);
@@ -170,7 +170,7 @@ public class RakamTest extends BaseTest {
         assertEquals(Rakam.getInstance().previousSessionId, timestamp);
 
         // init new instance, should have blank slate
-        Rakam.getInstance("new_app").initialize(context, new URL("test.com"), "1234567890");
+        Rakam.getInstance("new_app").initialize(context, server.url("/").url(), "1234567890");
         Shadows.shadowOf(Rakam.getInstance("new_app").logThread.getLooper()).runToEndOfTasks();
         assertEquals(Rakam.getInstance("new_app").lastEventId, -1L);
         assertEquals(Rakam.getInstance("new_app").lastEventTime, -1L);
