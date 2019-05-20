@@ -65,7 +65,7 @@ public class MD5Test {
     @Test
     public void testMD5WithRakamData() {
 
-        String apiVersionString = "" + Constants.API_VERSION;
+        String apiVersionString = "" + Constants.VERSION;
         String apiKey = "1cc2c1978ebab0f6451112a8f5df4f4e";
         String timestampString = "" + System.currentTimeMillis();
         String events = "[{\"version_name\":null,\"device_manufacturer\":\"unknown\",\"user_" +
@@ -79,7 +79,7 @@ public class MD5Test {
                 "610e21eb-2f27-48ca-bf4e-f977ce6391d1R\",\"language\":\"en\"},{\"version_name" +
                 "\":null,\"device_manufacturer\":\"unknown\",\"user_properties\":{},\"platfor" +
                 "m\":\"Android\",\"api_properties\":{\"limit_ad_tracking\":false},\"session_i" +
-                "d\":1439421597509,\"event_type\":\"test\",\"event_id\":2,\"event_properties" +
+                "d\":1439421597509,\"event_type\":\"test\",\"event_id\":2,\"properties" +
                 "\":{},\"device_id\":\"610e21eb-2f27-48ca-bf4e-f977ce6391d1R\",\"device_brand" +
                 "\":\"unknown\",\"country\":\"US\",\"os_version\":\"unknown\",\"timestamp\":1" +
                 "439421597509,\"device_model\":\"unknown\",\"os_name\":\"android\",\"library" +

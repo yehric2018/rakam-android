@@ -21,7 +21,8 @@
             <groupId>com.google.android</groupId>
             <artifactId>android</artifactId>
             <version>4.1.1.4</version>
-            <scope>provided</scope>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/android-21.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -135,11 +136,11 @@
             </plugin>
             <plugin>
                 <groupId>com.simpligility.maven.plugins</groupId>
-
                 <artifactId>android-maven-plugin</artifactId>
+                <version>4.3.0</version>
                 <configuration>
                     <sdk>
-                        <platform>23</platform>
+                        <platform>21</platform>
                     </sdk>
                 </configuration>
             </plugin>

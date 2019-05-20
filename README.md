@@ -3,22 +3,22 @@
 See our [SDK documentation](https://rawgit.com/buremba/rakam-android/master/javadoc/index.html) for a description of all available SDK methods.
 
 # Setup #
-1. [Download the jar](http://repo1.maven.org/maven2/io/rakam/android-sdk/2.7.13/android-sdk-2.7.13-jar-with-dependencies.jar) and copy it into the "libs" folder in your Android project in Android Studio.
+1. [Download the jar](http://repo1.maven.org/maven2/io/rakam/android-sdk/2.7.14/android-sdk-2.7.14-jar-with-dependencies.jar) and copy it into the "libs" folder in your Android project in Android Studio.
 
-  Alternatively, if you are using Maven in your project, the jar is available on [Maven Central](http://search.maven.org/#artifactdetails%7Cio.rakam%7Candroid-sdk%7C2.7.13%7Cjar) using the following configuration in your pom.xml:
+  Alternatively, if you are using Maven in your project, the jar is available on [Maven Central](http://search.maven.org/#artifactdetails%7Cio.rakam%7Candroid-sdk%7C2.7.14%7Cjar) using the following configuration in your pom.xml:
 
 ```
 <dependency>
   <groupId>io.rakam</groupId>
   <artifactId>android-sdk</artifactId>
-  <version>2.7.13</version>
+  <version>2.7.14</version>
 </dependency>
 ```
 
   Or if you are using gradle in your project, include in your build.gradle file:
 
 ```
-compile 'io.rakam:android-sdk:2.7.13'
+compile 'io.rakam:android-sdk:2.7.14'
 ```
 
 3. If you haven't already, add the [INTERNET](https://developer.android.com/reference/android/Manifest.permission.html#INTERNET) permission to your manifest file:
