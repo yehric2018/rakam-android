@@ -18,13 +18,11 @@
 
     <dependencies>
         <dependency>
-                <groupId>com.google.android</groupId>
+            <groupId>com.google.android</groupId>
             <artifactId>android</artifactId>
             <version>4.1.1.4</version>
-            <!--<scope>system</scope>-->
-            <!--<systemPath>/Users/buremba/Library/Android/sdk/platforms/android-21/android.jar</systemPath>-->
-            <!--<systemPath>${env.ANDROID_HOME}/platforms/android-${android.platform}/android.jar</systemPath>-->
-
+            <scope>provided</scope>
+            <systemPath>${basedir}/lib/android-21.jar</systemPath>
         </dependency>
 
         <dependency>
