@@ -42,7 +42,6 @@ public class Constants {
     public static final String OP_UNSET = "unset_properties";
 
     public static final String REVENUE_EVENT = "_revenue";
-    public static final String AMP_REVENUE_EVENT = "revenue_amount";
     public static final String AMP_REVENUE_PRODUCT_ID = "_product_id";
     public static final String AMP_REVENUE_QUANTITY = "_quantity";
     public static final String AMP_REVENUE_PRICE = "_price";

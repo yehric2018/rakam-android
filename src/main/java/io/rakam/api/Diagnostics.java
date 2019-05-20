@@ -2,6 +2,7 @@ package io.rakam.api;
 
 import android.util.Log;
 
+import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,20 +13,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import static io.rakam.api.RakamClient.JSON;
 
 /**
  * Created by djih on 11/1/18.
  */
 
 public class Diagnostics {
+    private static final RakamLog logger = RakamLog.getLogger();
+    public static final String TAG = "RakamDiagnostics";
 
-    public static final String DIAGNOSTIC_EVENT_ENDPOINT = "https://api.rakam.com/diagnostic";
-
-    public static final int DIAGNOSTIC_EVENT_API_VERSION = 1;
+    public static final String DIAGNOSTIC_EVENT_ENDPOINT = "https://diagnostics.rakam.io/event/collect";
 
     public static final int DIAGNOSTIC_EVENT_MAX_COUNT = 50; // limit memory footprint
     public static final int DIAGNOSTIC_EVENT_MIN_COUNT = 5;
@@ -161,12 +159,21 @@ public class Diagnostics {
                 }
                 List<JSONObject> orderedEvents = new ArrayList<JSONObject>(unsentErrorStrings.size());
                 for (String error : unsentErrorStrings) {
-                    orderedEvents.add(unsentErrors.get(error));
+                    JSONObject event;
+                    try {
+                        event = new JSONObject()
+                                .put("properties", unsentErrors.get(error))
+                                .put("collection", "android_sdk_error");
+                    } catch (JSONException e) {
+                        logger.e(TAG, "Unable to serialize events: "+ e.getMessage());
+                        continue;
+                    }
+                    orderedEvents.add(event);
                 }
-                String eventJson = new JSONArray(orderedEvents).toString();
+                JSONArray eventJson = new JSONArray(orderedEvents);
 
-                if (!Utils.isEmptyString(eventJson)) {
-                    makeEventUploadPostRequest(eventJson);
+                if (eventJson.length() > 0) {
+                    makeEventUploadPostRequest(new JSONArray(orderedEvents));
                 }
             }
         });
@@ -174,17 +181,26 @@ public class Diagnostics {
         return this;
     }
 
-    protected void makeEventUploadPostRequest(String events) {
-        FormBody body = new FormBody.Builder()
-                .add("v", "" + DIAGNOSTIC_EVENT_API_VERSION)
-                .add("client", apiKey)
-                .add("e", events)
-                .add("upload_time", "" + System.currentTimeMillis())
-                .build();
+    protected void makeEventUploadPostRequest(JSONArray events) {
+
+        final String body;
+        try {
+            JSONObject api = new JSONObject()
+                    .put("api_key", apiKey)
+                    .put("library", new JSONObject()
+                            .put("name", Constants.LIBRARY)
+                            .put("version", Constants.VERSION))
+                    .put("upload_time", System.currentTimeMillis());
+
+            body = new JSONObject().put("api", api).put("events", events).toString();
+        } catch (JSONException e) {
+            logger.e(TAG, String.format("Failed to convert revenue object to JSON: %s", e.toString()));
+            return;
+        }
 
         Request request = new Request.Builder()
                 .url(url)
-                .post(body)
+                .post(RequestBody.create(JSON, body))
                 .build();
 
         try {

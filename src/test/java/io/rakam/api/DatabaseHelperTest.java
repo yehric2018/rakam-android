@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 
 import java.util.List;
@@ -43,7 +42,7 @@ public class DatabaseHelperTest extends BaseTest {
 
     protected long addEventToTable(String table, String type, JSONObject props) {
         try {
-            props.put("event_type", type);
+            props.put("collection", type);
             return table.equals(DatabaseHelper.IDENTIFY_TABLE_NAME) ?
                     dbInstance.addIdentify(props.toString()) :
                     dbInstance.addEvent(props.toString());
@@ -266,7 +265,7 @@ public class DatabaseHelperTest extends BaseTest {
             events = dbInstance.getEvents(-1, -1);
             assertEquals(5, events.size());
             assertEquals(1, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_events_1", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_events_1", (events.get(0)).getString("collection"));
 
             events = dbInstance.getEvents(1, -1);
             assertEquals(1, events.size());
@@ -274,7 +273,7 @@ public class DatabaseHelperTest extends BaseTest {
             events = dbInstance.getEvents(5, -1);
             assertEquals(5, events.size());
             assertEquals(5, (events.get(4)).getLong("event_id"));
-            assertEquals("test_get_events_5", (events.get(4)).getString("event_type"));
+            assertEquals("test_get_events_5", (events.get(4)).getString("collection"));
 
             events = dbInstance.getEvents(-1, 0);
             assertEquals(0, events.size());
@@ -282,24 +281,24 @@ public class DatabaseHelperTest extends BaseTest {
             events = dbInstance.getEvents(-1, 1);
             assertEquals(1, events.size());
             assertEquals(1, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_events_1", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_events_1", (events.get(0)).getString("collection"));
 
             events = dbInstance.getEvents(5, 1);
             assertEquals(1, events.size());
             assertEquals(1, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_events_1", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_events_1", (events.get(0)).getString("collection"));
 
             dbInstance.removeEvent(1);
             events = dbInstance.getEvents(5, 1);
             assertEquals(1, events.size());
             assertEquals(2, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_events_2", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_events_2", (events.get(0)).getString("collection"));
 
             dbInstance.removeEvents(3);
             events = dbInstance.getEvents(5, 1);
             assertEquals(1, events.size());
             assertEquals(4, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_events_4", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_events_4", (events.get(0)).getString("collection"));
 
         } catch (JSONException e) {
             fail(e.toString());
@@ -321,7 +320,7 @@ public class DatabaseHelperTest extends BaseTest {
             events = dbInstance.getIdentifys(-1, -1);
             assertEquals(5, events.size());
             assertEquals(1, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_identifys_1", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_identifys_1", (events.get(0)).getString("collection"));
 
             events = dbInstance.getIdentifys(1, -1);
             assertEquals(1, events.size());
@@ -329,7 +328,7 @@ public class DatabaseHelperTest extends BaseTest {
             events = dbInstance.getIdentifys(5, -1);
             assertEquals(5, events.size());
             assertEquals(5, (events.get(4)).getLong("event_id"));
-            assertEquals("test_get_identifys_5", (events.get(4)).getString("event_type")
+            assertEquals("test_get_identifys_5", (events.get(4)).getString("collection")
             );
 
             events = dbInstance.getIdentifys(-1, 0);
@@ -338,25 +337,25 @@ public class DatabaseHelperTest extends BaseTest {
             events = dbInstance.getIdentifys(-1, 1);
             assertEquals(1, events.size());
             assertEquals(1, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_identifys_1", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_identifys_1", (events.get(0)).getString("collection"));
 
             events = dbInstance.getIdentifys(5, 1);
             assertEquals(1, events.size());
             assertEquals(1, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_identifys_1", (events.get(0)).getString("event_type"));
+            assertEquals("test_get_identifys_1", (events.get(0)).getString("collection"));
 
             dbInstance.removeIdentify(1);
             events = dbInstance.getIdentifys(5, 1);
             assertEquals(1, events.size());
             assertEquals(2, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_identifys_2", (events.get(0)).getString("event_type")
+            assertEquals("test_get_identifys_2", (events.get(0)).getString("collection")
             );
 
             dbInstance.removeIdentifys(3);
             events = dbInstance.getIdentifys(5, 1);
             assertEquals(1, events.size());
             assertEquals(4, (events.get(0)).getLong("event_id"));
-            assertEquals("test_get_identifys_4", (events.get(0)).getString("event_type")
+            assertEquals("test_get_identifys_4", (events.get(0)).getString("collection")
             );
         } catch (JSONException e) {
             fail(e.toString());

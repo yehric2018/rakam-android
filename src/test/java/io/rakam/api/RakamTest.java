@@ -10,6 +10,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.internal.ShadowExtractor;
+import org.robolectric.shadows.ShadowLooper;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -86,7 +88,7 @@ public class RakamTest extends BaseTest {
         oldDbHelper.addIdentify("oldIdentify2");
 
         // Verify persistence of old database file in default instance
-        Rakam.getInstance().initialize(context, server.url("/").url(), apiKey);
+        Rakam.getInstance().initialize(context, new URL("http://test.com"), apiKey);
         Shadows.shadowOf(Rakam.getInstance().logThread.getLooper()).runToEndOfTasks();
         assertEquals(Rakam.getInstance().getDeviceId(), "oldDeviceId");
         assertTrue(oldDbHelper.dbFileExists());
@@ -94,29 +96,29 @@ public class RakamTest extends BaseTest {
         assertFalse(newDbHelper2.dbFileExists());
 
         // init first new app and verify separate database file
-        Rakam.getInstance(newInstance1).initialize(context, server.url("/").url(), newApiKey1);
+        Rakam.getInstance(newInstance1).initialize(context, new URL("http://test.com"), newApiKey1);
         Shadows.shadowOf(
-            Rakam.getInstance(newInstance1).logThread.getLooper()
+                Rakam.getInstance(newInstance1).logThread.getLooper()
         ).runToEndOfTasks();
         assertTrue(newDbHelper1.dbFileExists()); // db file is created after deviceId initialization
 
         assertFalse(newDbHelper1.getValue("device_id").equals("oldDeviceId"));
         assertEquals(
-            newDbHelper1.getValue("device_id"), Rakam.getInstance(newInstance1).getDeviceId()
+                newDbHelper1.getValue("device_id"), Rakam.getInstance(newInstance1).getDeviceId()
         );
         assertEquals(newDbHelper1.getEventCount(), 0);
         assertEquals(newDbHelper1.getIdentifyCount(), 0);
 
         // init second new app and verify separate database file
-        Rakam.getInstance(newInstance2).initialize(context, server.url("/").url(), newApiKey2);
+        Rakam.getInstance(newInstance2).initialize(context, new URL("http://test.com"), newApiKey2);
         Shadows.shadowOf(
-            Rakam.getInstance(newInstance2).logThread.getLooper()
+                Rakam.getInstance(newInstance2).logThread.getLooper()
         ).runToEndOfTasks();
         assertTrue(newDbHelper2.dbFileExists()); // db file is created after deviceId initialization
 
         assertFalse(newDbHelper2.getValue("device_id").equals("oldDeviceId"));
         assertEquals(
-            newDbHelper2.getValue("device_id"), Rakam.getInstance(newInstance2).getDeviceId()
+                newDbHelper2.getValue("device_id"), Rakam.getInstance(newInstance2).getDeviceId()
         );
         assertEquals(newDbHelper2.getEventCount(), 0);
         assertEquals(newDbHelper2.getIdentifyCount(), 0);
@@ -124,7 +126,6 @@ public class RakamTest extends BaseTest {
         // verify existing database still intact
         assertTrue(oldDbHelper.dbFileExists());
         assertEquals(oldDbHelper.getValue("device_id"), "oldDeviceId");
-        assertEquals(oldDbHelper.getLongValue("sequence_number").longValue(), 1001L);
         assertEquals(oldDbHelper.getEventCount(), 1);
         assertEquals(oldDbHelper.getIdentifyCount(), 2);
 
@@ -163,7 +164,7 @@ public class RakamTest extends BaseTest {
 
         // init default instance, which should load preferences values
         Rakam.getInstance().initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(Rakam.getInstance().logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(Rakam.getInstance().logThread.getLooper())).runToEndOfTasks();
         assertEquals(Rakam.getInstance().lastEventId, 1000L);
         assertEquals(Rakam.getInstance().lastEventTime, timestamp);
         assertEquals(Rakam.getInstance().lastIdentifyId, 2000L);
@@ -171,7 +172,7 @@ public class RakamTest extends BaseTest {
 
         // init new instance, should have blank slate
         Rakam.getInstance("new_app").initialize(context, server.url("/").url(), "1234567890");
-        Shadows.shadowOf(Rakam.getInstance("new_app").logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(Rakam.getInstance("new_app").logThread.getLooper())).runToEndOfTasks();
         assertEquals(Rakam.getInstance("new_app").lastEventId, -1L);
         assertEquals(Rakam.getInstance("new_app").lastEventTime, -1L);
         assertEquals(Rakam.getInstance("new_app").lastIdentifyId, -1L);
@@ -179,7 +180,7 @@ public class RakamTest extends BaseTest {
 
         // shared preferences should update independently
         Rakam.getInstance("new_app").logEvent("testEvent");
-        Shadows.shadowOf(Rakam.getInstance("new_app").logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(Rakam.getInstance("new_app").logThread.getLooper())).runToEndOfTasks();
         assertEquals(Rakam.getInstance("new_app").lastEventId, 1L);
         assertTrue(Rakam.getInstance("new_app").lastEventTime > timestamp);
         assertEquals(Rakam.getInstance("new_app").lastIdentifyId, -1L);

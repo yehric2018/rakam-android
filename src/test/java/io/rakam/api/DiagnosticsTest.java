@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.sql.SQLException;
@@ -54,7 +54,7 @@ public class DiagnosticsTest extends BaseTest {
         httpClient = new OkHttpClient();
         deviceId = "test device id";
         logger = Diagnostics.getLogger();
-        looper = Shadows.shadowOf(logger.diagnosticThread.getLooper());
+        looper = ((ShadowLooper) ShadowExtractor.extract(logger.diagnosticThread.getLooper()));
         logger.url = server.url("/").toString();
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
     }
@@ -216,15 +216,19 @@ public class DiagnosticsTest extends BaseTest {
         logger.flushEvents();
         RecordedRequest request = runRequest();
         JSONArray events = getEventsFromRequest(request);
-        assertEquals(events.optJSONObject(0).optString("error"), "test_error");
-        assertTrue(events.optJSONObject(0).optLong("timestamp") >= timestamp);
-        assertEquals(events.optJSONObject(0).optInt("count"), 1);
-        assertEquals(events.optJSONObject(1).optString("error"), "test_error1");
-        assertTrue(events.optJSONObject(1).optLong("timestamp") >= timestamp);
-        assertEquals(events.optJSONObject(1).optInt("count"), 1);
-        assertEquals(events.optJSONObject(2).optString("error"), "test_error2");
-        assertTrue(events.optJSONObject(2).optLong("timestamp") >= timestamp);
-        assertEquals(events.optJSONObject(2).optInt("count"), 1);
+        JSONObject event = events.optJSONObject(0).optJSONObject("properties");
+        JSONObject jsonObject1 = events.optJSONObject(2).optJSONObject("properties");
+        JSONObject jsonObject = events.optJSONObject(1).optJSONObject("properties");
+
+        assertEquals(event.optString("error"), "test_error");
+        assertTrue(event.optLong("timestamp") >= timestamp);
+        assertEquals(event.optInt("count"), 1);
+        assertEquals(jsonObject.optString("error"), "test_error1");
+        assertTrue(jsonObject.optLong("timestamp") >= timestamp);
+        assertEquals(jsonObject.optInt("count"), 1);
+        assertEquals(jsonObject1.optString("error"), "test_error2");
+        assertTrue(jsonObject1.optLong("timestamp") >= timestamp);
+        assertEquals(jsonObject1.optInt("count"), 1);
 
         // verify flushing
         assertEquals(logger.unsentErrors.size(), 0);

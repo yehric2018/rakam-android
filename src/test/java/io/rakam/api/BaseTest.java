@@ -4,11 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.robolectric.Shadows;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 
@@ -18,10 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
-
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.fail;
 
@@ -29,9 +28,9 @@ public class BaseTest {
 
     protected class MockClock {
         int index = 0;
-        long timestamps [];
+        long timestamps[];
 
-        public void setTimestamps(long [] timestamps) {
+        public void setTimestamps(long[] timestamps) {
             this.timestamps = timestamps;
         }
 
@@ -47,10 +46,14 @@ public class BaseTest {
     protected class RakamClientWithTime extends RakamClient {
         MockClock mockClock;
 
-        public RakamClientWithTime(MockClock mockClock) { this.mockClock = mockClock; }
+        public RakamClientWithTime(MockClock mockClock) {
+            this.mockClock = mockClock;
+        }
 
         @Override
-        protected long getCurrentTimeMillis() { return mockClock.currentTimeMillis(); }
+        protected long getCurrentTimeMillis() {
+            return mockClock.currentTimeMillis();
+        }
     }
 
     // override RakamDatabaseHelper to throw Cursor Allocation Exception
@@ -62,8 +65,8 @@ public class BaseTest {
 
         @Override
         Cursor queryDb(
-            SQLiteDatabase db, String table, String[] columns, String selection,
-            String[] selectionArgs, String groupBy, String having, String orderBy, String limit
+                SQLiteDatabase db, String table, String[] columns, String selection,
+                String[] selectionArgs, String groupBy, String having, String orderBy, String limit
         ) {
             // cannot import CursorWindowAllocationException, so we throw the base class instead
             throw new RuntimeException("Cursor window allocation of 2048 kb failed.");
@@ -97,7 +100,7 @@ public class BaseTest {
         DatabaseHelper.instances.clear();
 
         // Clear shared prefs for each test
-        for (String instanceName: instanceNames) {
+        for (String instanceName : instanceNames) {
             SharedPreferences.Editor editor = Utils.getRakamSharedPreferences(context, instanceName).edit();
             editor.clear();
             editor.apply();
@@ -146,8 +149,8 @@ public class BaseTest {
 
     public RecordedRequest runRequest(RakamClient rakam) {
         server.enqueue(new MockResponse().setBody("1"));
-        ShadowLooper httplooper = Shadows.shadowOf(rakam.httpThread.getLooper());
-        httplooper.runToEndOfTasks();
+        ShadowLooper shadowLooper = ((ShadowLooper) ShadowExtractor.extract(rakam.httpThread.getLooper()));
+        shadowLooper.runToEndOfTasks();
 
         try {
             return server.takeRequest(1, SECONDS);
@@ -185,12 +188,12 @@ public class BaseTest {
 
     public JSONObject getLastUnsentEvent() {
         JSONArray events = getUnsentEventsFromTable(DatabaseHelper.EVENT_TABLE_NAME, 1);
-        return (JSONObject)events.opt(events.length() - 1);
+        return (JSONObject) events.opt(events.length() - 1);
     }
 
     public JSONObject getLastUnsentIdentify() {
         JSONArray events = getUnsentEventsFromTable(DatabaseHelper.IDENTIFY_TABLE_NAME, 1);
-        return (JSONObject)events.opt(events.length() - 1);
+        return (JSONObject) events.opt(events.length() - 1);
     }
 
     public JSONArray getUnsentEvents(int limit) {
@@ -241,26 +244,20 @@ public class BaseTest {
     }
 
     public JSONArray getEventsFromRequest(RecordedRequest request) throws JSONException {
-        Map<String, String> parsedBody = parseRequest(request.getUtf8Body());
-        if (parsedBody == null && !parsedBody.containsKey("e")) {
+        JSONObject parsedBody = parseRequest(request.getUtf8Body());
+        if (parsedBody == null && !parsedBody.has("events")) {
             return null;
         }
-        return new JSONArray(parsedBody.get("e"));
+        return parsedBody.getJSONArray("events");
     }
 
     // parse request string into a key:value map
-    public static Map<String, String> parseRequest(String request) {
+    public static JSONObject parseRequest(String request) {
         try {
-            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-            String[] pairs = request.split("&");
-            for (String pair : pairs) {
-                int idx = pair.indexOf("=");
-                query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
-            }
-            return query_pairs;
-        } catch (UnsupportedEncodingException e) {
+            return new JSONObject(request);
+        } catch (JSONException e) {
             fail(e.toString());
+            return null;
         }
-        return null;
     }
 }

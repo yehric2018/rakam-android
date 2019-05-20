@@ -9,13 +9,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
 import okhttp3.mockwebserver.RecordedRequest;
-
-import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -48,7 +46,7 @@ public class SessionTest extends BaseTest {
     public void setUp() throws Exception {
         super.setUp(true);
         rakam.initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
     }
 
     @After
@@ -60,18 +58,18 @@ public class SessionTest extends BaseTest {
     public void testDefaultStartSession() {
         long timestamp = System.currentTimeMillis();
         rakam.logEventAsync("test",  null, timestamp, false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // trackSessionEvents is false, no start_session event added
         assertEquals(getUnsentEventCount(), 1);
         JSONObject event = getLastUnsentEvent();
-        assertEquals(event.optString("event_type"), "test");
-        assertEquals(event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(event.optString("collection"), "test");
+        assertEquals(event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
     }
 
     @Test
     public void testDefaultTriggerNewSession() {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -91,10 +89,10 @@ public class SessionTest extends BaseTest {
         JSONObject event1 = events.optJSONObject(0);
         JSONObject event2 = events.optJSONObject(1);
 
-        assertEquals(event1.optString("event_type"), "test1");
-        assertEquals(event1.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event2.optString("event_type"), "test2");
-        assertEquals(event2.optString("session_id"), String.valueOf(timestamp2));
+        assertEquals(event1.optString("collection"), "test1");
+        assertEquals(event1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event2.optString("collection"), "test2");
+        assertEquals(event2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp2));
 
         // also test getSessionId
         assertEquals(rakam.getSessionId(), timestamp2);
@@ -102,7 +100,7 @@ public class SessionTest extends BaseTest {
 
     @Test
     public void testDefaultExtendSession() {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -127,17 +125,17 @@ public class SessionTest extends BaseTest {
         JSONObject event2 = events.optJSONObject(1);
         JSONObject event3 = events.optJSONObject(2);
 
-        assertEquals(event1.optString("event_type"), "test1");
-        assertEquals(event1.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event1.optString("timestamp"), String.valueOf(timestamp1));
+        assertEquals(event1.optString("collection"), "test1");
+        assertEquals(event1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event1.optJSONObject("properties").optString("_time"), String.valueOf(timestamp1));
 
-        assertEquals(event2.optString("event_type"), "test2");
-        assertEquals(event2.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event2.optString("timestamp"), String.valueOf(timestamp2));
+        assertEquals(event2.optString("collection"), "test2");
+        assertEquals(event2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event2.optJSONObject("properties").optString("_time"), String.valueOf(timestamp2));
 
-        assertEquals(event3.optString("event_type"), "test3");
-        assertEquals(event3.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event3.optString("timestamp"), String.valueOf(timestamp3));
+        assertEquals(event3.optString("collection"), "test3");
+        assertEquals(event3.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event3.optJSONObject("properties").optString("_time"), String.valueOf(timestamp3));
     }
 
     @Test
@@ -146,7 +144,7 @@ public class SessionTest extends BaseTest {
 
         long timestamp = System.currentTimeMillis();
         rakam.logEventAsync("test",  null, timestamp, false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // trackSessions is true, start_session event is added
         assertEquals(getUnsentEventCount(), 2);
@@ -154,15 +152,11 @@ public class SessionTest extends BaseTest {
         JSONObject session_event = events.optJSONObject(0);
         JSONObject test_event = events.optJSONObject(1);
 
-        assertEquals(session_event.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                session_event.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(session_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(session_event.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(session_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
 
-        assertEquals(test_event.optString("event_type"), "test");
-        assertEquals(test_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(test_event.optString("collection"), "test");
+        assertEquals(test_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
     }
 
     @Test
@@ -171,7 +165,7 @@ public class SessionTest extends BaseTest {
 
         long timestamp = System.currentTimeMillis();
         rakam.logEvent("test",  null, timestamp, false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         // trackSessions is true, start_session event is added
         assertEquals(getUnsentEventCount(), 2);
 
@@ -180,22 +174,18 @@ public class SessionTest extends BaseTest {
         JSONObject session_event = events.optJSONObject(0);
         JSONObject test_event = events.optJSONObject(1);
 
-        assertEquals(session_event.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                session_event.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(session_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(session_event.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(session_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
 
-        assertEquals(test_event.optString("event_type"), "test");
-        assertEquals(test_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(test_event.optString("collection"), "test");
+        assertEquals(test_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
     }
 
     @Test
     public void testDefaultTriggerNewSessionWithTracking() {
         rakam.trackSessionEvents(true);
 
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -220,41 +210,32 @@ public class SessionTest extends BaseTest {
         JSONObject startSession2 = events.optJSONObject(3);
         JSONObject event2 = events.optJSONObject(4);
 
-        assertEquals(startSession1.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession1.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession1.optString("session_id"), String.valueOf(timestamp1));
+        assertEquals(startSession1.optString("collection"), RakamClient.START_SESSION_EVENT);
+      
+        assertEquals(startSession1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
 
-        assertEquals(event1.optString("event_type"), "test1");
-        assertEquals(event1.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event1.optString("timestamp"), String.valueOf(timestamp1));
+        assertEquals(event1.optString("collection"), "test1");
+        assertEquals(event1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event1.optJSONObject("properties").optString("_time"), String.valueOf(timestamp1));
 
-        assertEquals(endSession.optString("event_type"), RakamClient.END_SESSION_EVENT);
-        assertEquals(
-                endSession.optJSONObject("api_properties").optString("special"),
-                RakamClient.END_SESSION_EVENT
-        );
-        assertEquals(endSession.optString("session_id"), String.valueOf(timestamp1));
+        assertEquals(endSession.optString("collection"), RakamClient.END_SESSION_EVENT);
+      
+        assertEquals(endSession.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
 
-        assertEquals(startSession2.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession2.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession2.optString("session_id"), String.valueOf(timestamp2));
+        assertEquals(startSession2.optString("collection"), RakamClient.START_SESSION_EVENT);
+       
+        assertEquals(startSession2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp2));
 
-        assertEquals(event2.optString("event_type"), "test2");
-        assertEquals(event2.optString("session_id"), String.valueOf(timestamp2));
-        assertEquals(event2.optString("timestamp"), String.valueOf(timestamp2));
+        assertEquals(event2.optString("collection"), "test2");
+        assertEquals(event2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp2));
+        assertEquals(event2.optJSONObject("properties").optString("_time"), String.valueOf(timestamp2));
     }
 
     @Test
     public void testDefaultTriggerNewSessionWithTrackingSynchronous() {
         rakam.trackSessionEvents(true);
 
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -280,41 +261,32 @@ public class SessionTest extends BaseTest {
         JSONObject startSession2 = events.optJSONObject(3);
         JSONObject event2 = events.optJSONObject(4);
 
-        assertEquals(startSession1.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession1.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession1.optString("session_id"), String.valueOf(timestamp1));
+        assertEquals(startSession1.optString("collection"), RakamClient.START_SESSION_EVENT);
+     
+        assertEquals(startSession1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
 
-        assertEquals(event1.optString("event_type"), "test1");
-        assertEquals(event1.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event1.optString("timestamp"), String.valueOf(timestamp1));
+        assertEquals(event1.optString("collection"), "test1");
+        assertEquals(event1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event1.optJSONObject("properties").optString("_time"), String.valueOf(timestamp1));
 
-        assertEquals(endSession.optString("event_type"), RakamClient.END_SESSION_EVENT);
-        assertEquals(
-                endSession.optJSONObject("api_properties").optString("special"),
-                RakamClient.END_SESSION_EVENT
-        );
-        assertEquals(endSession.optString("session_id"), String.valueOf(timestamp1));
+        assertEquals(endSession.optString("collection"), RakamClient.END_SESSION_EVENT);
+      
+        assertEquals(endSession.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
 
-        assertEquals(startSession2.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession2.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession2.optString("session_id"), String.valueOf(timestamp2));
+        assertEquals(startSession2.optString("collection"), RakamClient.START_SESSION_EVENT);
+      
+        assertEquals(startSession2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp2));
 
-        assertEquals(event2.optString("event_type"), "test2");
-        assertEquals(event2.optString("session_id"), String.valueOf(timestamp2));
-        assertEquals(event2.optString("timestamp"), String.valueOf(timestamp2));
+        assertEquals(event2.optString("collection"), "test2");
+        assertEquals(event2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp2));
+        assertEquals(event2.optJSONObject("properties").optString("_time"), String.valueOf(timestamp2));
     }
 
     @Test
     public void testDefaultExtendSessionWithTracking() {
         rakam.trackSessionEvents(true);
 
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -341,31 +313,27 @@ public class SessionTest extends BaseTest {
         JSONObject event2 = events.optJSONObject(2);
         JSONObject event3 = events.optJSONObject(3);
 
-        assertEquals(startSession.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession.optString("session_id"), String.valueOf(timestamp1));
+        assertEquals(startSession.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(startSession.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
 
-        assertEquals(event1.optString("event_type"), "test1");
-        assertEquals(event1.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event1.optString("timestamp"), String.valueOf(timestamp1));
+        assertEquals(event1.optString("collection"), "test1");
+        assertEquals(event1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event1.optJSONObject("properties").optString("_time"), String.valueOf(timestamp1));
 
-        assertEquals(event2.optString("event_type"), "test2");
-        assertEquals(event2.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event2.optString("timestamp"), String.valueOf(timestamp2));
+        assertEquals(event2.optString("collection"), "test2");
+        assertEquals(event2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event2.optJSONObject("properties").optString("_time"), String.valueOf(timestamp2));
 
-        assertEquals(event3.optString("event_type"), "test3");
-        assertEquals(event3.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event3.optString("timestamp"), String.valueOf(timestamp3));
+        assertEquals(event3.optString("collection"), "test3");
+        assertEquals(event3.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event3.optJSONObject("properties").optString("_time"), String.valueOf(timestamp3));
     }
 
     @Test
     public void testDefaultExtendSessionWithTrackingSynchronous() {
         rakam.trackSessionEvents(true);
 
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -393,24 +361,20 @@ public class SessionTest extends BaseTest {
         JSONObject event2 = events.optJSONObject(2);
         JSONObject event3 = events.optJSONObject(3);
 
-        assertEquals(startSession.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession.optString("session_id"), String.valueOf(timestamp1));
+        assertEquals(startSession.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(startSession.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
 
-        assertEquals(event1.optString("event_type"), "test1");
-        assertEquals(event1.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event1.optString("timestamp"), String.valueOf(timestamp1));
+        assertEquals(event1.optString("collection"), "test1");
+        assertEquals(event1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event1.optJSONObject("properties").optString("_time"), String.valueOf(timestamp1));
 
-        assertEquals(event2.optString("event_type"), "test2");
-        assertEquals(event2.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event2.optString("timestamp"), String.valueOf(timestamp2));
+        assertEquals(event2.optString("collection"), "test2");
+        assertEquals(event2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event2.optJSONObject("properties").optString("_time"), String.valueOf(timestamp2));
 
-        assertEquals(event3.optString("event_type"), "test3");
-        assertEquals(event3.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(event3.optString("timestamp"), String.valueOf(timestamp3));
+        assertEquals(event3.optString("collection"), "test3");
+        assertEquals(event3.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(event3.optJSONObject("properties").optString("_time"), String.valueOf(timestamp3));
     }
 
     @Test
@@ -432,7 +396,7 @@ public class SessionTest extends BaseTest {
         assertFalse(rakam.isInForeground());
 
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertTrue(rakam.isInForeground());
         assertEquals(rakam.previousSessionId, timestamp);
         assertEquals(rakam.lastEventId, -1);
@@ -453,7 +417,7 @@ public class SessionTest extends BaseTest {
         assertEquals(getUnsentEventCount(), 0);
 
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertTrue(rakam.isInForeground());
         assertEquals(rakam.previousSessionId, timestamp);
         assertEquals(rakam.lastEventId, 1);
@@ -462,17 +426,14 @@ public class SessionTest extends BaseTest {
         // verify that start session event sent
         assertEquals(getUnsentEventCount(), 1);
         JSONObject startSession = getLastUnsentEvent();
-        assertEquals(startSession.optString("event_type"), RakamClient.START_SESSION_EVENT);
+        assertEquals(startSession.optString("collection"), RakamClient.START_SESSION_EVENT);
+     
         assertEquals(
-                startSession.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(
-                startSession.optString("session_id"),
+                startSession.optJSONObject("properties").optString("_session_id"),
                 String.valueOf(timestamp)
         );
         assertEquals(
-            startSession.optString("timestamp"),
+            startSession.optJSONObject("properties").optString("_time"),
             String.valueOf(timestamp)
         );
     }
@@ -489,13 +450,13 @@ public class SessionTest extends BaseTest {
         assertEquals(rakam.lastEventTime, -1);
 
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[0]);
 
         callBacks.onActivityPaused(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[1]);
@@ -505,7 +466,7 @@ public class SessionTest extends BaseTest {
     @Test
     public void testAccurateOnPauseRefreshTimestampWithTracking() {
         rakam.trackSessionEvents(true);
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long minTimeBetweenSessionsMillis = 5*1000; //5s
         rakam.setMinTimeBetweenSessionsMillis(minTimeBetweenSessionsMillis);
         long timestamp = System.currentTimeMillis();
@@ -551,7 +512,7 @@ public class SessionTest extends BaseTest {
         assertEquals(getUnsentEventCount(), 0);
 
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[0]);
@@ -560,7 +521,7 @@ public class SessionTest extends BaseTest {
 
         // only refresh time, no session checking
         callBacks.onActivityPaused(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[1]);
@@ -569,7 +530,7 @@ public class SessionTest extends BaseTest {
 
         // resume after min session expired window, verify new session started
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[2]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[2]);
@@ -580,7 +541,7 @@ public class SessionTest extends BaseTest {
     @Test
     public void testAccurateOnResumeTriggerNewSessionWithTracking() {
         rakam.trackSessionEvents(true);
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long minTimeBetweenSessionsMillis = 5*1000; //5s
         rakam.setMinTimeBetweenSessionsMillis(minTimeBetweenSessionsMillis);
         long timestamp = System.currentTimeMillis();
@@ -627,29 +588,17 @@ public class SessionTest extends BaseTest {
         JSONObject endSession = events.optJSONObject(1);
         JSONObject startSession2 = events.optJSONObject(2);
 
-        assertEquals(startSession1.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-            startSession1.optJSONObject("api_properties").optString("special"),
-            RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession1.optString("session_id"), String.valueOf(timestamps[0]));
-        assertEquals(startSession1.optString("timestamp"), String.valueOf(timestamps[0]));
+        assertEquals(startSession1.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(startSession1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamps[0]));
+        assertEquals(startSession1.optJSONObject("properties").optString("_time"), String.valueOf(timestamps[0]));
 
-        assertEquals(endSession.optString("event_type"), RakamClient.END_SESSION_EVENT);
-        assertEquals(
-                endSession.optJSONObject("api_properties").optString("special"),
-                RakamClient.END_SESSION_EVENT
-        );
-        assertEquals(endSession.optString("session_id"), String.valueOf(timestamps[0]));
-        assertEquals(endSession.optString("timestamp"), String.valueOf(timestamps[1]));
+        assertEquals(endSession.optString("collection"), RakamClient.END_SESSION_EVENT);
+        assertEquals(endSession.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamps[0]));
+        assertEquals(endSession.optJSONObject("properties").optString("_time"), String.valueOf(timestamps[1]));
 
-        assertEquals(startSession2.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession2.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession2.optString("session_id"), String.valueOf(timestamps[2]));
-        assertEquals(startSession2.optString("timestamp"), String.valueOf(timestamps[2]));
+        assertEquals(startSession2.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(startSession2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamps[2]));
+        assertEquals(startSession2.optJSONObject("properties").optString("_time"), String.valueOf(timestamps[2]));
     }
 
     @Test
@@ -669,20 +618,20 @@ public class SessionTest extends BaseTest {
         assertEquals(rakam.lastEventTime, -1);
 
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[0]);
 
         callBacks.onActivityPaused(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[1]);
         assertFalse(rakam.isInForeground());
 
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, -1);
         assertEquals(rakam.lastEventTime, timestamps[2]);
@@ -692,7 +641,7 @@ public class SessionTest extends BaseTest {
     @Test
     public void testAccurateOnResumeExtendSessionWithTracking() {
         rakam.trackSessionEvents(true);
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long minTimeBetweenSessionsMillis = 5*1000; //5s
         rakam.setMinTimeBetweenSessionsMillis(minTimeBetweenSessionsMillis);
         long timestamp = System.currentTimeMillis();
@@ -732,18 +681,14 @@ public class SessionTest extends BaseTest {
         assertEquals(getUnsentEventCount(), 1);
 
         JSONObject event = getLastUnsentEvent();
-        assertEquals(event.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-            event.optJSONObject("api_properties").optString("special"),
-            RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(event.optString("session_id"), String.valueOf(timestamps[0]));
-        assertEquals(event.optString("timestamp"), String.valueOf(timestamps[0]));
+        assertEquals(event.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamps[0]));
+        assertEquals(event.optJSONObject("properties").optString("_time"), String.valueOf(timestamps[0]));
     }
 
     @Test
     public void testAccurateLogAsyncEvent() {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long minTimeBetweenSessionsMillis = 5*1000; //5s
         rakam.setMinTimeBetweenSessionsMillis(minTimeBetweenSessionsMillis);
         long timestamp = System.currentTimeMillis();
@@ -765,7 +710,7 @@ public class SessionTest extends BaseTest {
         assertEquals(getUnsentEventCount(), 1);
 
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamp);
         assertEquals(rakam.lastEventId, 1);
         assertEquals(rakam.lastEventTime, timestamps[0]);
@@ -773,15 +718,15 @@ public class SessionTest extends BaseTest {
         assertTrue(rakam.isInForeground());
 
         JSONObject event = getLastUnsentEvent();
-        assertEquals(event.optString("event_type"), "test");
-        assertEquals(event.optString("session_id"), String.valueOf(timestamp));
-        assertEquals(event.optString("timestamp"), String.valueOf(timestamp));
+        assertEquals(event.optString("collection"), "test");
+        assertEquals(event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
+        assertEquals(event.optJSONObject("properties").optString("_time"), String.valueOf(timestamp));
     }
 
     @Test
     public void testAccurateLogAsyncEventWithTracking() {
         rakam.trackSessionEvents(true);
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long minTimeBetweenSessionsMillis = 5*1000; //5s
         rakam.setMinTimeBetweenSessionsMillis(minTimeBetweenSessionsMillis);
         long timestamp = System.currentTimeMillis();
@@ -804,7 +749,7 @@ public class SessionTest extends BaseTest {
 
         // onResume after session expires will start new session
         callBacks.onActivityResumed(null);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
         assertEquals(rakam.previousSessionId, timestamps[0]);
         assertEquals(rakam.lastEventId, 4);
         assertEquals(rakam.lastEventTime, timestamps[0]);
@@ -817,39 +762,27 @@ public class SessionTest extends BaseTest {
         JSONObject endSession = events.optJSONObject(2);
         JSONObject startSession2 = events.optJSONObject(3);
 
-        assertEquals(startSession1.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-            startSession1.optJSONObject("api_properties").optString("special"),
-            RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession1.optString("session_id"), String.valueOf(timestamp));
-        assertEquals(startSession1.optString("timestamp"), String.valueOf(timestamp));
+        assertEquals(startSession1.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(startSession1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
+        assertEquals(startSession1.optJSONObject("properties").optString("_time"), String.valueOf(timestamp));
 
-        assertEquals(event.optString("event_type"), "test");
-        assertEquals(event.optString("session_id"), String.valueOf(timestamp));
-        assertEquals(event.optString("timestamp"), String.valueOf(timestamp));
+        assertEquals(event.optString("collection"), "test");
+        assertEquals(event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
+        assertEquals(event.optJSONObject("properties").optString("_time"), String.valueOf(timestamp));
 
-        assertEquals(endSession.optString("event_type"), RakamClient.END_SESSION_EVENT);
-        assertEquals(
-                endSession.optJSONObject("api_properties").optString("special"),
-                RakamClient.END_SESSION_EVENT
-        );
-        assertEquals(endSession.optString("session_id"), String.valueOf(timestamp));
-        assertEquals(endSession.optString("timestamp"), String.valueOf(timestamp));
+        assertEquals(endSession.optString("collection"), RakamClient.END_SESSION_EVENT);
+        assertEquals(endSession.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
+        assertEquals(endSession.optJSONObject("properties").optString("_time"), String.valueOf(timestamp));
 
-        assertEquals(startSession2.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(
-                startSession2.optJSONObject("api_properties").optString("special"),
-                RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(startSession2.optString("session_id"), String.valueOf(timestamps[0]));
-        assertEquals(startSession2.optString("timestamp"), String.valueOf(timestamps[0]));
+        assertEquals(startSession2.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(startSession2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamps[0]));
+        assertEquals(startSession2.optJSONObject("properties").optString("_time"), String.valueOf(timestamps[0]));
     }
 
 
     @Test
     public void testLogOutOfSessionEvent() {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5*1000; //1s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -875,12 +808,12 @@ public class SessionTest extends BaseTest {
         JSONObject outOfSessionEvent = events.optJSONObject(1);
         JSONObject event2 = events.optJSONObject(2);
 
-        assertEquals(event1.optString("event_type"), "test1");
-        assertEquals(event1.optString("session_id"), String.valueOf(timestamp1));
-        assertEquals(outOfSessionEvent.optString("event_type"), "outOfSession");
-        assertEquals(outOfSessionEvent.optString("session_id"), String.valueOf(-1));
-        assertEquals(event2.optString("event_type"), "test2");
-        assertEquals(event2.optString("session_id"), String.valueOf(timestamp3));
+        assertEquals(event1.optString("collection"), "test1");
+        assertEquals(event1.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp1));
+        assertEquals(outOfSessionEvent.optString("collection"), "outOfSession");
+        assertEquals(outOfSessionEvent.optJSONObject("properties").optString("_session_id"), String.valueOf(-1));
+        assertEquals(event2.optString("collection"), "test2");
+        assertEquals(event2.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp3));
     }
 
     @Test
@@ -890,7 +823,7 @@ public class SessionTest extends BaseTest {
             timestamp, timestamp + 1, timestamp + 2,
             timestamp + 3, timestamp + 4, timestamp + 5,
         };
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         RakamCallbacks callBacks = new RakamCallbacksWithTime(rakam, timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
@@ -906,7 +839,7 @@ public class SessionTest extends BaseTest {
         RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
         assertEquals(events.length(), 1);
-        assertEquals(events.getJSONObject(0).optString("event_type"), "testEvent");
+        assertEquals(events.getJSONObject(0).optString("collection"), "testEvent");
 
         // verify that events have been cleared from client
         looper.runOneTask();
@@ -921,7 +854,7 @@ public class SessionTest extends BaseTest {
             timestamp + 3, timestamp + 4, timestamp + 5,
         };
         rakam.setFlushEventsOnClose(false);
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         RakamCallbacks callBacks = new RakamCallbacksWithTime(rakam, timestamps);
         Robolectric.getForegroundThreadScheduler().advanceTo(1);
 
@@ -944,7 +877,7 @@ public class SessionTest extends BaseTest {
     public void testIdentifyTriggerNewSession() throws JSONException {
         rakam.trackSessionEvents(true);
 
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -961,12 +894,11 @@ public class SessionTest extends BaseTest {
 
         JSONArray events = getUnsentEvents(1);
         assertEquals(
-            events.getJSONObject(0).optString("event_type"), RakamClient.START_SESSION_EVENT
+            events.getJSONObject(0).optString("collection"), RakamClient.START_SESSION_EVENT
         );
         JSONArray identifies = getUnsentIdentifys(1);
-        JSONObject expected = new JSONObject().put("$set", new JSONObject().put("key", "value"));
         assertTrue(Utils.compareJSONObjects(
-            identifies.getJSONObject(0).getJSONObject("user_properties"), expected
+            identifies.getJSONObject(0).getJSONObject("properties").getJSONObject("$set"), new JSONObject().put("key", "value")
         ));
     }
 
@@ -974,7 +906,7 @@ public class SessionTest extends BaseTest {
     public void testOutOfSessionIdentifyDoesNotTriggerNewSession() throws JSONException {
         rakam.trackSessionEvents(true);
 
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         long sessionTimeoutMillis = 5 * 1000; //5s
         rakam.setSessionTimeoutMillis(sessionTimeoutMillis);
 
@@ -989,9 +921,8 @@ public class SessionTest extends BaseTest {
         assertEquals(getUnsentIdentifyCount(), 1);
 
         JSONArray identifies = getUnsentIdentifys(1);
-        JSONObject expected = new JSONObject().put("$set", new JSONObject().put("key", "value"));
         assertTrue(Utils.compareJSONObjects(
-            identifies.getJSONObject(0).getJSONObject("user_properties"), expected
+            identifies.getJSONObject(0).getJSONObject("properties").getJSONObject("$set"),  new JSONObject().put("key", "value")
         ));
     }
 
@@ -1001,14 +932,14 @@ public class SessionTest extends BaseTest {
 
         long timestamp = System.currentTimeMillis();
         rakam.logEventAsync("test",  null, timestamp, false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // trackSessions is true, start_session event is added
         assertEquals(getUnsentEventCount(), 2);
 
         // set user id and validate session ended and new session started
         rakam.setUserId("test_new_user", true);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // total of 4 events, start session, test event, end session, start session
         assertEquals(getUnsentEventCount(), 4);
@@ -1017,38 +948,26 @@ public class SessionTest extends BaseTest {
         // verify pre setUserId events
         JSONObject session_event = events.optJSONObject(0);
         JSONObject test_event = events.optJSONObject(1);
-        assertEquals(session_event.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(session_event.optString("user_id"), "null");
-        assertEquals(
-            session_event.optJSONObject("api_properties").optString("special"),
-            RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(session_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(session_event.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(session_event.optJSONObject("properties").optString("_user"), "null");
+        assertEquals(session_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
 
-        assertEquals(test_event.optString("event_type"), "test");
-        assertEquals(test_event.optString("session_id"), String.valueOf(timestamp));
-        assertEquals(test_event.optString("user_id"), "null");
+        assertEquals(test_event.optString("collection"), "test");
+        assertEquals(test_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
+        assertEquals(test_event.optJSONObject("properties").optString("_user"), "null");
 
         // verify post setUserId events
         session_event = events.optJSONObject(2);
-        assertEquals(session_event.optString("event_type"), RakamClient.END_SESSION_EVENT);
-        assertEquals(session_event.optString("user_id"), "null");
-        assertEquals(
-            session_event.optJSONObject("api_properties").optString("special"),
-            RakamClient.END_SESSION_EVENT
-        );
-        assertEquals(session_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(session_event.optString("collection"), RakamClient.END_SESSION_EVENT);
+        assertEquals(session_event.optJSONObject("properties").optString("_user"), "null");
+        assertEquals(session_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
 
         session_event = events.optJSONObject(3);
-        assertEquals(session_event.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(session_event.optString("user_id"), "test_new_user");
-        assertEquals(
-            session_event.optJSONObject("api_properties").optString("special"),
-            RakamClient.START_SESSION_EVENT
-        );
+        assertEquals(session_event.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(session_event.optJSONObject("properties").optString("_user"), "test_new_user");
 
         // the new event should have a newer session id
-        assertTrue(session_event.optLong("session_id") > timestamp);
+        assertTrue(session_event.optJSONObject("properties").optLong("_session_id") > timestamp);
     }
 
     @Test
@@ -1057,14 +976,14 @@ public class SessionTest extends BaseTest {
 
         long timestamp = System.currentTimeMillis();
         rakam.logEventAsync("test",  null, timestamp, false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // trackSessions is true, start_session event is added
         assertEquals(getUnsentEventCount(), 2);
 
         // set user id and validate session ended and new session started
         rakam.setUserId("test_new_user", false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // still only 2 events, start session, test event
         assertEquals(getUnsentEventCount(), 2);
@@ -1073,17 +992,13 @@ public class SessionTest extends BaseTest {
         // verify pre setUserId events
         JSONObject session_event = events.optJSONObject(0);
         JSONObject test_event = events.optJSONObject(1);
-        assertEquals(session_event.optString("event_type"), RakamClient.START_SESSION_EVENT);
-        assertEquals(session_event.optString("user_id"), "null");
-        assertEquals(
-            session_event.optJSONObject("api_properties").optString("special"),
-            RakamClient.START_SESSION_EVENT
-        );
-        assertEquals(session_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(session_event.optString("collection"), RakamClient.START_SESSION_EVENT);
+        assertEquals(session_event.optJSONObject("properties").optString("_user"), "null");
+        assertEquals(session_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
 
-        assertEquals(test_event.optString("event_type"), "test");
-        assertEquals(test_event.optString("session_id"), String.valueOf(timestamp));
-        assertEquals(test_event.optString("user_id"), "null");
+        assertEquals(test_event.optString("collection"), "test");
+        assertEquals(test_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
+        assertEquals(test_event.optJSONObject("properties").optString("_user"), "null");
 
         // verify same session id
         assertEquals(rakam.sessionId, timestamp);
@@ -1095,14 +1010,14 @@ public class SessionTest extends BaseTest {
 
         long timestamp = System.currentTimeMillis();
         rakam.logEventAsync("test",  null, timestamp, false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // trackSessions is false, there should only be 1 event
         assertEquals(getUnsentEventCount(), 1);
 
         // set user id and validate session ended and new session started
         rakam.setUserId("test_new_user", true);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // still only 1 event1, test event
         assertEquals(getUnsentEventCount(), 1);
@@ -1110,23 +1025,23 @@ public class SessionTest extends BaseTest {
 
         // verify pre setUserId events
         JSONObject session_event = events.optJSONObject(0);
-        assertEquals(session_event.optString("event_type"), "test");
-        assertEquals(session_event.optString("user_id"), "null");
-        assertEquals(session_event.optString("session_id"), String.valueOf(timestamp));
+        assertEquals(session_event.optString("collection"), "test");
+        assertEquals(session_event.optJSONObject("properties").optString("_user"), "null");
+        assertEquals(session_event.optJSONObject("properties").optString("_session_id"), String.valueOf(timestamp));
 
         // log an event with new user id and session
         rakam.logEventAsync("test",  null, timestamp, false);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         // verify post set user id
         assertEquals(getUnsentEventCount(), 2);
         JSONObject test_event = getLastEvent();
-        assertEquals(test_event.optString("event_type"), "test");
-        assertEquals(test_event.optString("user_id"), "test_new_user");
-        assertEquals(test_event.optLong("session_id"), rakam.sessionId);
+        assertEquals(test_event.optString("collection"), "test");
+        assertEquals(test_event.optJSONObject("properties").optString("_user"), "test_new_user");
+        assertEquals(test_event.optJSONObject("properties").optLong("_session_id"), rakam.sessionId);
 
         // there should be a new session id at least
         assertTrue(rakam.sessionId > timestamp);
-        assertTrue(test_event.optLong("session_id") > timestamp);
+        assertTrue(test_event.optJSONObject("properties").optLong("_session_id") > timestamp);
     }
 }

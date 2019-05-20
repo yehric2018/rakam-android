@@ -29,7 +29,7 @@ public class IdentifyTest extends BaseTest {
         Identify identify = new Identify().unset(property1).unset(property2).unset(property1);
 
         JSONObject expected = new JSONObject();
-        JSONObject expectedOperations = new JSONObject().put(property1, "-").put(property2, "-");
+        JSONObject expectedOperations = new JSONObject().put(property1, true).put(property2, true);
         expected.put(Constants.AMP_OP_UNSET, expectedOperations);
         assertTrue(Utils.compareJSONObjects(expected, identify.userPropertiesOperations));
     }
@@ -279,7 +279,7 @@ public class IdentifyTest extends BaseTest {
         expected.put(Constants.AMP_OP_SET_ONCE, new JSONObject().put(property1, value1));
         expected.put(Constants.AMP_OP_ADD, new JSONObject().put(property2, value2));
         expected.put(Constants.AMP_OP_SET, new JSONObject().put(property3, value3));
-        expected.put(Constants.AMP_OP_UNSET, new JSONObject().put(property4, "-"));
+        expected.put(Constants.AMP_OP_UNSET, new JSONObject().put(property4, true));
         expected.put(Constants.AMP_OP_APPEND, new JSONObject().put(property5, value5));
         expected.put(Constants.AMP_OP_PREPEND, new JSONObject().put(property6, value6));
         assertTrue(Utils.compareJSONObjects(expected, identify.userPropertiesOperations));
@@ -311,7 +311,7 @@ public class IdentifyTest extends BaseTest {
         identify.add(property, value2).set(property, value3).unset(property);
 
         JSONObject expected = new JSONObject();
-        expected.put(Constants.AMP_OP_CLEAR_ALL, "-");
+        expected.put(Constants.AMP_OP_CLEAR_ALL, true);
         assertTrue(Utils.compareJSONObjects(expected, identify.userPropertiesOperations));
     }
 
@@ -362,7 +362,7 @@ public class IdentifyTest extends BaseTest {
         expected.put(Constants.AMP_OP_SET_ONCE, new JSONObject().put(property1, value1));
         expected.put(Constants.AMP_OP_ADD, new JSONObject().put(property2, value2));
         expected.put(Constants.AMP_OP_SET, new JSONObject().put(property3, value3));
-        expected.put(Constants.AMP_OP_UNSET, new JSONObject().put(property4, "-"));
+        expected.put(Constants.AMP_OP_UNSET, new JSONObject().put(property4, true));
         expected.put(Constants.AMP_OP_APPEND, new JSONObject().put(property5, value5));
         expected.put(Constants.AMP_OP_PREPEND, new JSONObject().put(property6, value6));
         assertTrue(Utils.compareJSONObjects(expected, identify.getUserPropertiesOperations()));

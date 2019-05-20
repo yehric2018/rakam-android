@@ -14,8 +14,8 @@ import org.mockito.Matchers;
 import org.powermock.api.mockito.PowerMockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.io.File;
@@ -48,7 +48,7 @@ public class DatabaseRecoveryTest extends BaseTest {
         rakam.setEventUploadPeriodMillis(10*60*1000);
         rakam.initialize(context, null, apiKey, null, null, true);
 
-        looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         looper.runOneTask();
         dbInstance = DatabaseHelper.getDatabaseHelper(context);
     }
@@ -221,7 +221,7 @@ public class DatabaseRecoveryTest extends BaseTest {
         reset(mockDbHelper);
 
         Diagnostics logger = Diagnostics.getLogger();
-        ShadowLooper diagnosticLooper = Shadows.shadowOf(logger.diagnosticThread.getLooper());
+        ShadowLooper diagnosticLooper = ((ShadowLooper) ShadowExtractor.extract(logger.diagnosticThread.getLooper()));
         diagnosticLooper.runToEndOfTasks();
         assertEquals(logger.unsentErrors.size(), 4);  // 3 from device info
 

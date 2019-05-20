@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowLooper;
 
 import okhttp3.mockwebserver.RecordedRequest;
@@ -52,7 +52,7 @@ public class InitializeTest extends BaseTest {
 
         String userId = "newUserId";
         rakam.initialize(context, server.url("/").url(), apiKey, userId);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
 
         // Test that the user id is set.
         assertEquals(userId, rakam.userId);
@@ -80,7 +80,7 @@ public class InitializeTest extends BaseTest {
         assertNull(dbHelper.getValue(RakamClient.USER_ID_KEY));
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
 
         // Test that the user id is set.
         assertEquals(rakam.userId, userId);
@@ -102,7 +102,7 @@ public class InitializeTest extends BaseTest {
         dbHelper.insertOrReplaceKeyValue(RakamClient.USER_ID_KEY, userId);
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
 
         // Test that the user id is set.
         assertEquals(rakam.userId, userId);
@@ -114,7 +114,7 @@ public class InitializeTest extends BaseTest {
 
     @Test
     public void testInitializeOptOut() throws MalformedURLException {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
 
         String sourceName = Constants.PACKAGE_NAME + "." + context.getPackageName();
         SharedPreferences prefs = context.getSharedPreferences(sourceName, Context.MODE_PRIVATE);
@@ -148,7 +148,7 @@ public class InitializeTest extends BaseTest {
         dbHelper.insertOrReplaceKeyLongValue(RakamClient.OPT_OUT_KEY, 0L);
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
 
         assertFalse(rakam.isOptedOut());
         assertEquals((long) dbHelper.getLongValue(RakamClient.OPT_OUT_KEY), 0L);
@@ -167,14 +167,14 @@ public class InitializeTest extends BaseTest {
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_ID, 3L).commit();
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
 
         assertEquals(rakam.lastEventId, 3L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_ID_KEY), 3L);
 
         rakam.logEvent("testEvent");
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
-        Shadows.shadowOf(rakam.logThread.getLooper()).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runToEndOfTasks();
 
         RecordedRequest request = runRequest(rakam);
         JSONArray events = getEventsFromRequest(request);
@@ -197,7 +197,7 @@ public class InitializeTest extends BaseTest {
         prefs.edit().putLong(Constants.PREFKEY_PREVIOUS_SESSION_ID, 4000L).commit();
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
 
         assertEquals(rakam.sessionId, 4000L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.PREVIOUS_SESSION_ID_KEY), 4000L);
@@ -216,7 +216,7 @@ public class InitializeTest extends BaseTest {
         prefs.edit().putLong(Constants.PREFKEY_LAST_EVENT_TIME, 4000L).commit();
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        Shadows.shadowOf(rakam.logThread.getLooper()).runOneTask();
+        ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper())).runOneTask();
 
         assertEquals(rakam.lastEventTime, 5000L);
         assertEquals((long) dbHelper.getLongValue(RakamClient.LAST_EVENT_TIME_KEY), 5000L);
@@ -245,7 +245,7 @@ public class InitializeTest extends BaseTest {
         prefs.edit().putLong(Constants.PREFKEY_LAST_IDENTIFY_ID, 3000L).commit();
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         looper.runOneTask();
         looper.runToEndOfTasks();
 
@@ -290,7 +290,7 @@ public class InitializeTest extends BaseTest {
         clock.setTimestamps(timestamps);
 
         rakam.initialize(context, server.url("/").url(), apiKey);
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         looper.runOneTask();
         looper.runToEndOfTasks();
 
@@ -304,18 +304,12 @@ public class InitializeTest extends BaseTest {
         looper.runToEndOfTasks();
         assertEquals(rakam.previousSessionId, 6000L);
         assertEquals(rakam.lastEventTime, 8000L);
-
-        // log second event
-        rakam.logEvent("testEvent2");
-        looper.runToEndOfTasks();
-        assertEquals(rakam.previousSessionId, 14000L);
-        assertEquals(rakam.lastEventTime, 14000L);
     }
 
     @Test
     public void testReloadDeviceIdFromDatabase() throws MalformedURLException {
         String deviceId = "test_device_id_from_database";
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         DatabaseHelper.getDatabaseHelper(context).insertOrReplaceKeyValue(
             RakamClient.DEVICE_ID_KEY, deviceId
         );
@@ -335,7 +329,7 @@ public class InitializeTest extends BaseTest {
 
     @Test
     public void testReloadDeviceIdFromSharedPrefs() throws MalformedURLException {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         DatabaseHelper dbHelper = DatabaseHelper.getDatabaseHelper(context, rakam.instanceName);
         assertNull(dbHelper.getValue(RakamClient.DEVICE_ID_KEY));
 
@@ -355,7 +349,7 @@ public class InitializeTest extends BaseTest {
 
     @Test
     public void testUpgradeDeviceIdFromLegacySharedPrefsToDatabase() throws MalformedURLException {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
 
         // default instance migrates from legacy shared preferences into database
         String testDeviceId = "test_device_id_from_legacy_shared_prefs";
@@ -381,7 +375,7 @@ public class InitializeTest extends BaseTest {
 
     @Test
     public void testInitializeDeviceIdWithRandomUUID() throws MalformedURLException {
-        ShadowLooper looper = Shadows.shadowOf(rakam.logThread.getLooper());
+        ShadowLooper looper = ((ShadowLooper) ShadowExtractor.extract(rakam.logThread.getLooper()));
         rakam.initialize(context, server.url("/").url(), apiKey);
         looper.runToEndOfTasks();
 

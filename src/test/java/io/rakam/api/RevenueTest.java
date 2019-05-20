@@ -41,7 +41,7 @@ public class RevenueTest extends BaseTest {
         assertEquals(revenue.productId, productId);
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optString("$productId"), productId);
+        assertEquals(obj.optString("_product_id"), productId);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class RevenueTest extends BaseTest {
         assertEquals(revenue.quantity, quantity);
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optInt("$quantity"), quantity);
+        assertEquals(obj.optInt("_quantity"), quantity);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class RevenueTest extends BaseTest {
         assertEquals(revenue.price.doubleValue(), price, 0);
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optDouble("$price"), price, 0);
+        assertEquals(obj.optDouble("_price"), price, 0);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class RevenueTest extends BaseTest {
         assertEquals(revenue.revenueType, revenueType);
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optString("$revenueType"), revenueType);
+        assertEquals(obj.optString("_revenue_type"), revenueType);
     }
 
     @Test
@@ -105,8 +105,8 @@ public class RevenueTest extends BaseTest {
         assertEquals(revenue.receiptSig, receiptSig);
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optString("$receipt"), receipt);
-        assertEquals(obj.optString("$receiptSig"), receiptSig);
+        assertEquals(obj.optString("_receipt"), receipt);
+        assertEquals(obj.optString("_receipt_sig"), receiptSig);
     }
 
     @Test
@@ -120,10 +120,10 @@ public class RevenueTest extends BaseTest {
 
         JSONObject obj = revenue.toJSONObject();
         assertEquals(obj.optString("city"), "san francisco");
-        assertEquals(obj.optInt("$quantity"), 1);
+        assertEquals(obj.optInt("_quantity"), 1);
 
         // assert original json object was not modified
-        assertFalse(properties.has("$quantity"));
+        assertFalse(properties.has("_quantity"));
     }
 
     @Test
@@ -137,10 +137,10 @@ public class RevenueTest extends BaseTest {
 
         JSONObject obj = revenue.toJSONObject();
         assertEquals(obj.optString("city"), "san francisco");
-        assertEquals(obj.optInt("$quantity"), 1);
+        assertEquals(obj.optInt("_quantity"), 1);
 
         // assert original json object was not modified
-        assertFalse(properties.has("$quantity"));
+        assertFalse(properties.has("_quantity"));
     }
 
     @Test
@@ -176,12 +176,12 @@ public class RevenueTest extends BaseTest {
         revenue.setRevenueType(revenueType).setEventProperties(props);
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optDouble("$price"), price, 0);
-        assertEquals(obj.optInt("$quantity"), 15);
-        assertEquals(obj.optString("$productId"), productId);
-        assertEquals(obj.optString("$receipt"), receipt);
-        assertEquals(obj.optString("$receiptSig"), receiptSig);
-        assertEquals(obj.optString("$revenueType"), revenueType);
+        assertEquals(obj.optDouble("_price"), price, 0);
+        assertEquals(obj.optInt("_quantity"), 15);
+        assertEquals(obj.optString("_product_id"), productId);
+        assertEquals(obj.optString("_receipt"), receipt);
+        assertEquals(obj.optString("_receipt_sig"), receiptSig);
+        assertEquals(obj.optString("_revenue_type"), revenueType);
         assertEquals(obj.optString("city"), "Boston");
     }
 

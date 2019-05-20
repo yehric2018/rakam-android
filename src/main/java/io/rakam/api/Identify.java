@@ -929,7 +929,7 @@ public class Identify
      * @return the same Identify object
      */
     public Identify unset(String property) {
-        addToUserProperties(Constants.AMP_OP_UNSET, property, "-");
+        addToUserProperties(Constants.AMP_OP_UNSET, property, true);
         return this;
     }
 
@@ -952,7 +952,7 @@ public class Identify
         }
 
         try {
-            userPropertiesOperations.put(Constants.AMP_OP_CLEAR_ALL, "-");
+            userPropertiesOperations.put(Constants.AMP_OP_CLEAR_ALL, true);
         } catch (JSONException e) {
             RakamLog.getLogger().e(TAG, e.toString());
         }

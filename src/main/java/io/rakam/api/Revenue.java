@@ -1,7 +1,5 @@
 package io.rakam.api;
 
-import android.text.TextUtils;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
