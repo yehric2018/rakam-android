@@ -23,7 +23,7 @@ public class Diagnostics {
     private static final RakamLog logger = RakamLog.getLogger();
     public static final String TAG = "RakamDiagnostics";
 
-    public static final String DIAGNOSTIC_EVENT_ENDPOINT = "https://diagnostics.rakam.io/event/collect";
+    public static final String DIAGNOSTIC_EVENT_ENDPOINT = "https://diagnostics.rakam.io/event/batch";
 
     public static final int DIAGNOSTIC_EVENT_MAX_COUNT = 50; // limit memory footprint
     public static final int DIAGNOSTIC_EVENT_MIN_COUNT = 5;
