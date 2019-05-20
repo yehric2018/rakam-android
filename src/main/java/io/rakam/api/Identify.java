@@ -32,9 +32,9 @@ public class Identify
 {
 
     /**
-     * The class identifier tag used in logging. TAG = {@code "Identify";}
+     * The class identifier tag used in logging. TAG = {@code "io.rakam.api.Identify";}
      */
-    public static final String TAG = "Identify";
+    public static final String TAG = "io.rakam.api.Identify";
 
     /**
      * Internal {@code JSONObject} to hold all of the user property operations.
@@ -50,12 +50,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, boolean value)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, value);
+    public Identify setOnce(String property, boolean value) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -64,12 +63,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, double value)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, value);
+    public Identify setOnce(String property, double value) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -78,12 +76,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, float value)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, value);
+    public Identify setOnce(String property, float value) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -92,12 +89,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, int value)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, value);
+    public Identify setOnce(String property, int value) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -106,12 +102,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, long value)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, value);
+    public Identify setOnce(String property, long value) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -120,12 +115,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, String value)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, value);
+    public Identify setOnce(String property, String value) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, value);
         return this;
     }
 
@@ -134,12 +128,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, JSONArray values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, values);
+    public Identify setOnce(String property, JSONArray values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, values);
         return this;
     }
 
@@ -148,12 +141,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, JSONObject values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, values);
+    public Identify setOnce(String property, JSONObject values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, values);
         return this;
     }
 
@@ -162,12 +154,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, boolean[] values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, booleanArrayToJSONArray(values));
+    public Identify setOnce(String property, boolean[] values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, booleanArrayToJSONArray(values));
         return this;
     }
 
@@ -176,12 +167,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, double[] values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, doubleArrayToJSONArray(values));
+    public Identify setOnce(String property, double[] values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, doubleArrayToJSONArray(values));
         return this;
     }
 
@@ -190,12 +180,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, float[] values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, floatArrayToJSONArray(values));
+    public Identify setOnce(String property, float[] values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, floatArrayToJSONArray(values));
         return this;
     }
 
@@ -204,12 +193,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, int[] values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, intArrayToJSONArray(values));
+    public Identify setOnce(String property, int[] values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, intArrayToJSONArray(values));
         return this;
     }
 
@@ -218,12 +206,11 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, long[] values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, longArrayToJSONArray(values));
+    public Identify setOnce(String property, long[] values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, longArrayToJSONArray(values));
         return this;
     }
 
@@ -232,12 +219,24 @@ public class Identify
      * property will be ignored.
      *
      * @param property the user property to setOnce
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify setOnce(String property, String[] values)
-    {
-        addToUserProperties(Constants.OP_SET_ONCE, property, stringArrayToJSONArray(values));
+    public Identify setOnce(String property, String[] values) {
+        addToUserProperties(Constants.AMP_OP_SET_ONCE, property, stringArrayToJSONArray(values));
+        return this;
+    }
+
+
+    /**
+     * Sets a user property value. Existing values for that user property will be overwritten.
+     *
+     * @param property the user property to set
+     * @param value    the value of the user property
+     * @return the same Identify object
+     */
+    public Identify set(String property, boolean value) {
+        addToUserProperties(Constants.AMP_OP_SET, property, value);
         return this;
     }
 
@@ -245,12 +244,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, boolean value)
-    {
-        addToUserProperties(Constants.OP_SET, property, value);
+    public Identify set(String property, double value) {
+        addToUserProperties(Constants.AMP_OP_SET, property, value);
         return this;
     }
 
@@ -258,12 +256,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, double value)
-    {
-        addToUserProperties(Constants.OP_SET, property, value);
+    public Identify set(String property, float value) {
+        addToUserProperties(Constants.AMP_OP_SET, property, value);
         return this;
     }
 
@@ -271,12 +268,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, float value)
-    {
-        addToUserProperties(Constants.OP_SET, property, value);
+    public Identify set(String property, int value) {
+        addToUserProperties(Constants.AMP_OP_SET, property, value);
         return this;
     }
 
@@ -284,12 +280,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, int value)
-    {
-        addToUserProperties(Constants.OP_SET, property, value);
+    public Identify set(String property, long value) {
+        addToUserProperties(Constants.AMP_OP_SET, property, value);
         return this;
     }
 
@@ -297,12 +292,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param value the value of the user property
+     * @param value    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, long value)
-    {
-        addToUserProperties(Constants.OP_SET, property, value);
+    public Identify set(String property, String value) {
+        addToUserProperties(Constants.AMP_OP_SET, property, value);
         return this;
     }
 
@@ -310,12 +304,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param value the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, String value)
-    {
-        addToUserProperties(Constants.OP_SET, property, value);
+    public Identify set(String property, JSONObject values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, values);
         return this;
     }
 
@@ -323,12 +316,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, JSONObject values)
-    {
-        addToUserProperties(Constants.OP_SET, property, values);
+    public Identify set(String property, JSONArray values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, values);
         return this;
     }
 
@@ -336,12 +328,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, JSONArray values)
-    {
-        addToUserProperties(Constants.OP_SET, property, values);
+    public Identify set(String property, boolean[] values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, booleanArrayToJSONArray(values));
         return this;
     }
 
@@ -349,12 +340,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, boolean[] values)
-    {
-        addToUserProperties(Constants.OP_SET, property, booleanArrayToJSONArray(values));
+    public Identify set(String property, double[] values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, doubleArrayToJSONArray(values));
         return this;
     }
 
@@ -362,12 +352,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, double[] values)
-    {
-        addToUserProperties(Constants.OP_SET, property, doubleArrayToJSONArray(values));
+    public Identify set(String property, float[] values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, floatArrayToJSONArray(values));
         return this;
     }
 
@@ -375,12 +364,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, float[] values)
-    {
-        addToUserProperties(Constants.OP_SET, property, floatArrayToJSONArray(values));
+    public Identify set(String property, int[] values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, intArrayToJSONArray(values));
         return this;
     }
 
@@ -388,12 +376,11 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, int[] values)
-    {
-        addToUserProperties(Constants.OP_SET, property, intArrayToJSONArray(values));
+    public Identify set(String property, long[] values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, longArrayToJSONArray(values));
         return this;
     }
 
@@ -401,25 +388,26 @@ public class Identify
      * Sets a user property value. Existing values for that user property will be overwritten.
      *
      * @param property the user property to set
-     * @param values the value of the user property
+     * @param values    the value of the user property
      * @return the same Identify object
      */
-    public Identify set(String property, long[] values)
-    {
-        addToUserProperties(Constants.OP_SET, property, longArrayToJSONArray(values));
+    public Identify set(String property, String[] values) {
+        addToUserProperties(Constants.AMP_OP_SET, property, stringArrayToJSONArray(values));
         return this;
     }
 
+
     /**
-     * Sets a user property value. Existing values for that user property will be overwritten.
+     * Increment a user property by some numerical value. If the user property does not have
+     * a value set, it will be initialized to 0 before being incremented. Value can be
+     * negative to decrement a user property value.
      *
-     * @param property the user property to set
-     * @param values the value of the user property
+     * @param property the user property to increment
+     * @param value    the value (can be negative) to increment
      * @return the same Identify object
      */
-    public Identify set(String property, String[] values)
-    {
-        addToUserProperties(Constants.OP_SET, property, stringArrayToJSONArray(values));
+    public Identify add(String property, double value) {
+        addToUserProperties(Constants.AMP_OP_ADD, property, value);
         return this;
     }
 
@@ -429,12 +417,11 @@ public class Identify
      * negative to decrement a user property value.
      *
      * @param property the user property to increment
-     * @param value the value (can be negative) to increment
+     * @param value    the value (can be negative) to increment
      * @return the same Identify object
      */
-    public Identify add(String property, double value)
-    {
-        addToUserProperties(Constants.OP_INCREMENT, property, value);
+    public Identify add(String property, float value) {
+        addToUserProperties(Constants.AMP_OP_ADD, property, value);
         return this;
     }
 
@@ -444,12 +431,11 @@ public class Identify
      * negative to decrement a user property value.
      *
      * @param property the user property to increment
-     * @param value the value (can be negative) to increment
+     * @param value    the value (can be negative) to increment
      * @return the same Identify object
      */
-    public Identify add(String property, float value)
-    {
-        addToUserProperties(Constants.OP_INCREMENT, property, value);
+    public Identify add(String property, int value) {
+        addToUserProperties(Constants.AMP_OP_ADD, property, value);
         return this;
     }
 
@@ -459,12 +445,11 @@ public class Identify
      * negative to decrement a user property value.
      *
      * @param property the user property to increment
-     * @param value the value (can be negative) to increment
+     * @param value    the value (can be negative) to increment
      * @return the same Identify object
      */
-    public Identify add(String property, int value)
-    {
-        addToUserProperties(Constants.OP_INCREMENT, property, value);
+    public Identify add(String property, long value) {
+        addToUserProperties(Constants.AMP_OP_ADD, property, value);
         return this;
     }
 
@@ -474,12 +459,12 @@ public class Identify
      * negative to decrement a user property value.
      *
      * @param property the user property to increment
-     * @param value the value (can be negative) to increment
+     * @param value    the value (can be negative) to increment. Server-side we convert
+     *                 the string into a number if possible.
      * @return the same Identify object
      */
-    public Identify add(String property, long value)
-    {
-        addToUserProperties(Constants.OP_INCREMENT, property, value);
+    public Identify add(String property, String value) {
+        addToUserProperties(Constants.AMP_OP_ADD, property, value);
         return this;
     }
 
@@ -489,467 +474,453 @@ public class Identify
      * negative to decrement a user property value.
      *
      * @param property the user property to increment
-     * @param value the value (can be negative) to increment. Server-side we convert
-     * the string into a number if possible.
+     * @param values    the value (can be negative) to increment. Server-side we flatten
+     *                 dictionaries and apply add to each flattened property value.
      * @return the same Identify object
      */
-    public Identify add(String property, String value)
-    {
-        addToUserProperties(Constants.OP_INCREMENT, property, value);
+    public Identify add(String property, JSONObject values) {
+        addToUserProperties(Constants.AMP_OP_ADD, property, values);
+        return this;
+    }
+
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param value    the value being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, boolean value) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
         return this;
     }
 
     /**
-     * Increment a user property by some numerical value. If the user property does not have
-     * a value set, it will be initialized to 0 before being incremented. Value can be
-     * negative to decrement a user property value.
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
      *
-     * @param property the user property to increment
-     * @param values the value (can be negative) to increment. Server-side we flatten
-     * dictionaries and apply add to each flattened property value.
+     * @param property the user property property to which to append
+     * @param value    the value being appended
      * @return the same Identify object
      */
-    public Identify add(String property, JSONObject values)
-    {
-        addToUserProperties(Constants.OP_INCREMENT, property, values);
+    public Identify append(String property, double value) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
         return this;
     }
 
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param value    the value being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, boolean value) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param value    the value being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, double value) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param value    the value being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, float value) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param value    the value being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, int value) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param value    the value being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, long value) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param value    the value being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, String value) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, JSONArray values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, values);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended. Server-side we flatten dictionaries and apply
-//     *                 append to each flattened property.
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, JSONObject values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, values);
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, boolean[] values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, booleanArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, double[] values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, doubleArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, float[] values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, floatArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, int[] values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, intArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, long[] values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, longArrayToJSONArray(values));
-//        return this;
-//    }
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param value    the value being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, float value) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
+        return this;
+    }
 
-//    /**
-//     * Append a value or values to a user property. If the user property does not have a value
-//     * set, it will be initialized to an empty list before the new values are appended. If
-//     * the user property has an existing value and it is not a list, it will be converted into
-//     * a list with the new value(s) appended.
-//     *
-//     * @param property the user property property to which to append
-//     * @param values   the values being appended
-//     * @return the same Identify object
-//     */
-//    public Identify append(String property, String[] values) {
-//        addToUserProperties(Constants.AMP_OP_APPEND, property, stringArrayToJSONArray(values));
-//        return this;
-//    }
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param value    the value being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, int value) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
+        return this;
+    }
 
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param value    the value being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, boolean value) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param value    the value being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, double value) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param value    the value being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, float value) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param value    the value being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, int value) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param value    the value being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, long value) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param value    the value being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, String value) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the value being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, JSONArray values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, values);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the values being prepended. Server-side we flatten dictionaries and apply
-//     *                  prepend to each flattened property.
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, JSONObject values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, values);
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the values being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, boolean[] values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, booleanArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the values being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, double[] values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, doubleArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the values being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, float[] values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, floatArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the values being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, int[] values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, intArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the values being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, long[] values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, longArrayToJSONArray(values));
-//        return this;
-//    }
-//
-//    /**
-//     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
-//     * front of a given list. if the user property does not have a value set, it will be
-//     * initialized to an empty list before the new values are prepended. If the user property
-//     * has an existing value and it is not a list, it will be converted into a list with the
-//     * new value(s) prepended.
-//     *
-//     * @param property the user property to which to append
-//     * @param values    the values being prepended
-//     * @return the same Identify object
-//     */
-//    public Identify prepend(String property, String[] values) {
-//        addToUserProperties(Constants.AMP_OP_PREPEND, property, stringArrayToJSONArray(values));
-//        return this;
-//    }
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param value    the value being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, long value) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param value    the value being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, String value) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, JSONArray values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, values);
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended. Server-side we flatten dictionaries and apply
+     *                  append to each flattened property.
+     * @return the same Identify object
+     */
+    public Identify append(String property, JSONObject values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, values);
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, boolean[] values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, booleanArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, double[] values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, doubleArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, float[] values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, floatArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, int[] values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, intArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, long[] values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, longArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Append a value or values to a user property. If the user property does not have a value
+     * set, it will be initialized to an empty list before the new values are appended. If
+     * the user property has an existing value and it is not a list, it will be converted into
+     * a list with the new value(s) appended.
+     *
+     * @param property the user property property to which to append
+     * @param values    the values being appended
+     * @return the same Identify object
+     */
+    public Identify append(String property, String[] values) {
+        addToUserProperties(Constants.AMP_OP_APPEND, property, stringArrayToJSONArray(values));
+        return this;
+    }
+
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param value    the value being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, boolean value) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param value    the value being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, double value) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param value    the value being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, float value) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param value    the value being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, int value) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param value    the value being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, long value) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param value    the value being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, String value) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, value);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the value being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, JSONArray values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, values);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the values being prepended. Server-side we flatten dictionaries and apply
+     *                  prepend to each flattened property.
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, JSONObject values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, values);
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the values being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, boolean[] values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, booleanArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the values being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, double[] values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, doubleArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the values being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, float[] values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, floatArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the values being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, int[] values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, intArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the values being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, long[] values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, longArrayToJSONArray(values));
+        return this;
+    }
+
+    /**
+     * Prepend a value or values to a user property. Prepend means inserting the value(s) at the
+     * front of a given list. if the user property does not have a value set, it will be
+     * initialized to an empty list before the new values are prepended. If the user property
+     * has an existing value and it is not a list, it will be converted into a list with the
+     * new value(s) prepended.
+     *
+     * @param property the user property to which to append
+     * @param values    the values being prepended
+     * @return the same Identify object
+     */
+    public Identify prepend(String property, String[] values) {
+        addToUserProperties(Constants.AMP_OP_PREPEND, property, stringArrayToJSONArray(values));
+        return this;
+    }
+
 
     /**
      * Unset and remove a user property.
@@ -957,11 +928,11 @@ public class Identify
      * @param property the user property to unset and remove.
      * @return the same Identify object
      */
-    public Identify unset(String property)
-    {
-        addToUserProperties(OP_UNSET, property, null);
+    public Identify unset(String property) {
+        addToUserProperties(Constants.AMP_OP_UNSET, property, true);
         return this;
     }
+
 
     /**
      * Clear all user properties. <b>Note:</b> the result is irreversible! <b>Also Note:</b>
@@ -969,10 +940,9 @@ public class Identify
      *
      * @return the same Identify object.
      */
-    public Identify clearAll()
-    {
+    public Identify clearAll() {
         if (userPropertiesOperations.length() > 0) {
-            if (!userProperties.contains(Constants.OP_CLEAR_ALL)) {
+            if (!userProperties.contains(Constants.AMP_OP_CLEAR_ALL)) {
                 RakamLog.getLogger().w(TAG, String.format(
                         "Need to send $clearAll on its own Identify object without any other " +
                                 "operations, ignoring $clearAll"
@@ -982,17 +952,16 @@ public class Identify
         }
 
         try {
-            userPropertiesOperations.put(Constants.OP_CLEAR_ALL, 1);
-        }
-        catch (JSONException e) {
+            userPropertiesOperations.put(Constants.AMP_OP_CLEAR_ALL, true);
+        } catch (JSONException e) {
             RakamLog.getLogger().e(TAG, e.toString());
         }
         return this;
     }
 
-    private void addToUserProperties(String operation, String property, Object value)
-    {
-        if (TextUtils.isEmpty(property)) {
+
+    private void addToUserProperties(String operation, String property, Object value) {
+        if (Utils.isEmptyString(property)) {
             RakamLog.getLogger().w(TAG, String.format(
                     "Attempting to perform operation %s with a null or empty string property, ignoring",
                     operation
@@ -1000,7 +969,7 @@ public class Identify
             return;
         }
 
-        if (operation != OP_UNSET && value == null) {
+        if (value == null) {
             RakamLog.getLogger().w(TAG, String.format(
                     "Attempting to perform operation %s with null value for property %s, ignoring",
                     operation, property
@@ -1009,7 +978,7 @@ public class Identify
         }
 
         // check that clearAll wasn't already used in this Identify
-        if (userPropertiesOperations.has(Constants.OP_CLEAR_ALL)) {
+        if (userPropertiesOperations.has(Constants.AMP_OP_CLEAR_ALL)) {
             RakamLog.getLogger().w(TAG, String.format(
                     "This Identify already contains a $clearAll operation, ignoring operation %s",
                     operation
@@ -1028,39 +997,27 @@ public class Identify
 
         try {
             if (!userPropertiesOperations.has(operation)) {
-                userPropertiesOperations.put(operation, operation != OP_UNSET ? new JSONObject() : new JSONArray());
+                userPropertiesOperations.put(operation, new JSONObject());
             }
-
-            if (operation != OP_UNSET) {
-                userPropertiesOperations.getJSONObject(operation).put(property, value);
-            }
-            else {
-                userPropertiesOperations.getJSONArray(operation).put(property);
-            }
+            userPropertiesOperations.getJSONObject(operation).put(property, value);
             userProperties.add(property);
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
             RakamLog.getLogger().e(TAG, e.toString());
         }
     }
 
-    private JSONArray booleanArrayToJSONArray(boolean[] values)
-    {
+    private JSONArray booleanArrayToJSONArray(boolean[] values) {
         JSONArray array = new JSONArray();
-        for (boolean value : values) {
-            array.put(value);
-        }
+        for (boolean value : values) array.put(value);
         return array;
     }
 
-    private JSONArray floatArrayToJSONArray(float[] values)
-    {
+    private JSONArray floatArrayToJSONArray(float[] values) {
         JSONArray array = new JSONArray();
         for (float value : values) {
             try {
                 array.put(value);
-            }
-            catch (JSONException e) {
+            } catch (JSONException e) {
                 RakamLog.getLogger().e(TAG, String.format(
                         "Error converting float %f to JSON: %s", value, e.toString()
                 ));
@@ -1069,14 +1026,12 @@ public class Identify
         return array;
     }
 
-    private JSONArray doubleArrayToJSONArray(double[] values)
-    {
+    private JSONArray doubleArrayToJSONArray(double[] values) {
         JSONArray array = new JSONArray();
         for (double value : values) {
             try {
                 array.put(value);
-            }
-            catch (JSONException e) {
+            } catch (JSONException e) {
                 RakamLog.getLogger().e(TAG, String.format(
                         "Error converting double %d to JSON: %s", value, e.toString()
                 ));
@@ -1085,30 +1040,21 @@ public class Identify
         return array;
     }
 
-    private JSONArray intArrayToJSONArray(int[] values)
-    {
+    private JSONArray intArrayToJSONArray(int[] values) {
         JSONArray array = new JSONArray();
-        for (int value : values) {
-            array.put(value);
-        }
+        for (int value : values) array.put(value);
         return array;
     }
 
-    private JSONArray longArrayToJSONArray(long[] values)
-    {
+    private JSONArray longArrayToJSONArray(long[] values) {
         JSONArray array = new JSONArray();
-        for (long value : values) {
-            array.put(value);
-        }
+        for (long value : values) array.put(value);
         return array;
     }
 
-    private JSONArray stringArrayToJSONArray(String[] values)
-    {
+    private JSONArray stringArrayToJSONArray(String[] values) {
         JSONArray array = new JSONArray();
-        for (String value : values) {
-            array.put(value);
-        }
+        for (String value : values) array.put(value);
         return array;
     }
 
@@ -1116,12 +1062,60 @@ public class Identify
      * Sets user property.
      *
      * @param property the property
-     * @param value the value
+     * @param value    the value
      * @return the user property
      */
-    Identify setUserProperty(String property, Object value)
-    {
-        addToUserProperties(Constants.OP_SET, property, value);
+    Identify setUserProperty(String property, Object value) {
+        addToUserProperties(Constants.AMP_OP_SET, property, value);
         return this;
+    }
+
+    /**
+     * Sets a user property value only once. Subsequent @{code setOnce} operations on that user
+     * property will be ignored. <b>Note:</b> this method has been deprecated. Please use one
+     * with a different signature.
+     *
+     * @param property the user property to setOnce
+     * @param value    the value of the user property
+     * @return the same Identify object
+     * @deprecated
+     */
+    public Identify setOnce(String property, Object value) {
+        RakamLog.getLogger().w(
+                TAG,
+                "This version of setOnce is deprecated. Please use one with a different signature."
+        );
+        return this;
+    }
+
+    /**
+     * Sets a user property value. Existing values for that user property will be overwritten.
+     * <b>Note:</b> this method has been deprecated. Please use one with a different signature.
+     *
+     * @param property the user property to set
+     * @param value    the value of the user property
+     * @return the same Identify object
+     * @deprecated
+     */
+    public Identify set(String property, Object value) {
+        RakamLog.getLogger().w(
+                TAG,
+                "This version of set is deprecated. Please use one with a different signature."
+        );
+        return this;
+    }
+
+    /**
+     * Public method that exposes the user property operations JSON blob.
+     * @return a copy of the User Property Operations JSONObject. If copying fails, returns
+     *      an empty JSONObject
+     */
+    public JSONObject getUserPropertiesOperations() {
+        try {
+            return new JSONObject(userPropertiesOperations.toString());
+        } catch (JSONException e) {
+            RakamLog.getLogger().e(TAG, e.toString());
+        }
+        return new JSONObject();
     }
 }

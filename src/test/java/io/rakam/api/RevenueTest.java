@@ -11,6 +11,7 @@ import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -113,12 +114,12 @@ public class RevenueTest extends BaseTest {
         Revenue revenue = new Revenue();
         assertNull(revenue.properties);
 
-        JSONObject properties = new JSONObject().put("_city", "san francisco");
+        JSONObject properties = new JSONObject().put("city", "san francisco");
         revenue.setEventProperties(properties);
-        assertTrue(compareJSONObjects(properties, revenue.properties));
+        assertTrue(Utils.compareJSONObjects(properties, revenue.properties));
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optString("_city"), "san francisco");
+        assertEquals(obj.optString("city"), "san francisco");
         assertEquals(obj.optInt("_quantity"), 1);
 
         // assert original json object was not modified
@@ -130,12 +131,12 @@ public class RevenueTest extends BaseTest {
         Revenue revenue = new Revenue();
         assertNull(revenue.properties);
 
-        JSONObject properties = new JSONObject().put("_city", "san francisco");
+        JSONObject properties = new JSONObject().put("city", "san francisco");
         revenue.setEventProperties(properties);
-        assertTrue(compareJSONObjects(properties, revenue.properties));
+        assertTrue(Utils.compareJSONObjects(properties, revenue.properties));
 
         JSONObject obj = revenue.toJSONObject();
-        assertEquals(obj.optString("_city"), "san francisco");
+        assertEquals(obj.optString("city"), "san francisco");
         assertEquals(obj.optInt("_quantity"), 1);
 
         // assert original json object was not modified
@@ -155,7 +156,7 @@ public class RevenueTest extends BaseTest {
         assertFalse(revenue2.isValidRevenue());
         revenue2.setPrice(10.99);
         revenue2.setQuantity(15);
-        assertFalse(revenue2.isValidRevenue());
+        assertTrue(revenue2.isValidRevenue());
         revenue2.setProductId("testProductId");
         assertTrue(revenue2.isValidRevenue());
     }
@@ -168,7 +169,7 @@ public class RevenueTest extends BaseTest {
         String receipt = "testReceipt";
         String receiptSig = "testReceiptSig";
         String revenueType = "testRevenueType";
-        JSONObject props = new JSONObject().put("_city", "Boston");
+        JSONObject props = new JSONObject().put("city", "Boston");
 
         Revenue revenue = new Revenue().setProductId(productId).setPrice(price);
         revenue.setQuantity(quantity).setReceipt(receipt, receiptSig);
@@ -181,6 +182,34 @@ public class RevenueTest extends BaseTest {
         assertEquals(obj.optString("_receipt"), receipt);
         assertEquals(obj.optString("_receipt_sig"), receiptSig);
         assertEquals(obj.optString("_revenue_type"), revenueType);
-        assertEquals(obj.optString("_city"), "Boston");
+        assertEquals(obj.optString("city"), "Boston");
+    }
+
+    @Test
+    public void testEquals() throws JSONException {
+        Revenue r1 = new Revenue();
+        Revenue r2 = new Revenue();
+
+        r1.setPrice(10.00).setQuantity(2).setProductId("testProductId");
+        r1.setEventProperties(new JSONObject().put("testProp", "testValue"));
+        r2.setPrice(9.99).setQuantity(2).setProductId("testProductId");
+        r2.setEventProperties(new JSONObject().put("testProp", "testValue"));
+        assertFalse(r1.equals(r2));
+        r2.setPrice(10.00);
+        assertTrue(r1.equals(r2));
+        r2.setEventProperties(new JSONObject().put("testProp", "fakeValue"));
+        assertFalse(r1.equals(r2));
+    }
+
+    @Test
+    public void testHashCode() {
+        Revenue r1 = new Revenue();
+        Revenue r2 = new Revenue();
+
+        r1.setPrice(10.00).setQuantity(2).setProductId("testProductId");
+        r2.setPrice(9.99).setQuantity(2).setProductId("testProductId");
+        assertNotEquals(r1.hashCode(), r2.hashCode());
+        r2.setPrice(10.00);
+        assertEquals(r1.hashCode(), r2.hashCode());
     }
 }
