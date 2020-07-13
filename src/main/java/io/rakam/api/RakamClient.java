@@ -1893,11 +1893,6 @@ public class RakamClient {
 
         String address = scheme + "://" + serverName;
 
-        if (apiUrl.getPath() != null && !(apiUrl.getPath().equals("/") || apiUrl.getPath().isEmpty())) {
-            throw new IllegalStateException(String.format("Please set root address of the API address." +
-                    " A valid example is %s, %s is not valid.", address, apiUrl.toString()));
-        }
-
         if (serverPort > -1) {
             address = address + ":" + serverPort;
         }
